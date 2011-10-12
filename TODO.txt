@@ -1,0 +1,13 @@
+- Package OpenSlide-Java
+
+- Package OpenSlide headers, license file, and README
+
+- Check whether every dependency is using a reasonable threading library
+
+- Compiler flags: -mms-bitfields, -mthreads?, --enable-auto-image-base
+
+- Create import libraries in .lib format
+
+- Support 64-bit builds
+
+- Autoconfigure cross-compilation
