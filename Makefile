@@ -1,4 +1,4 @@
-PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PIXMAN CAIRO OPENSLIDE
+PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE
 
 # Versions
 ZLIB_VER = 1.2.5
@@ -11,6 +11,7 @@ ICONV_VER = 1.14
 GETTEXT_VER = 0.18.1.1
 GLIB_VER = 2.28
 GLIB_REV = 8
+PKGCONFIG_VER = 0.26
 PIXMAN_VER = 0.22.2
 CAIRO_VER = 1.10.2
 OPENSLIDE_VER = 3.2.4
@@ -25,6 +26,7 @@ OPENJPEG_URL = http://openjpeg.googlecode.com/files/openjpeg_v$(OPENJPEG_VER)_so
 ICONV_URL = http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(ICONV_VER).tar.gz
 GETTEXT_URL = http://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VER).tar.gz
 GLIB_URL = http://ftp.gnome.org/pub/gnome/sources/glib/$(GLIB_VER)/glib-$(GLIB_VER).$(GLIB_REV).tar.xz
+PKGCONFIG_URL = http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VER).tar.gz
 PIXMAN_URL = http://cairographics.org/releases/pixman-$(PIXMAN_VER).tar.gz
 CAIRO_URL = http://cairographics.org/releases/cairo-$(CAIRO_VER).tar.gz
 OPENSLIDE_URL = http://github.com/downloads/openslide/openslide/openslide-$(OPENSLIDE_VER).tar.xz
@@ -41,6 +43,7 @@ OPENJPEG_BUILD = build/openjpeg_v$(OPENJPEG_VER)_sources_r$(OPENJPEG_REV)
 ICONV_BUILD = build/libiconv-$(ICONV_VER)
 GETTEXT_BUILD = build/gettext-$(GETTEXT_VER)/gettext-runtime
 GLIB_BUILD = build/glib-$(GLIB_VER).$(GLIB_REV)
+PKGCONFIG_BUILD = build/pkg-config-$(PKGCONFIG_VER)
 PIXMAN_BUILD = build/pixman-$(PIXMAN_VER)
 CAIRO_BUILD = build/cairo-$(CAIRO_VER)
 OPENSLIDE_BUILD = build/openslide-$(OPENSLIDE_VER)
@@ -54,6 +57,8 @@ OPENJPEG = bin/libopenjpeg.dll
 ICONV = $(addprefix bin/,libiconv-2.dll libcharset-1.dll)
 GETTEXT = bin/libintl-8.dll
 GLIB = $(addprefix bin/,libglib-2.0-0.dll libgthread-2.0-0.dll)
+# pkg-config is used for build, but not distributed
+PKGCONFIG =
 PIXMAN = bin/libpixman-1-0.dll
 CAIRO = bin/libcairo-2.dll
 OPENSLIDE = $(addprefix bin/,libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe)
@@ -73,17 +78,29 @@ ZIP = zip
 
 # Cross-compilation
 CROSS_HOST = i686-pc-mingw32
-CROSS_HOST_PREFIX := $(if $(CROSS_HOST),$(CROSS_HOST)-)
-IF_NATIVE := $(if $(CROSS_HOST),@:)
+ifeq ($(CROSS_HOST),)
+# Native
+CROSS_HOST_PREFIX =
+IF_NATIVE =
+PKG_CONFIG_EXE = $(ROOT)/bin/pkg-config.exe
+CONFIGURE_ARGS = PKG_CONFIG=$(PKG_CONFIG_EXE)
+else
+# Cross
+CROSS_HOST_PREFIX = $(CROSS_HOST)-
+IF_NATIVE = @:
+PKG_CONFIG_EXE =
+# Fedora's $(CROSS_HOST)-pkg-config clobbers search paths; avoid it
+CONFIGURE_ARGS = --host=$(CROSS_HOST) \
+	PKG_CONFIG=pkg-config \
+	PKG_CONFIG_LIBDIR="$(ROOT)/lib/pkgconfig"
+endif
 
 # Use only our pkg-config library directory, even on cross builds
 # https://bugzilla.redhat.com/show_bug.cgi?id=688171
 DIR_CONFIGURE = cd $(PKG_BUILD) && ./configure \
 	--prefix="$(ROOT)" \
 	--disable-static \
-	$(if $(CROSS_HOST),--host=$(CROSS_HOST)) \
-	PKG_CONFIG=pkg-config \
-	PKG_CONFIG_LIBDIR="$(ROOT)/lib/pkgconfig" \
+	$(CONFIGURE_ARGS) \
 	CPPFLAGS="-I$(ROOT)/include" \
 	LDFLAGS="-L$(ROOT)/lib"
 DIR_MAKE = $(MAKE) -C $(PKG_BUILD)
@@ -215,8 +232,16 @@ $(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
 	$(DIR_MAKE) install
 	$(CP) $(foreach f,$(GLIB),$(ROOT)/bin/$(notdir $(f))) bin/
 
+# Only built during native builds; use $(PKG_CONFIG_EXE) in dependencies
+$(ROOT)/bin/pkg-config.exe: PKG_BUILD = $(PKGCONFIG_BUILD)
+$(ROOT)/bin/pkg-config.exe: $(PKGCONFIG_TAR) $(PKGCONFIG_BUILD) $(GLIB)
+	$(DIR_CONFIGURE)
+	$(DIR_MAKE)
+	$(IF_NATIVE) $(DIR_MAKE) check
+	$(DIR_MAKE) install
+
 $(PIXMAN): PKG_BUILD = $(PIXMAN_BUILD)
-$(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD)
+$(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD) $(PKG_CONFIG_EXE)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
 	$(IF_NATIVE) $(DIR_MAKE) check
@@ -224,7 +249,7 @@ $(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD)
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
 $(CAIRO): PKG_BUILD = $(CAIRO_BUILD)
-$(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(ZLIB) $(PNG) $(PIXMAN)
+$(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(PKG_CONFIG_EXE) $(ZLIB) $(PNG) $(PIXMAN)
 	# -Dffs to work around 1.10.2 bug
 	# https://bugs.freedesktop.org/show_bug.cgi?id=30277
 	$(DIR_CONFIGURE) \
@@ -237,7 +262,7 @@ $(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(ZLIB) $(PNG) $(PIXMAN)
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
 $(OPENSLIDE): PKG_BUILD = $(OPENSLIDE_BUILD)
-$(OPENSLIDE): $(OPENSLIDE_TAR) $(OPENSLIDE_BUILD) $(PNG) $(JPEG) $(TIFF) $(OPENJPEG) $(GLIB) $(CAIRO)
+$(OPENSLIDE): $(OPENSLIDE_TAR) $(OPENSLIDE_BUILD) $(PKG_CONFIG_EXE) $(PNG) $(JPEG) $(TIFF) $(OPENJPEG) $(GLIB) $(CAIRO)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
 	$(IF_NATIVE) $(DIR_MAKE) check
