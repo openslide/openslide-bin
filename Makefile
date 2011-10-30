@@ -92,7 +92,8 @@ PKG_CONFIG_EXE =
 # Fedora's $(CROSS_HOST)-pkg-config clobbers search paths; avoid it
 CONFIGURE_ARGS = --host=$(CROSS_HOST) \
 	PKG_CONFIG=pkg-config \
-	PKG_CONFIG_LIBDIR="$(ROOT)/lib/pkgconfig"
+	PKG_CONFIG_LIBDIR="$(ROOT)/lib/pkgconfig" \
+	PKG_CONFIG_PATH=
 endif
 
 # Use only our pkg-config library directory, even on cross builds
