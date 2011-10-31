@@ -149,8 +149,10 @@ tar/config.guess:
 # Unpack the specified tarball.
 $(foreach p,$(PACKAGES),$($(p)_BUILD)): $(CONFIG_GUESS_EXE)
 	mkdir -p bin build
+	rm -rf $@
 	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_BUILD)),tar xf $($(p)_TAR) -C build))
 
+$(ZLIB_BUILD): $(ZLIB_TAR)
 $(ZLIB): PKG_BUILD = $(ZLIB_BUILD)
 $(ZLIB): $(ZLIB_TAR) $(ZLIB_BUILD)
 	$(DIR_MAKE) -f win32/Makefile.gcc \
@@ -167,6 +169,7 @@ $(ZLIB): $(ZLIB_TAR) $(ZLIB_BUILD)
 		LIBRARY_PATH="$(ROOT)/lib" install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(PNG_BUILD): $(PNG_TAR)
 $(PNG): PKG_BUILD = $(PNG_BUILD)
 $(PNG): $(PNG_TAR) $(PNG_BUILD) $(ZLIB)
 	$(DIR_CONFIGURE)
@@ -175,6 +178,7 @@ $(PNG): $(PNG_TAR) $(PNG_BUILD) $(ZLIB)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(JPEG_BUILD): $(JPEG_TAR)
 $(JPEG): PKG_BUILD = $(JPEG_BUILD)
 $(JPEG): $(JPEG_TAR) $(JPEG_BUILD)
 	$(DIR_CONFIGURE)
@@ -183,6 +187,7 @@ $(JPEG): $(JPEG_TAR) $(JPEG_BUILD)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(TIFF_BUILD): $(TIFF_TAR)
 $(TIFF): PKG_BUILD = $(TIFF_BUILD)
 $(TIFF): $(TIFF_TAR) $(TIFF_BUILD) $(ZLIB) $(JPEG)
 	$(DIR_CONFIGURE) \
@@ -195,6 +200,7 @@ $(TIFF): $(TIFF_TAR) $(TIFF_BUILD) $(ZLIB) $(JPEG)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(OPENJPEG_BUILD): $(OPENJPEG_TAR)
 $(OPENJPEG): PKG_BUILD = $(OPENJPEG_BUILD)
 $(OPENJPEG): TCFILE = $(PKG_BUILD)/toolchain.cmake
 $(OPENJPEG): $(OPENJPEG_TAR) $(OPENJPEG_BUILD) $(PNG) $(TIFF)
@@ -215,6 +221,7 @@ $(OPENJPEG): $(OPENJPEG_TAR) $(OPENJPEG_BUILD) $(PNG) $(TIFF)
 	$(DIR_MAKE) all install
 	$(CP) $(ROOT)/lib/$(notdir $@) bin/
 
+$(ICONV_BUILD): $(ICONV_TAR)
 $(ICONV): PKG_BUILD = $(ICONV_BUILD)
 $(ICONV): $(ICONV_TAR) $(ICONV_BUILD)
 	$(DIR_CONFIGURE)
@@ -223,6 +230,7 @@ $(ICONV): $(ICONV_TAR) $(ICONV_BUILD)
 	$(DIR_MAKE) install
 	$(CP) $(foreach f,$(ICONV),$(ROOT)/bin/$(notdir $(f))) bin/
 
+$(GETTEXT_BUILD): $(GETTEXT_TAR)
 $(GETTEXT): PKG_BUILD = $(GETTEXT_BUILD)
 $(GETTEXT): $(GETTEXT_TAR) $(GETTEXT_BUILD) $(ICONV)
 	@# Missing tests for C++ compiler, which is only needed on Windows
@@ -238,6 +246,7 @@ $(GETTEXT): $(GETTEXT_TAR) $(GETTEXT_BUILD) $(ICONV)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(GLIB_BUILD): $(GLIB_TAR)
 $(GLIB): PKG_BUILD = $(GLIB_BUILD)
 $(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
 	$(DIR_CONFIGURE)
@@ -247,6 +256,7 @@ $(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
 	$(CP) $(foreach f,$(GLIB),$(ROOT)/bin/$(notdir $(f))) bin/
 
 # Only built during native builds; use $(PKG_CONFIG_EXE) in dependencies
+$(PKGCONFIG_BUILD): $(PKGCONFIG_TAR)
 $(ROOT)/bin/pkg-config.exe: PKG_BUILD = $(PKGCONFIG_BUILD)
 $(ROOT)/bin/pkg-config.exe: $(PKGCONFIG_TAR) $(PKGCONFIG_BUILD) $(GLIB)
 	$(DIR_CONFIGURE)
@@ -254,6 +264,7 @@ $(ROOT)/bin/pkg-config.exe: $(PKGCONFIG_TAR) $(PKGCONFIG_BUILD) $(GLIB)
 	$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 
+$(PIXMAN_BUILD): $(PIXMAN_TAR)
 $(PIXMAN): PKG_BUILD = $(PIXMAN_BUILD)
 $(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD) $(PKG_CONFIG_EXE)
 	$(DIR_CONFIGURE)
@@ -262,6 +273,7 @@ $(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD) $(PKG_CONFIG_EXE)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(CAIRO_BUILD): $(CAIRO_TAR)
 $(CAIRO): PKG_BUILD = $(CAIRO_BUILD)
 $(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(PKG_CONFIG_EXE) $(ZLIB) $(PNG) $(PIXMAN)
 	# -Dffs to work around 1.10.2 bug
@@ -275,6 +287,7 @@ $(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(PKG_CONFIG_EXE) $(ZLIB) $(PNG) $(PIXMAN)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(OPENSLIDE_BUILD): $(OPENSLIDE_TAR)
 $(OPENSLIDE): PKG_BUILD = $(OPENSLIDE_BUILD)
 $(OPENSLIDE): $(OPENSLIDE_TAR) $(OPENSLIDE_BUILD) $(PKG_CONFIG_EXE) $(PNG) $(JPEG) $(TIFF) $(OPENJPEG) $(GLIB) $(CAIRO)
 	$(DIR_CONFIGURE)
