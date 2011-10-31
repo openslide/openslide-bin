@@ -1,4 +1,4 @@
-PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE
+PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE OPENSLIDEJAVA
 # CONFIGGUESS intentionally not included
 
 # Versions
@@ -17,6 +17,7 @@ PKGCONFIG_VER = 0.26
 PIXMAN_VER = 0.22.2
 CAIRO_VER = 1.10.2
 OPENSLIDE_VER = 3.2.4
+OPENSLIDEJAVA_VER = 0.9.2
 WINBUILD_RELEASE = 1
 
 # Tarball URLs
@@ -33,6 +34,7 @@ PKGCONFIG_URL = http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG
 PIXMAN_URL = http://cairographics.org/releases/pixman-$(PIXMAN_VER).tar.gz
 CAIRO_URL = http://cairographics.org/releases/cairo-$(CAIRO_VER).tar.gz
 OPENSLIDE_URL = http://github.com/downloads/openslide/openslide/openslide-$(OPENSLIDE_VER).tar.xz
+OPENSLIDEJAVA_URL = http://github.com/downloads/openslide/openslide-java/openslide-java-$(OPENSLIDEJAVA_VER).tar.xz
 
 # Directories
 ROOT := $(shell pwd)/root
@@ -50,6 +52,7 @@ PKGCONFIG_BUILD = build/pkg-config-$(PKGCONFIG_VER)
 PIXMAN_BUILD = build/pixman-$(PIXMAN_VER)
 CAIRO_BUILD = build/cairo-$(CAIRO_VER)
 OPENSLIDE_BUILD = build/openslide-$(OPENSLIDE_VER)
+OPENSLIDEJAVA_BUILD = build/openslide-java-$(OPENSLIDEJAVA_VER)
 
 # Build artifacts
 ZLIB = bin/zlib1.dll
@@ -65,6 +68,7 @@ PKGCONFIG =
 PIXMAN = bin/libpixman-1-0.dll
 CAIRO = bin/libcairo-2.dll
 OPENSLIDE = $(addprefix bin/,libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe)
+OPENSLIDEJAVA = $(addprefix bin/,openslide-jni.dll openslide.jar)
 
 # Cached tarballs
 $(foreach p,$(PACKAGES),$(eval $(p)_TAR = tar/$$(notdir $$($(p)_URL))))
@@ -117,7 +121,7 @@ install = @if (! type "$(1)" && type mingw-get) >/dev/null 2>&1 ; then \
 	mingw-get install "msys-$(1)-bin"; fi
 
 .PHONY: all sdist bdist
-all: $(OPENSLIDE)
+all: $(OPENSLIDE) $(OPENSLIDEJAVA)
 sdist: $(SDIST)
 bdist: $(BDIST)
 
@@ -295,3 +299,11 @@ $(OPENSLIDE): $(OPENSLIDE_TAR) $(OPENSLIDE_BUILD) $(PKG_CONFIG_EXE) $(PNG) $(JPE
 	$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 	$(CP) $(foreach f,$(OPENSLIDE),$(ROOT)/bin/$(notdir $(f))) bin/
+
+$(OPENSLIDEJAVA_BUILD): $(OPENSLIDEJAVA_TAR)
+$(OPENSLIDEJAVA): PKG_BUILD = $(OPENSLIDEJAVA_BUILD)
+$(OPENSLIDEJAVA): $(OPENSLIDEJAVA_TAR) $(OPENSLIDEJAVA_BUILD) $(PKG_CONFIG_EXE) $(OPENSLIDE)
+	$(DIR_CONFIGURE)
+	$(DIR_MAKE)
+	$(DIR_MAKE) install
+	$(CP) $(foreach f,$(OPENSLIDEJAVA),$(ROOT)/lib/openslide-java/$(notdir $(f))) bin/
