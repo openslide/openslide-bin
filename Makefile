@@ -1,6 +1,8 @@
 PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE
+# CONFIGGUESS intentionally not included
 
 # Versions
+CONFIGGUESS_VER = 3bc7c305
 ZLIB_VER = 1.2.5
 PNG_VER = 1.5.5
 JPEG_VER = 8c
@@ -18,6 +20,7 @@ OPENSLIDE_VER = 3.2.4
 WINBUILD_RELEASE = 1
 
 # Tarball URLs
+CONFIGGUESS_URL = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=$(CONFIGGUESS_VER)
 ZLIB_URL = http://prdownloads.sourceforge.net/libpng/zlib-$(ZLIB_VER).tar.bz2
 PNG_URL = http://prdownloads.sourceforge.net/libpng/libpng-$(PNG_VER).tar.xz
 JPEG_URL = http://www.ijg.org/files/jpegsrc.v$(JPEG_VER).tar.gz
@@ -82,15 +85,18 @@ ifeq ($(CROSS_HOST),)
 # Native
 CROSS_HOST_PREFIX =
 IF_NATIVE =
+CONFIG_GUESS_EXE =
 PKG_CONFIG_EXE = $(ROOT)/bin/pkg-config.exe
 CONFIGURE_ARGS = PKG_CONFIG=$(PKG_CONFIG_EXE)
 else
 # Cross
 CROSS_HOST_PREFIX = $(CROSS_HOST)-
 IF_NATIVE = @:
+CONFIG_GUESS_EXE = tar/config.guess
 PKG_CONFIG_EXE =
 # Fedora's $(CROSS_HOST)-pkg-config clobbers search paths; avoid it
 CONFIGURE_ARGS = --host=$(CROSS_HOST) \
+	--build=$(shell sh $(CONFIG_GUESS_EXE)) \
 	PKG_CONFIG=pkg-config \
 	PKG_CONFIG_LIBDIR="$(ROOT)/lib/pkgconfig" \
 	PKG_CONFIG_PATH=
@@ -119,7 +125,7 @@ bdist: $(BDIST)
 clean:
 	$(RM) -rf bin build root $(SDIST) $(BDIST)
 
-$(SDIST): Makefile README.txt TODO.txt $(TARS)
+$(SDIST): Makefile README.txt TODO.txt tar/config.guess $(TARS)
 	$(call install,zip)
 	$(ZIP) $@ $^
 
@@ -133,8 +139,15 @@ $(TARS):
 	mkdir -p tar
 	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_TAR)),wget -P tar -q $($(p)_URL)))
 
+# config.guess gets its own download rule because we have to rename the
+# saved file
+tar/config.guess:
+	$(call install,wget)
+	mkdir -p tar
+	wget -q -O $@ "$(CONFIGGUESS_URL)"
+
 # Unpack the specified tarball.
-$(foreach p,$(PACKAGES),$($(p)_BUILD)):
+$(foreach p,$(PACKAGES),$($(p)_BUILD)): $(CONFIG_GUESS_EXE)
 	mkdir -p bin build
 	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_BUILD)),tar xf $($(p)_TAR) -C build))
 
