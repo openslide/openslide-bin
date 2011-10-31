@@ -141,7 +141,7 @@ $(BDIST): $(foreach p,$(PACKAGES),$($(p)))
 $(TARS):
 	$(call install,wget)
 	mkdir -p tar
-	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_TAR)),wget -P tar -q $($(p)_URL)))
+	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_TAR)),wget -P tar -q --no-check-certificate $($(p)_URL)))
 
 # config.guess gets its own download rule because we have to rename the
 # saved file
