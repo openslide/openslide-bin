@@ -98,7 +98,7 @@ RM = rm
 ZIP = zip
 
 # Cross-compilation
-CROSS_HOST = i686-pc-mingw32
+CROSS_HOST =
 ifeq ($(CROSS_HOST),)
 # Native
 CROSS_HOST_PREFIX =

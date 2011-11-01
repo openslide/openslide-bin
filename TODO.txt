@@ -7,5 +7,3 @@
 - Create import libraries in .lib format
 
 - Support 64-bit builds
-
-- Autoconfigure cross-compilation
