@@ -18,7 +18,6 @@ PIXMAN_VER = 0.22.2
 CAIRO_VER = 1.10.2
 OPENSLIDE_VER = 3.2.4
 OPENSLIDEJAVA_VER = 0.9.2
-WINBUILD_RELEASE = 1
 
 # Tarball URLs
 CONFIGGUESS_URL = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=$(CONFIGGUESS_VER)
@@ -75,8 +74,9 @@ $(foreach p,$(PACKAGES),$(eval $(p)_TAR = tar/$$(notdir $$($(p)_URL))))
 TARS = $(foreach p,$(PACKAGES),$($(p)_TAR))
 
 # Distribution zip files
-SDIST = openslide-winbuild-$(OPENSLIDE_VER)-$(WINBUILD_RELEASE).zip
-BDIST = openslide-win32-$(OPENSLIDE_VER)-$(WINBUILD_RELEASE).zip
+DATESTAMP := $(shell date +%Y%m%d)
+SDIST = openslide-winbuild-$(DATESTAMP).zip
+BDIST = openslide-win32-$(DATESTAMP).zip
 
 # Programs
 CP = cp
@@ -127,7 +127,7 @@ bdist: $(BDIST)
 
 .PHONY: clean
 clean:
-	$(RM) -rf bin build root $(SDIST) $(BDIST)
+	$(RM) -rf bin build root openslide-win*-*.zip
 
 $(SDIST): Makefile README.txt TODO.txt tar/config.guess $(TARS)
 	$(call install,zip)
