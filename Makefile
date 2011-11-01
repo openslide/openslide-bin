@@ -1,6 +1,20 @@
 PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE OPENSLIDEJAVA
 # CONFIGGUESS intentionally not included
 
+# Package names
+ZLIB_NAME = zlib
+PNG_NAME = libpng
+JPEG_NAME = libjpeg
+TIFF_NAME = libtiff
+OPENJPEG_NAME = OpenJPEG
+ICONV_NAME = libiconv
+GETTEXT_NAME = gettext
+GLIB_NAME = glib
+PIXMAN_NAME = pixman
+CAIRO_NAME = cairo
+OPENSLIDE_NAME = OpenSlide
+OPENSLIDEJAVA_NAME = OpenSlide Java
+
 # Versions
 CONFIGGUESS_VER = 3bc7c305
 ZLIB_VER = 1.2.5
@@ -127,13 +141,13 @@ bdist: $(BDIST)
 
 .PHONY: clean
 clean:
-	$(RM) -rf bin build root openslide-win*-*.zip
+	$(RM) -rf bin build root openslide-win*-*.zip VERSIONS.txt
 
 $(SDIST): Makefile README.txt TODO.txt tar/config.guess $(TARS)
 	$(call install,zip)
 	$(ZIP) $@ $^
 
-$(BDIST): $(foreach p,$(PACKAGES),$($(p)))
+$(BDIST): $(foreach p,$(PACKAGES),$($(p))) VERSIONS.txt
 	$(call install,zip)
 	$(ZIP) $@ $^
 
@@ -155,6 +169,10 @@ $(foreach p,$(PACKAGES),$($(p)_BUILD)): $(CONFIG_GUESS_EXE)
 	mkdir -p bin build
 	rm -rf $@
 	$(foreach p,$(PACKAGES),$(if $(findstring $@,$($(p)_BUILD)),tar xf $($(p)_TAR) -C build))
+
+VERSIONS.txt: Makefile
+	@rm -f $@
+	@$(foreach p,$(PACKAGES),$(if $($(p)_NAME),echo "$($(p)_NAME) $($(p)_VER)" >> $@ &&)) :
 
 $(ZLIB_BUILD): $(ZLIB_TAR)
 $(ZLIB): PKG_BUILD = $(ZLIB_BUILD)

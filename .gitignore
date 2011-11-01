@@ -2,4 +2,5 @@ bin
 build
 root
 tar
+VERSIONS.txt
 openslide-win*.zip
