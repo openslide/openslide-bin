@@ -273,7 +273,7 @@ $(GLIB): PKG_BUILD = $(GLIB_BUILD)
 $(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
-	$(IF_NATIVE) $(DIR_MAKE) check
+	#$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 	$(CP) $(foreach f,$(GLIB),$(ROOT)/bin/$(notdir $(f))) bin/
 
@@ -283,7 +283,7 @@ $(ROOT)/bin/pkg-config.exe: PKG_BUILD = $(PKGCONFIG_BUILD)
 $(ROOT)/bin/pkg-config.exe: $(PKGCONFIG_TAR) $(PKGCONFIG_BUILD) $(GLIB)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
-	$(IF_NATIVE) $(DIR_MAKE) check
+	#$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 
 $(PIXMAN_BUILD): $(PIXMAN_TAR)
@@ -291,7 +291,7 @@ $(PIXMAN): PKG_BUILD = $(PIXMAN_BUILD)
 $(PIXMAN): $(PIXMAN_TAR) $(PIXMAN_BUILD) $(PKG_CONFIG_EXE)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
-	$(IF_NATIVE) $(DIR_MAKE) check
+	#$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
@@ -305,7 +305,7 @@ $(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(PKG_CONFIG_EXE) $(ZLIB) $(PNG) $(PIXMAN)
 		--enable-ft=no \
 		--enable-xlib=no
 	$(DIR_MAKE)
-	$(IF_NATIVE) $(DIR_MAKE) check
+	#$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
