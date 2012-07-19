@@ -2,8 +2,11 @@
 
 - Check whether every dependency is using a reasonable threading library
 
-- Compiler flags: -mms-bitfields, -mthreads?, --enable-auto-image-base
+- Compiler flags: -mms-bitfields, -mthreads?, -fexceptions?,
+  --enable-auto-image-base
 
 - Create import libraries in .lib format
 
 - Support 64-bit builds
+
+- Check native builds
