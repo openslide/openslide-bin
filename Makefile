@@ -18,22 +18,21 @@ OPENSLIDEJAVA_NAME = OpenSlide Java
 
 # Versions
 CONFIGGUESS_VER = 3bc7c305
-ZLIB_VER = 1.2.5
-PNG_VER = 1.5.5
-JPEG_VER = 8c
-TIFF_VER = 3.9.5
-OPENJPEG_VER = 1_4
-OPENJPEG_REV = 697
+ZLIB_VER = 1.2.7
+PNG_VER = 1.5.12
+JPEG_VER = 8d
+TIFF_VER = 4.0.2
+OPENJPEG_VER = 1.5.0
 ICONV_VER = 1.14
 GETTEXT_VER = 0.18.1.1
 FFI_VER = 3.0.11
-GLIB_VER = 2.28
-GLIB_REV = 8
-PKGCONFIG_VER = 0.26
-PIXMAN_VER = 0.22.2
-CAIRO_VER = 1.10.2
-OPENSLIDE_VER = 3.2.4
-OPENSLIDEJAVA_VER = 0.9.2
+GLIB_VER = 2.30
+GLIB_REV = 3
+PKGCONFIG_VER = 0.27
+PIXMAN_VER = 0.26.2
+CAIRO_VER = 1.12.2
+OPENSLIDE_VER = 3.2.6
+OPENSLIDEJAVA_VER = 0.10.0
 
 # Tarball URLs
 CONFIGGUESS_URL = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=$(CONFIGGUESS_VER)
@@ -41,14 +40,14 @@ ZLIB_URL = http://prdownloads.sourceforge.net/libpng/zlib-$(ZLIB_VER).tar.bz2
 PNG_URL = http://prdownloads.sourceforge.net/libpng/libpng-$(PNG_VER).tar.xz
 JPEG_URL = http://www.ijg.org/files/jpegsrc.v$(JPEG_VER).tar.gz
 TIFF_URL = ftp://ftp.remotesensing.org/pub/libtiff/tiff-$(TIFF_VER).tar.gz
-OPENJPEG_URL = http://openjpeg.googlecode.com/files/openjpeg_v$(OPENJPEG_VER)_sources_r$(OPENJPEG_REV).tgz
+OPENJPEG_URL = http://openjpeg.googlecode.com/files/openjpeg-$(OPENJPEG_VER).tar.gz
 ICONV_URL = http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(ICONV_VER).tar.gz
 GETTEXT_URL = http://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VER).tar.gz
 FFI_URL = ftp://sourceware.org/pub/libffi/libffi-$(FFI_VER).tar.gz
 GLIB_URL = http://ftp.gnome.org/pub/gnome/sources/glib/$(GLIB_VER)/glib-$(GLIB_VER).$(GLIB_REV).tar.xz
 PKGCONFIG_URL = http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VER).tar.gz
 PIXMAN_URL = http://cairographics.org/releases/pixman-$(PIXMAN_VER).tar.gz
-CAIRO_URL = http://cairographics.org/releases/cairo-$(CAIRO_VER).tar.gz
+CAIRO_URL = http://cairographics.org/releases/cairo-$(CAIRO_VER).tar.xz
 OPENSLIDE_URL = http://github.com/downloads/openslide/openslide/openslide-$(OPENSLIDE_VER).tar.xz
 OPENSLIDEJAVA_URL = http://github.com/downloads/openslide/openslide-java/openslide-java-$(OPENSLIDEJAVA_VER).tar.xz
 
@@ -60,7 +59,7 @@ ZLIB_BUILD = build/zlib-$(ZLIB_VER)
 PNG_BUILD = build/libpng-$(PNG_VER)
 JPEG_BUILD = build/jpeg-$(JPEG_VER)
 TIFF_BUILD = build/tiff-$(TIFF_VER)
-OPENJPEG_BUILD = build/openjpeg_v$(OPENJPEG_VER)_sources_r$(OPENJPEG_REV)
+OPENJPEG_BUILD = build/openjpeg-$(OPENJPEG_VER)
 ICONV_BUILD = build/libiconv-$(ICONV_VER)
 GETTEXT_BUILD = build/gettext-$(GETTEXT_VER)/gettext-runtime
 FFI_BUILD = build/libffi-$(FFI_VER)
@@ -75,7 +74,7 @@ OPENSLIDEJAVA_BUILD = build/openslide-java-$(OPENSLIDEJAVA_VER)
 ZLIB = bin/zlib1.dll
 PNG = bin/libpng15-15.dll
 JPEG = bin/libjpeg-8.dll
-TIFF = bin/libtiff-3.dll
+TIFF = bin/libtiff-5.dll
 OPENJPEG = bin/libopenjpeg.dll
 ICONV = $(addprefix bin/,libiconv-2.dll libcharset-1.dll)
 GETTEXT = bin/libintl-8.dll
@@ -246,7 +245,7 @@ $(OPENJPEG): $(OPENJPEG_TAR) $(OPENJPEG_BUILD) $(PNG) $(TIFF)
 		-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
 		-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY .
 	$(DIR_MAKE) all install
-	$(CP) $(ROOT)/lib/$(notdir $@) bin/
+	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
 $(ICONV_BUILD): $(ICONV_TAR)
 $(ICONV): PKG_BUILD = $(ICONV_BUILD)

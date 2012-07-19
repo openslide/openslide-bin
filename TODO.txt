@@ -10,3 +10,5 @@
 - Support 64-bit builds
 
 - Check native builds
+
+- Switch to glib 2.32 once glib-compile-resources is available
