@@ -1,4 +1,4 @@
-PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE OPENSLIDEJAVA
+PACKAGES = ZLIB PNG JPEG TIFF OPENJPEG ICONV GETTEXT FFI GLIB PKGCONFIG PIXMAN CAIRO OPENSLIDE OPENSLIDEJAVA
 # CONFIGGUESS intentionally not included
 
 # Package names
@@ -9,6 +9,7 @@ TIFF_NAME = libtiff
 OPENJPEG_NAME = OpenJPEG
 ICONV_NAME = libiconv
 GETTEXT_NAME = gettext
+FFI_NAME = libffi
 GLIB_NAME = glib
 PIXMAN_NAME = pixman
 CAIRO_NAME = cairo
@@ -25,6 +26,7 @@ OPENJPEG_VER = 1_4
 OPENJPEG_REV = 697
 ICONV_VER = 1.14
 GETTEXT_VER = 0.18.1.1
+FFI_VER = 3.0.11
 GLIB_VER = 2.28
 GLIB_REV = 8
 PKGCONFIG_VER = 0.26
@@ -42,6 +44,7 @@ TIFF_URL = ftp://ftp.remotesensing.org/pub/libtiff/tiff-$(TIFF_VER).tar.gz
 OPENJPEG_URL = http://openjpeg.googlecode.com/files/openjpeg_v$(OPENJPEG_VER)_sources_r$(OPENJPEG_REV).tgz
 ICONV_URL = http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$(ICONV_VER).tar.gz
 GETTEXT_URL = http://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VER).tar.gz
+FFI_URL = ftp://sourceware.org/pub/libffi/libffi-$(FFI_VER).tar.gz
 GLIB_URL = http://ftp.gnome.org/pub/gnome/sources/glib/$(GLIB_VER)/glib-$(GLIB_VER).$(GLIB_REV).tar.xz
 PKGCONFIG_URL = http://pkgconfig.freedesktop.org/releases/pkg-config-$(PKGCONFIG_VER).tar.gz
 PIXMAN_URL = http://cairographics.org/releases/pixman-$(PIXMAN_VER).tar.gz
@@ -60,6 +63,7 @@ TIFF_BUILD = build/tiff-$(TIFF_VER)
 OPENJPEG_BUILD = build/openjpeg_v$(OPENJPEG_VER)_sources_r$(OPENJPEG_REV)
 ICONV_BUILD = build/libiconv-$(ICONV_VER)
 GETTEXT_BUILD = build/gettext-$(GETTEXT_VER)/gettext-runtime
+FFI_BUILD = build/libffi-$(FFI_VER)
 GLIB_BUILD = build/glib-$(GLIB_VER).$(GLIB_REV)
 PKGCONFIG_BUILD = build/pkg-config-$(PKGCONFIG_VER)
 PIXMAN_BUILD = build/pixman-$(PIXMAN_VER)
@@ -75,6 +79,7 @@ TIFF = bin/libtiff-3.dll
 OPENJPEG = bin/libopenjpeg.dll
 ICONV = $(addprefix bin/,libiconv-2.dll libcharset-1.dll)
 GETTEXT = bin/libintl-8.dll
+FFI = bin/libffi-6.dll
 GLIB = $(addprefix bin/,libglib-2.0-0.dll libgthread-2.0-0.dll)
 # pkg-config is used for build, but not distributed
 PKGCONFIG =
@@ -268,9 +273,18 @@ $(GETTEXT): $(GETTEXT_TAR) $(GETTEXT_BUILD) $(ICONV)
 	$(DIR_MAKE) install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
+$(FFI_BUILD): $(FFI_TAR)
+$(FFI): PKG_BUILD = $(FFI_BUILD)
+$(FFI): $(FFI_TAR) $(FFI_BUILD)
+	$(DIR_CONFIGURE)
+	$(DIR_MAKE)
+	$(IF_NATIVE) $(DIR_MAKE) check
+	$(DIR_MAKE) install
+	$(CP) $(ROOT)/bin/$(notdir $@) bin/
+
 $(GLIB_BUILD): $(GLIB_TAR)
 $(GLIB): PKG_BUILD = $(GLIB_BUILD)
-$(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
+$(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT) $(FFI)
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
 	#$(IF_NATIVE) $(DIR_MAKE) check
