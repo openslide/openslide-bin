@@ -281,7 +281,9 @@ $(GLIB): $(GLIB_TAR) $(GLIB_BUILD) $(ZLIB) $(ICONV) $(GETTEXT)
 $(PKGCONFIG_BUILD): $(PKGCONFIG_TAR)
 $(ROOT)/bin/pkg-config.exe: PKG_BUILD = $(PKGCONFIG_BUILD)
 $(ROOT)/bin/pkg-config.exe: $(PKGCONFIG_TAR) $(PKGCONFIG_BUILD) $(GLIB)
-	$(DIR_CONFIGURE)
+	$(DIR_CONFIGURE) \
+		GLIB_CFLAGS="-I$(ROOT)/include/glib-2.0 -I$(ROOT)/lib/glib-2.0/include" \
+		GLIB_LIBS="-L$(ROOT)/lib -lglib-2.0 -lintl"
 	$(DIR_MAKE)
 	#$(IF_NATIVE) $(DIR_MAKE) check
 	$(DIR_MAKE) install
