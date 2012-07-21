@@ -75,7 +75,7 @@ ZLIB = bin/zlib1.dll
 PNG = bin/libpng15-15.dll
 JPEG = bin/libjpeg-8.dll
 TIFF = bin/libtiff-5.dll
-OPENJPEG = bin/libopenjpeg.dll
+OPENJPEG = bin/libopenjpeg-1.dll
 ICONV = $(addprefix bin/,libiconv-2.dll libcharset-1.dll)
 GETTEXT = bin/libintl-8.dll
 FFI = bin/libffi-6.dll
@@ -228,22 +228,11 @@ $(TIFF): $(TIFF_TAR) $(TIFF_BUILD) $(ZLIB) $(JPEG)
 
 $(OPENJPEG_BUILD): $(OPENJPEG_TAR)
 $(OPENJPEG): PKG_BUILD = $(OPENJPEG_BUILD)
-$(OPENJPEG): TCFILE = $(PKG_BUILD)/toolchain.cmake
-$(OPENJPEG): $(OPENJPEG_TAR) $(OPENJPEG_BUILD) $(PNG) $(TIFF)
-	@# The Autotools build system doesn't correctly build for Windows.
-	@#
-	@# Certain cmake variables cannot be specified on the command-line due
-	@# to cmake #9980.
-	echo "SET(CMAKE_SYSTEM_NAME Windows)" > $(TCFILE)
-	echo "SET(CMAKE_C_COMPILER $(CROSS_HOST_PREFIX)gcc)" >> $(TCFILE)
-	echo "SET(CMAKE_RC_COMPILER $(CROSS_HOST_PREFIX)windres)" >> $(TCFILE)
-	cd $(PKG_BUILD) && cmake -G "Unix Makefiles" \
-		-DCMAKE_TOOLCHAIN_FILE=$(notdir $(TCFILE)) \
-		-DCMAKE_INSTALL_PREFIX="$(ROOT)" \
-		-DCMAKE_FIND_ROOT_PATH="$(ROOT)" \
-		-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-		-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-		-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY .
+$(OPENJPEG): $(OPENJPEG_TAR) $(OPENJPEG_BUILD) $(PNG) $(TIFF) $(PKG_CONFIG_EXE)
+	$(DIR_CONFIGURE) \
+		--disable-doc \
+		TIFF_CFLAGS="-I$(ROOT)/include" \
+		TIFF_LIBS="-L$(ROOT)/lib -ltiff"
 	$(DIR_MAKE) all install
 	$(CP) $(ROOT)/bin/$(notdir $@) bin/
 
