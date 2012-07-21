@@ -12,7 +12,7 @@ libgcj-devel package.)
 
 Then:
 
-make CROSS_HOST=i686-pc-mingw32
+make CROSS_HOST=i686-w64-mingw32
 
 Output will be in bin/.
 
