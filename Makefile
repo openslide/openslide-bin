@@ -316,6 +316,9 @@ $(CAIRO): $(CAIRO_TAR) $(CAIRO_BUILD) $(PKG_CONFIG_EXE) $(ZLIB) $(PNG) $(PIXMAN)
 $(OPENSLIDE_BUILD): $(OPENSLIDE_TAR)
 $(OPENSLIDE): PKG_BUILD = $(OPENSLIDE_BUILD)
 $(OPENSLIDE): $(OPENSLIDE_TAR) $(OPENSLIDE_BUILD) $(PKG_CONFIG_EXE) $(PNG) $(JPEG) $(TIFF) $(OPENJPEG) $(GLIB) $(CAIRO)
+	@# Work around OpenSlide 3.2.6 compile failure on mingw-w64
+	cd $(PKG_BUILD)/src && sed -i s/fseeko/_openslide_fseek/g *
+	cd $(PKG_BUILD)/src && sed -i s/ftello/_openslide_ftell/g *
 	$(DIR_CONFIGURE)
 	$(DIR_MAKE)
 	$(IF_NATIVE) $(DIR_MAKE) check
