@@ -496,6 +496,23 @@ probe() {
         build_host_prefix="${build_host}-"
         ant_home=""
         java_home=""
+
+        # Ensure Wine is not run via binfmt_misc, since some packages
+        # attempt to run programs after building them.
+        for hdr in PE MZ
+        do
+            echo $hdr > conftest
+            chmod +x conftest
+            if ./conftest 2>/dev/null ; then
+                # Awkward construct due to "set -e"
+                :
+            elif [ $? = 193 ] ; then
+                rm conftest
+                echo "Wine is enabled in binfmt_misc.  Please disable it."
+                exit 1
+            fi
+            rm conftest
+        done
     esac
 }
 
