@@ -12,7 +12,7 @@ libgcj-devel package.)
 
 Then:
 
-make CROSS_HOST=i686-w64-mingw32
+./build.sh all
 
 Output will be in bin/.
 
@@ -30,17 +30,19 @@ You must use 8.3 short file names for path elements that contain spaces.
 
 Then:
 
-make ANT_HOME=/ant JAVA_HOME=/java
+./build.sh all
 
 Output will be in bin/.
 
 Note that cross-compiling is MUCH faster than compiling natively.
 
-Make targets
-------------
+Subcommands
+-----------
 
 all
 	Build OpenSlide and all dependencies.
+build
+	Build the specified targets.
 sdist
 	Build Zip file containing build system and sources for OpenSlide
 	and all dependencies.
@@ -49,3 +51,11 @@ bdist
 	dependencies.
 clean
 	Delete build and binary directories, but not downloaded tarballs.
+
+Options
+-------
+
+These must be specified before the subcommand.
+
+-j<n>
+	Parallel make with the specified parallelism.
