@@ -195,8 +195,8 @@ do_configure() {
     # Additional parameters can be specified as arguments.
     if [ "$build_type" = "native" ] ; then
         _configure_common \
-        	PKG_CONFIG="${root}/bin/pkg-config.exe" \
-        	"$@"
+                PKG_CONFIG="${root}/bin/pkg-config.exe" \
+                "$@"
     else
         # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
         _configure_common \
@@ -357,9 +357,9 @@ build_one() {
         make install
         ;;
     openslide)
-	# Work around OpenSlide 3.2.6 compile failure on mingw-w64
-	sed -i s/fseeko/_openslide_fseek/g src/*
-	sed -i s/ftello/_openslide_ftell/g src/*
+        # Work around OpenSlide 3.2.6 compile failure on mingw-w64
+        sed -i s/fseeko/_openslide_fseek/g src/*
+        sed -i s/ftello/_openslide_ftell/g src/*
         do_configure
         make $parallel
         if [ "$build_type" = "native" ] ; then
