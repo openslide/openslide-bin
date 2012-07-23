@@ -346,10 +346,7 @@ build_one() {
         make install
         ;;
     cairo)
-        # -Dffs to work around 1.10.2 bug
-        # https://bugs.freedesktop.org/show_bug.cgi?id=30277
         do_configure \
-                CFLAGS="-Dffs=__builtin_ffs" \
                 --enable-ft=no \
                 --enable-xlib=no
         make $parallel
