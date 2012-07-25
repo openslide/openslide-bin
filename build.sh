@@ -394,7 +394,7 @@ build() {
 
 sdist() {
     # Build source distribution
-    local package tars
+    local package tars zipfile
     tars=""
     for package in $packages
     do
@@ -402,13 +402,14 @@ sdist() {
         tars="$tars $(tarpath $package)"
     done
     install_tool zip
-    zip "openslide-winbuild-$(date +%Y%m%d).zip" \
-            build.sh README.txt TODO.txt $tars
+    zipfile="openslide-winbuild-$(date +%Y%m%d).zip"
+    rm -f "${zipfile}"
+    zip "${zipfile}" build.sh README.txt TODO.txt $tars
 }
 
 bdist() {
     # Build binary distribution
-    local package name
+    local package name zipfile
     rm -f VERSIONS.txt
     for package in $packages
     do
@@ -428,8 +429,9 @@ bdist() {
         fi
     done
     install_tool zip
-    zip -r "openslide-win${build_bits}-$(date +%Y%m%d).zip" \
-            VERSIONS.txt bin
+    zipfile="openslide-win${build_bits}-$(date +%Y%m%d).zip"
+    rm -f "${zipfile}"
+    zip -r "${zipfile}" VERSIONS.txt bin
     rm -r bin
 }
 
