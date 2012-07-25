@@ -2,7 +2,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pkgconfig pixman cairo openslide openslidejava"
+packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pkgconfig pixman cairo xml openslide openslidejava"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
@@ -16,6 +16,7 @@ ffi_name="libffi"
 glib_name="glib"
 pixman_name="pixman"
 cairo_name="cairo"
+xml_name="libxml2"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
@@ -34,6 +35,7 @@ glib_ver="${glib_basever}.3"
 pkgconfig_ver="0.27"
 pixman_ver="0.26.2"
 cairo_ver="1.12.2"
+xml_ver="2.8.0"
 openslide_ver="3.2.6"
 openslidejava_ver="0.10.0"
 
@@ -51,6 +53,7 @@ glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${gli
 pkgconfig_url="http://pkgconfig.freedesktop.org/releases/pkg-config-${pkgconfig_ver}.tar.gz"
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
+xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
 openslide_url="http://github.com/downloads/openslide/openslide/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="http://github.com/downloads/openslide/openslide-java/openslide-java-${openslidejava_ver}.tar.xz"
 
@@ -67,6 +70,7 @@ glib_build="glib-${glib_ver}"
 pkgconfig_build="pkg-config-${pkgconfig_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
+xml_build="libxml2-${xml_ver}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
@@ -82,6 +86,7 @@ ffi_licenses="LICENSE"
 glib_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
+xml_licenses="COPYING"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt"
 openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 
@@ -98,7 +103,8 @@ glib_dependencies="zlib iconv gettext ffi"
 pkgconfig_dependencies="glib"
 pixman_dependencies="pkgconfig"
 cairo_dependencies="pkgconfig zlib png pixman"
-openslide_dependencies="pkgconfig png jpeg tiff openjpeg glib cairo"
+xml_dependencies="zlib iconv"
+openslide_dependencies="pkgconfig png jpeg tiff openjpeg glib cairo xml"
 openslidejava_dependencies="pkgconfig openslide"
 
 # Build artifacts
@@ -115,6 +121,7 @@ glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll"
 pkgconfig_artifacts=""
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
+xml_artifacts="libxml2-2.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
@@ -362,6 +369,15 @@ build_one() {
         if [ "$build_type" = "native" ] ; then
             # make check
             :
+        fi
+        make install
+        ;;
+    xml)
+        do_configure \
+                --without-python
+        make $parallel
+        if [ "$build_type" = "native" ] ; then
+            make check
         fi
         make install
         ;;
