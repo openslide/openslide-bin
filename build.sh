@@ -559,13 +559,6 @@ probe
 
 # Process command-line arguments
 case "$1" in
-all)
-    build openslide openslidejava
-    ;;
-build)
-    shift
-    build $*
-    ;;
 sdist)
     sdist
     ;;
@@ -578,11 +571,7 @@ clean)
 *)
     cat <<EOF
 
-Usage: $0 [-j<n>] [-m{32|64}] {all|sdist|bdist|clean}
-       $0 [-j<n>] [-m{32|64}] build target [target [...]]
-
-Targets:
-$packages
+Usage: $0 [-j<n>] [-m{32|64}] {sdist|bdist|clean}
 EOF
     exit 1
     ;;

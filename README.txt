@@ -35,10 +35,6 @@ Note that cross-compiling is MUCH faster than compiling natively.
 Subcommands
 -----------
 
-all
-	Build OpenSlide and all dependencies.
-build
-	Build the specified targets.
 sdist
 	Build Zip file containing build system and sources for OpenSlide
 	and all dependencies.
