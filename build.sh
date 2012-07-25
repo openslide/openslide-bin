@@ -70,6 +70,21 @@ cairo_build="cairo-${cairo_ver}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
+# Locations of license files within the source tree
+zlib_licenses="README"
+png_licenses="png.h"  # !!!
+jpeg_licenses="README"
+tiff_licenses="COPYRIGHT"
+openjpeg_licenses="LICENSE"
+iconv_licenses="COPYING.LIB"
+gettext_licenses="COPYING intl/COPYING.LIB-2.0 intl/COPYING.LIB-2.1"
+ffi_licenses="LICENSE"
+glib_licenses="COPYING"
+pixman_licenses="COPYING"
+cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
+openslide_licenses="LICENSE.txt lgpl-2.1.txt"
+openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
+
 # Build dependencies
 zlib_dependencies=""
 png_dependencies="zlib"
@@ -406,7 +421,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name zipdir
+    local package name licensedir zipdir
     for package in $packages
     do
         build_one "$package"
@@ -420,12 +435,22 @@ bdist() {
         do
             cp "${root}/bin/${artifact}" "${zipdir}/bin/"
         done
+        licensedir="${zipdir}/licenses/$(expand ${package}_name)"
+        mkdir -p "${licensedir}"
+        for artifact in $(expand ${package}_licenses)
+        do
+            cp "${build}/$(expand ${package}_build)/${artifact}" \
+                    "${licensedir}"
+        done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
             printf "%-30s %s\n" "$name" "$(expand ${package}_ver)" >> \
                     "${zipdir}/VERSIONS.txt"
         fi
     done
+    mkdir -p "${zipdir}/include"
+    cp -r "${root}/include/openslide" "${zipdir}/include/"
+    cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
     install_tool zip
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"

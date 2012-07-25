@@ -1,5 +1,3 @@
-- Package OpenSlide headers, license file, and README
-
 - Check whether every dependency is using a reasonable threading library
 
 - Compiler flags: -mms-bitfields, -mthreads?, -fexceptions?,
