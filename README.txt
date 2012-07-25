@@ -59,3 +59,5 @@ These must be specified before the subcommand.
 
 -j<n>
 	Parallel make with the specified parallelism.
+-m{32|64}
+	Select 32-bit or 64-bit build (default: 32).

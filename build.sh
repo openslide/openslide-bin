@@ -153,9 +153,9 @@ unpack() {
     # $1  = package shortname
     fetch "${1}"
     echo "Unpacking ${1}..."
-    mkdir -p build
-    rm -rf "build/$(expand ${1}_build)"
-    tar xf "$(tarpath $1)" -C build
+    mkdir -p "${build}"
+    rm -rf "${build}/$(expand ${1}_build)"
+    tar xf "$(tarpath $1)" -C "${build}"
 }
 
 is_built() {
@@ -164,12 +164,12 @@ is_built() {
     local file
     if [ "$1" = "pkgconfig" ] ; then
         # Special case: no distributed artifacts; built only on Windows
-        [ "$build_type" = "cross" -o -e root/bin/pkg-config.exe ]
+        [ "$build_type" = "cross" -o -e "${root}/bin/pkg-config.exe" ]
         return
     else
         for file in $(expand ${1}_artifacts)
         do
-            if [ ! -e "bin/$file" ] ; then
+            if [ ! -e "${bin}/${file}" ] ; then
                 return 1
             fi
         done
@@ -221,10 +221,10 @@ build_one() {
     build $(expand ${1}_dependencies)
 
     unpack "$1"
-    mkdir -p bin
+    mkdir -p "${bin}"
 
     echo "Building ${1}..."
-    builddir="build/$(expand ${1}_build)"
+    builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
     zlib)
@@ -377,7 +377,7 @@ build_one() {
 
     for artifact in $(expand ${1}_artifacts)
     do
-        cp "root/bin/$artifact" bin/
+        cp "${root}/bin/$artifact" "${bin}/"
     done
 }
 
@@ -408,15 +408,18 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package artifacts files name
-    files=""
+    local package name
     rm -f VERSIONS.txt
     for package in $packages
     do
         build_one "$package"
+    done
+    mkdir bin
+    for package in $packages
+    do
         for artifact in $(expand ${package}_artifacts)
         do
-            files="$files bin/$artifact"
+            cp "${bin}/${artifact}" bin/
         done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
@@ -425,22 +428,25 @@ bdist() {
         fi
     done
     install_tool zip
-    zip "openslide-win32-$(date +%Y%m%d).zip" \
-            VERSIONS.txt $files
+    zip -r "openslide-win${build_bits}-$(date +%Y%m%d).zip" \
+            VERSIONS.txt bin
+    rm -r bin
 }
 
 clean() {
     # Clean built files
     echo "Cleaning..."
-    rm -rf bin build root openslide-win*-*.zip VERSIONS.txt
+    rm -rf 32 64 openslide-win*-*.zip VERSIONS.txt
 }
 
 probe() {
     # Probe the build environment and set up variables
-    local host
+    local host arch
 
-    mkdir -p root
-    root=$(pwd)/root
+    build="${build_bits}/build"
+    root="$(pwd)/${build_bits}/root"
+    bin="${build_bits}/bin"
+    mkdir -p "${root}"
 
     fetch configguess
     build_system=$(sh tar/config.guess)
@@ -475,7 +481,12 @@ probe() {
         echo "Detected cross build."
         build_type="cross"
         build_host=""
-        for host in i686-w64-mingw32 i686-pc-mingw32
+        if [ "$build_bits" = "64" ] ; then
+            arch=x86_64
+        else
+            arch=i686
+        fi
+        for host in $arch-w64-mingw32 $arch-pc-mingw32
         do
             if type $host-gcc >/dev/null 2>&1 ; then
                 build_host=$host
@@ -523,11 +534,23 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-while getopts "j:" opt
+build_bits=32
+while getopts "j:m:" opt
 do
     case "$opt" in
     j)
         parallel="-j${OPTARG}"
+        ;;
+    m)
+        case ${OPTARG} in
+        32|64)
+            build_bits=${OPTARG}
+            ;;
+        *)
+            echo "-m32 or -m64 only."
+            exit 1
+            ;;
+        esac
         ;;
     esac
 done
@@ -557,8 +580,8 @@ clean)
 *)
     cat <<EOF
 
-Usage: $0 {all|sdist|bdist|clean}
-       $0 build target [target [...]]
+Usage: $0 [-j<n>] [-m{32|64}] {all|sdist|bdist|clean}
+       $0 [-j<n>] [-m{32|64}] build target [target [...]]
 
 Targets:
 $packages

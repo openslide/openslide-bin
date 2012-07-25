@@ -1,6 +1,5 @@
-bin
-build
-root
+32
+64
 tar
 VERSIONS.txt
 openslide-win*.zip

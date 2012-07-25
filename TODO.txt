@@ -7,6 +7,6 @@
 
 - Create import libraries in .lib format
 
-- Support 64-bit builds
+- Support native 64-bit builds
 
 - Check native builds
