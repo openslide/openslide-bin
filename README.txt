@@ -6,7 +6,7 @@ This is a very early version.  Do not rely on its output.
 Cross-compiling from Linux
 --------------------------
 
-You will need MinGW, OpenJDK, and Apache Ant.  You will also need the
+You will need MinGW, nasm, OpenJDK, and Apache Ant.  You will also need the
 GNU Classpath version of jni.h installed.  (On Fedora this is in the
 libgcj-devel package.)
 
