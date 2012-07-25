@@ -12,9 +12,7 @@ libgcj-devel package.)
 
 Then:
 
-./build.sh all
-
-Output will be in bin/.
+./build.sh bdist
 
 Building natively on Windows
 ----------------------------
@@ -30,9 +28,7 @@ You must use 8.3 short file names for path elements that contain spaces.
 
 Then:
 
-./build.sh all
-
-Output will be in bin/.
+./build.sh bdist
 
 Note that cross-compiling is MUCH faster than compiling natively.
 

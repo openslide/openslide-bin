@@ -169,7 +169,7 @@ is_built() {
     else
         for file in $(expand ${1}_artifacts)
         do
-            if [ ! -e "${bin}/${file}" ] ; then
+            if [ ! -e "${root}/bin/${file}" ] ; then
                 return 1
             fi
         done
@@ -221,7 +221,6 @@ build_one() {
     build $(expand ${1}_dependencies)
 
     unpack "$1"
-    mkdir -p "${bin}"
 
     echo "Building ${1}..."
     builddir="${build}/$(expand ${1}_build)"
@@ -374,11 +373,6 @@ build_one() {
         ;;
     esac
     popd >/dev/null
-
-    for artifact in $(expand ${1}_artifacts)
-    do
-        cp "${root}/bin/$artifact" "${bin}/"
-    done
 }
 
 build() {
@@ -424,7 +418,7 @@ bdist() {
     do
         for artifact in $(expand ${package}_artifacts)
         do
-            cp "${bin}/${artifact}" "${zipdir}/bin/"
+            cp "${root}/bin/${artifact}" "${zipdir}/bin/"
         done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
@@ -450,7 +444,6 @@ probe() {
 
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
-    bin="${build_bits}/bin"
     mkdir -p "${root}"
 
     fetch configguess
