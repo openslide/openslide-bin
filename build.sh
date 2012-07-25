@@ -2,7 +2,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pkgconfig pixman cairo xml openslide openslidejava"
+packages="configguess zlib png nasm jpeg tiff openjpeg iconv gettext ffi glib pkgconfig pixman cairo xml openslide openslidejava"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
@@ -24,6 +24,7 @@ openslidejava_name="OpenSlide Java"
 configguess_ver="fc7ed3ed"
 zlib_ver="1.2.7"
 png_ver="1.5.12"
+nasm_ver="2.10.03"
 jpeg_ver="1.2.1"
 tiff_ver="4.0.2"
 openjpeg_ver="1.5.0"
@@ -43,6 +44,7 @@ openslidejava_ver="0.10.0"
 configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.bz2"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
+nasm_url="http://www.nasm.us/pub/nasm/releasebuilds/${nasm_ver}/nasm-${nasm_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${tiff_ver}.tar.gz"
 openjpeg_url="http://openjpeg.googlecode.com/files/openjpeg-${openjpeg_ver}.tar.gz"
@@ -60,6 +62,7 @@ openslidejava_url="http://github.com/downloads/openslide/openslide-java/openslid
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
 png_build="libpng-${png_ver}"
+nasm_build="nasm-${nasm_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
 openjpeg_build="openjpeg-${openjpeg_ver}"
@@ -93,7 +96,8 @@ openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 # Build dependencies
 zlib_dependencies=""
 png_dependencies="zlib"
-jpeg_dependencies=""
+nasm_dependencies=""
+jpeg_dependencies="nasm"
 tiff_dependencies="zlib jpeg"
 openjpeg_dependencies="png tiff pkgconfig"
 iconv_dependencies=""
@@ -110,6 +114,8 @@ openslidejava_dependencies="pkgconfig openslide"
 # Build artifacts
 zlib_artifacts="zlib1.dll"
 png_artifacts="libpng15-15.dll"
+# nasm is used for build, but not distributed
+nasm_artifacts=""
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
 openjpeg_artifacts="libopenjpeg-1.dll"
@@ -188,6 +194,10 @@ is_built() {
         # Special case: no distributed artifacts; built only on Windows
         [ "$build_type" = "cross" -o -e "${root}/bin/pkg-config.exe" ]
         return
+    elif [ "$1" = "nasm" ] ; then
+        # Likewise
+        [ "$build_type" = "cross" -o -e "${root}/bin/nasm.exe" ]
+        return
     else
         for file in $(expand ${1}_artifacts)
         do
@@ -217,6 +227,7 @@ do_configure() {
     # Additional parameters can be specified as arguments.
     if [ "$build_type" = "native" ] ; then
         _configure_common \
+                NASM="${root}/bin/nasm.exe" \
                 PKG_CONFIG="${root}/bin/pkg-config.exe" \
                 "$@"
     else
@@ -270,6 +281,11 @@ build_one() {
         if [ "$build_type" = "native" ] ; then
             make check
         fi
+        make install
+        ;;
+    nasm)
+        do_configure
+        make $parallel
         make install
         ;;
     jpeg)
