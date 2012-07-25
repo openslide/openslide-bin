@@ -403,7 +403,7 @@ sdist() {
     done
     install_tool zip
     zip "openslide-winbuild-$(date +%Y%m%d).zip" \
-            Makefile README.txt TODO.txt $tars
+            build.sh README.txt TODO.txt $tars
 }
 
 bdist() {
