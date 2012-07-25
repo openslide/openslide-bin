@@ -394,45 +394,48 @@ build() {
 
 sdist() {
     # Build source distribution
-    local package tars zipfile
-    tars=""
+    local package zipdir
+    zipdir="openslide-winbuild-$(date +%Y%m%d)"
+    rm -rf "${zipdir}"
+    mkdir -p "${zipdir}/tar"
     for package in $packages
     do
         fetch "$package"
-        tars="$tars $(tarpath $package)"
+        cp "$(tarpath ${package})" "${zipdir}/tar/"
     done
+    cp build.sh README.txt TODO.txt "${zipdir}/"
     install_tool zip
-    zipfile="openslide-winbuild-$(date +%Y%m%d).zip"
-    rm -f "${zipfile}"
-    zip "${zipfile}" build.sh README.txt TODO.txt $tars
+    rm -f "${zipdir}.zip"
+    zip -r "${zipdir}.zip" "${zipdir}"
+    rm -r "${zipdir}"
 }
 
 bdist() {
     # Build binary distribution
-    local package name zipfile
-    rm -f VERSIONS.txt
+    local package name zipdir
     for package in $packages
     do
         build_one "$package"
     done
-    mkdir bin
+    zipdir="openslide-win${build_bits}-$(date +%Y%m%d)"
+    rm -rf "${zipdir}"
+    mkdir -p "${zipdir}/bin"
     for package in $packages
     do
         for artifact in $(expand ${package}_artifacts)
         do
-            cp "${bin}/${artifact}" bin/
+            cp "${bin}/${artifact}" "${zipdir}/bin/"
         done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
             printf "%-30s %s\n" "$name" "$(expand ${package}_ver)" >> \
-                    VERSIONS.txt
+                    "${zipdir}/VERSIONS.txt"
         fi
     done
     install_tool zip
-    zipfile="openslide-win${build_bits}-$(date +%Y%m%d).zip"
-    rm -f "${zipfile}"
-    zip -r "${zipfile}" VERSIONS.txt bin
-    rm -r bin
+    rm -f "${zipdir}.zip"
+    zip -r "${zipdir}.zip" "${zipdir}"
+    rm -r "${zipdir}"
 }
 
 clean() {
