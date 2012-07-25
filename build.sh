@@ -223,13 +223,8 @@ build_one() {
     unpack "$1"
     mkdir -p bin
 
-    builddir=build/$(expand ${1}_build)
-    if [ -z "$builddir" ] ; then
-        echo "Unknown package $1"
-        return 1
-    fi
-
     echo "Building ${1}..."
+    builddir="build/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
     zlib)
