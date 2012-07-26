@@ -34,6 +34,16 @@ the location of the installer EXE.
 
 Note that cross-compiling is MUCH faster than compiling natively.
 
+### Troubleshooting
+
+The build will fail if the path to the openslide-winbuild directory
+contains spaces.
+
+If the build randomly fails complaining that fork() failed due to a DLL
+address mismatch, follow the instructions here:
+
+    http://cygwin.wikia.com/wiki/Rebaseall
+
 Substitute Sources
 ------------------
 
