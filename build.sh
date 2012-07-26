@@ -5,7 +5,7 @@ set -eE
 packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pixman cairo xml openslide openslidejava"
 
 # Tool configuration for Cygwin
-cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ nasm"
+cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm"
 ant_ver="1.8.4"
 ant_url="http://apache.cs.utah.edu/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
