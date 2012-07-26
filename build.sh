@@ -179,11 +179,19 @@ fetch() {
 unpack() {
     # Remove the package build directory and re-unpack it
     # $1  = package shortname
+    local path
     fetch "${1}"
-    echo "Unpacking ${1}..."
     mkdir -p "${build}"
-    rm -rf "${build}/$(expand ${1}_build)"
-    tar xf "$(tarpath $1)" -C "${build}"
+    path="${build}/$(expand ${1}_build)"
+    if [ -e "override/${1}" ] ; then
+        echo "Unpacking ${1} from override directory..."
+        rm -rf "${path}"
+        cp -r "override/${1}" "${path}"
+    else
+        echo "Unpacking ${1}..."
+        rm -rf "${path}"
+        tar xf "$(tarpath $1)" -C "${build}"
+    fi
 }
 
 is_built() {

@@ -32,6 +32,14 @@ Then:
 
 Note that cross-compiling is MUCH faster than compiling natively.
 
+Substitute Sources
+------------------
+
+To override the source tree used to build a package, create a top-level
+directory named "override" and place the substitute source tree in a
+subdirectory named after the package's shortname.  A list of shortnames
+can be obtained by running build.sh with no arguments.
+
 Subcommands
 -----------
 
