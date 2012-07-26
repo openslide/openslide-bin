@@ -1,13 +1,13 @@
 This is a set of scripts for building OpenSlide for Windows, including all
-of its dependencies, using MinGW.
+of its dependencies, using MinGW-w64.
 
 This is a very early version.  Do not rely on its output.
 
 Cross-compiling from Linux
 --------------------------
 
-You will need MinGW, nasm, OpenJDK, and Apache Ant.  You will also need the
-GNU Classpath version of jni.h installed.  (On Fedora this is in the
+You will need MinGW-w64, nasm, OpenJDK, and Apache Ant.  You will also need
+the GNU Classpath version of jni.h installed.  (On Fedora this is in the
 libgcj-devel package.)
 
 Then:

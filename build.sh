@@ -490,8 +490,6 @@ clean() {
 
 probe() {
     # Probe the build environment and set up variables
-    local host arch
-
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
     mkdir -p "${root}"
@@ -525,26 +523,16 @@ probe() {
         # Cross build
         echo "Detected cross build."
         build_type="cross"
-        build_host=""
         if [ "$build_bits" = "64" ] ; then
-            arch=x86_64
+            build_host=x86_64-w64-mingw32
         else
-            arch=i686
+            build_host=i686-w64-mingw32
         fi
-        for host in $arch-w64-mingw32 $arch-pc-mingw32
-        do
-            if type $host-gcc >/dev/null 2>&1 ; then
-                build_host=$host
-                break
-            fi
-        done
-        if [ -n "$build_host" ] ; then
-            echo "Detected build prefix: $build_host"
-        else
+        build_host_prefix="${build_host}-"
+        if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
             echo "Couldn't find suitable cross-compiler."
             exit 1
         fi
-        build_host_prefix="${build_host}-"
         ant_home=""
         java_home=""
 
