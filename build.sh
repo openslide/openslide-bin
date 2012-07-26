@@ -2,7 +2,13 @@
 
 set -eE
 
-packages="configguess zlib png nasm jpeg tiff openjpeg iconv gettext ffi glib pkgconfig pixman cairo xml openslide openslidejava"
+packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pixman cairo xml openslide openslidejava"
+
+# Tool configuration for Cygwin
+cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ nasm"
+ant_ver="1.8.4"
+ant_url="http://apache.cs.utah.edu/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
+ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
@@ -24,7 +30,6 @@ openslidejava_name="OpenSlide Java"
 configguess_ver="fc7ed3ed"
 zlib_ver="1.2.7"
 png_ver="1.5.12"
-nasm_ver="2.10.03"
 jpeg_ver="1.2.1"
 tiff_ver="4.0.2"
 openjpeg_ver="1.5.0"
@@ -33,7 +38,6 @@ gettext_ver="0.18.1.1"
 ffi_ver="3.0.11"
 glib_basever="2.32"
 glib_ver="${glib_basever}.3"
-pkgconfig_ver="0.27"
 pixman_ver="0.26.2"
 cairo_ver="1.12.2"
 xml_ver="2.8.0"
@@ -44,7 +48,6 @@ openslidejava_ver="0.10.0"
 configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.bz2"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
-nasm_url="http://www.nasm.us/pub/nasm/releasebuilds/${nasm_ver}/nasm-${nasm_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${tiff_ver}.tar.gz"
 openjpeg_url="http://openjpeg.googlecode.com/files/openjpeg-${openjpeg_ver}.tar.gz"
@@ -52,7 +55,6 @@ iconv_url="http://ftp.gnu.org/pub/gnu/libiconv/libiconv-${iconv_ver}.tar.gz"
 gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.gz"
 ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
 glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
-pkgconfig_url="http://pkgconfig.freedesktop.org/releases/pkg-config-${pkgconfig_ver}.tar.gz"
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
@@ -62,7 +64,6 @@ openslidejava_url="http://github.com/downloads/openslide/openslide-java/openslid
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
 png_build="libpng-${png_ver}"
-nasm_build="nasm-${nasm_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
 openjpeg_build="openjpeg-${openjpeg_ver}"
@@ -70,7 +71,6 @@ iconv_build="libiconv-${iconv_ver}"
 gettext_build="gettext-${gettext_ver}/gettext-runtime"
 ffi_build="libffi-${ffi_ver}"
 glib_build="glib-${glib_ver}"
-pkgconfig_build="pkg-config-${pkgconfig_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
@@ -96,26 +96,22 @@ openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 # Build dependencies
 zlib_dependencies=""
 png_dependencies="zlib"
-nasm_dependencies=""
-jpeg_dependencies="nasm"
+jpeg_dependencies=""
 tiff_dependencies="zlib jpeg"
-openjpeg_dependencies="png tiff pkgconfig"
+openjpeg_dependencies="png tiff"
 iconv_dependencies=""
 gettext_dependencies="iconv"
 ffi_dependencies=""
 glib_dependencies="zlib iconv gettext ffi"
-pkgconfig_dependencies="glib"
-pixman_dependencies="pkgconfig"
-cairo_dependencies="pkgconfig zlib png pixman"
+pixman_dependencies=""
+cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
-openslide_dependencies="pkgconfig png jpeg tiff openjpeg glib cairo xml"
-openslidejava_dependencies="pkgconfig openslide"
+openslide_dependencies="png jpeg tiff openjpeg glib cairo xml"
+openslidejava_dependencies="openslide"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
 png_artifacts="libpng15-15.dll"
-# nasm is used for build, but not distributed
-nasm_artifacts=""
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
 openjpeg_artifacts="libopenjpeg-1.dll"
@@ -123,8 +119,6 @@ iconv_artifacts="libiconv-2.dll libcharset-1.dll"
 gettext_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-6.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll"
-# pkg-config is used for build, but not distributed
-pkgconfig_artifacts=""
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 xml_artifacts="libxml2-2.dll"
@@ -149,12 +143,23 @@ tarpath() {
     fi
 }
 
-install_tool() {
-    # Install specified program into MSYS if not present
-    # $1  = the name of the program
-    if (! type "$1" && type mingw-get) >/dev/null 2>&1 ; then
-        echo "Installing ${1}..."
-        mingw-get install "msys-$1-bin"
+setup_cygwin() {
+    # Install necessary tools for Cygwin builds.
+    # $1  = path to Cygwin setup.exe
+
+    # Install cygwin packages
+    # Avoid UAC setup.exe magic
+    cp "$1" cygwin.exe
+    ./cygwin.exe -q -P "${cygtools// /,}" >/dev/null
+    rm cygwin.exe
+
+    # Install ant binary distribution in /opt/ant
+    if [ ! -e /opt/ant ] ; then
+        fetch ant
+        echo "Installing ant..."
+        mkdir -p /opt
+        tar xf "$(tarpath ant)" -C /opt
+        mv "/opt/${ant_build}" /opt/ant
     fi
 }
 
@@ -163,7 +168,6 @@ fetch() {
     # $1  = package shortname
     local url
     url="$(expand ${1}_url)"
-    install_tool wget
     mkdir -p tar
     if [ ! -e "$(tarpath $1)" ] ; then
         echo "Fetching ${1}..."
@@ -198,23 +202,13 @@ is_built() {
     # Return true if the specified package is already built
     # $1  = package shortname
     local file
-    if [ "$1" = "pkgconfig" ] ; then
-        # Special case: no distributed artifacts; built only on Windows
-        [ "$build_type" = "cross" -o -e "${root}/bin/pkg-config.exe" ]
-        return
-    elif [ "$1" = "nasm" ] ; then
-        # Likewise
-        [ "$build_type" = "cross" -o -e "${root}/bin/nasm.exe" ]
-        return
-    else
-        for file in $(expand ${1}_artifacts)
-        do
-            if [ ! -e "${root}/bin/${file}" ] ; then
-                return 1
-            fi
-        done
-        return 0
-    fi
+    for file in $(expand ${1}_artifacts)
+    do
+        if [ ! -e "${root}/bin/${file}" ] ; then
+            return 1
+        fi
+    done
+    return 0
 }
 
 _configure_common() {
@@ -235,8 +229,6 @@ do_configure() {
     # Additional parameters can be specified as arguments.
     if [ "$build_type" = "native" ] ; then
         _configure_common \
-                NASM="${root}/bin/nasm.exe" \
-                PKG_CONFIG="${root}/bin/pkg-config.exe" \
                 "$@"
     else
         # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
@@ -289,11 +281,6 @@ build_one() {
         if [ "$build_type" = "native" ] ; then
             make check
         fi
-        make install
-        ;;
-    nasm)
-        do_configure
-        make $parallel
         make install
         ;;
     jpeg)
@@ -357,18 +344,6 @@ build_one() {
         ;;
     glib)
         do_configure
-        make $parallel
-        if [ "$build_type" = "native" ] ; then
-            # make check
-            :
-        fi
-        make install
-        ;;
-    pkgconfig)
-        # Only built during native builds
-        do_configure \
-                GLIB_CFLAGS="-I${root}/include/glib-2.0 -I${root}/lib/glib-2.0/include" \
-                GLIB_LIBS="-L${root}/lib -lglib-2.0 -lintl"
         make $parallel
         if [ "$build_type" = "native" ] ; then
             # make check
@@ -453,7 +428,6 @@ sdist() {
         cp "$(tarpath ${package})" "${zipdir}/tar/"
     done
     cp build.sh README.txt TODO.txt "${zipdir}/"
-    install_tool zip
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -491,7 +465,6 @@ bdist() {
     mkdir -p "${zipdir}/include"
     cp -r "${root}/include/openslide" "${zipdir}/include/"
     cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
-    install_tool zip
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -527,20 +500,17 @@ probe() {
     build_system=$(sh tar/config.guess)
 
     case "$build_system" in
-    *-*-mingw32|*-*-cygwin)
+    *-*-cygwin)
         # Native build
         echo "Detected native build."
         build_type="native"
         build_host=""
         build_host_prefix=""
 
-        ant_home="${ANT_HOME}"
+        ant_home="/opt/ant"
         java_home="${JAVA_HOME}"
-        if [ -z "$ant_home" ] ; then
-            ant_home=/ant
-        fi
         if [ -z "$java_home" ] ; then
-            java_home=/java
+            java_home=$(echo /cygdrive/c/Program\ Files/Java/jdk*)
         fi
         if [ ! -e "$ant_home" ] ; then
             echo "Ant directory not found."
@@ -607,6 +577,12 @@ fail_handler() {
 # Set up error handling
 trap fail_handler ERR
 
+# Cygwin setup bypasses normal startup
+if [ "$1" = "setup" ] ; then
+    setup_cygwin "$2"
+    exit 0
+fi
+
 # Parse command-line options
 parallel=""
 build_bits=32
@@ -649,7 +625,8 @@ clean)
 *)
     cat <<EOF
 
-Usage: $0 sdist
+Usage: $0 setup /path/to/cygwin/setup.exe
+       $0 sdist
        $0 [-j<n>] [-m{32|64}] bdist
        $0 [-m{32|64}] clean [package...]
 

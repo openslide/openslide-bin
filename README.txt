@@ -17,16 +17,18 @@ Then:
 Building natively on Windows
 ----------------------------
 
-You will need a JDK, Apache Ant, MinGW, and MSYS.  Edit the MSYS fstab file
-(e.g. C:\MinGW\msys\1.0\etc\fstab) to mount your JDK and Apache Ant
-installations within the MSYS directory tree:
+### One-time setup
 
-C:\Progra~1\Java\jdk1.6.0_29   /java
-C:\ant                         /ant
+1.  Install a JDK.
 
-You must use 8.3 short file names for path elements that contain spaces.
+2.  Install Cygwin, accepting the default set of packages.  Make note of
+the location of the installer EXE.
 
-Then:
+3.  Launch a Cygwin shell and navigate to the openslide-winbuild directory.
+
+4.  ./build.sh setup /path/to/cygwin/setup.exe
+
+### Building
 
 ./build.sh bdist
 
@@ -42,6 +44,10 @@ can be obtained by running build.sh with no arguments.
 
 Subcommands
 -----------
+
+setup
+	Configure Cygwin environment.  Only useful on Windows.  The path
+	to Cygwin's setup.exe must be specified as an argument.
 
 sdist
 	Build Zip file containing build system and sources for OpenSlide
