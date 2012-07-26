@@ -333,7 +333,11 @@ build_one() {
         make install
         ;;
     glib)
+        # Terrible workaround for glib 2.32 build bug
+        # https://bugzilla.gnome.org/show_bug.cgi?id=674483
+        mv "${root}/lib/pkgconfig/zlib.pc" "${root}/lib/pkgconfig/tmp.pc"
         do_configure
+        mv "${root}/lib/pkgconfig/tmp.pc" "${root}/lib/pkgconfig/zlib.pc"
         make $parallel
         if [ "$build_type" = "native" ] ; then
             # make check
