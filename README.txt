@@ -43,6 +43,8 @@ bdist
 	dependencies.
 clean
 	Delete build and binary directories, but not downloaded tarballs.
+	If one or more package shortnames is specified, delete only the
+	build artifacts for those packages in the specified bitness.
 
 Options
 -------

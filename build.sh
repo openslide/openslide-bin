@@ -491,8 +491,20 @@ bdist() {
 
 clean() {
     # Clean built files
-    echo "Cleaning..."
-    rm -rf 32 64 openslide-win*-*.zip VERSIONS.txt
+    local package artifact
+    if [ $# -gt 0 ] ; then
+        for package in "$@"
+        do
+            echo "Cleaning ${package}..."
+            for artifact in $(expand ${package}_artifacts)
+            do
+                rm -f "${root}/bin/${artifact}"
+            done
+        done
+    else
+        echo "Cleaning..."
+        rm -rf 32 64 openslide-win*-*.zip
+    fi
 }
 
 probe() {
@@ -623,12 +635,18 @@ bdist)
     bdist
     ;;
 clean)
-    clean
+    shift
+    clean "$@"
     ;;
 *)
     cat <<EOF
 
-Usage: $0 [-j<n>] [-m{32|64}] {sdist|bdist|clean}
+Usage: $0 sdist
+       $0 [-j<n>] [-m{32|64}] bdist
+       $0 [-m{32|64}] clean [package...]
+
+Packages:
+$packages
 EOF
     exit 1
     ;;
