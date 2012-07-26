@@ -211,35 +211,25 @@ is_built() {
     return 0
 }
 
-_configure_common() {
-    # Helper function to run configure
-
-    # Use only our pkg-config library directory, even on cross builds
-    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    ./configure \
-            --prefix="$root" \
-            --disable-static \
-            CPPFLAGS="-I${root}/include" \
-            LDFLAGS="-L${root}/lib" \
-            "$@"
-}
-
 do_configure() {
     # Run configure with the appropriate parameters.
     # Additional parameters can be specified as arguments.
-    if [ "$build_type" = "native" ] ; then
-        _configure_common \
-                "$@"
-    else
-        # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
-        _configure_common \
-                --host=${build_host} \
-                --build=${build_system} \
-                PKG_CONFIG=pkg-config \
-                PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
-                PKG_CONFIG_PATH= \
-                "$@"
-    fi
+    #
+    # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
+    #
+    # Use only our pkg-config library directory, even on cross builds
+    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    ./configure \
+            --host=${build_host} \
+            --build=${build_system} \
+            --prefix="$root" \
+            --disable-static \
+            PKG_CONFIG=pkg-config \
+            PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
+            PKG_CONFIG_PATH= \
+            CPPFLAGS="-I${root}/include" \
+            LDFLAGS="-L${root}/lib" \
+            "$@"
 }
 
 build_one() {
@@ -261,7 +251,7 @@ build_one() {
     case "$1" in
     zlib)
         make -f win32/Makefile.gcc $parallel \
-                PREFIX="${build_host_prefix}" \
+                PREFIX="${build_host}-" \
                 IMPLIB=libz.dll.a all
         if [ "$build_type" = "native" ] ; then
             make -f win32/Makefile.gcc \
@@ -269,7 +259,7 @@ build_one() {
         fi
         make -f win32/Makefile.gcc \
                 SHARED_MODE=1 \
-                PREFIX="${build_host_prefix}" \
+                PREFIX="${build_host}-" \
                 IMPLIB=libz.dll.a \
                 BINARY_PATH="${root}/bin" \
                 INCLUDE_PATH="${root}/include" \
@@ -322,7 +312,7 @@ build_one() {
     gettext)
         # Missing tests for C++ compiler, which is only needed on Windows
         do_configure \
-                CXX=${build_host_prefix}g++ \
+                CXX=${build_host}-g++ \
                 --disable-java \
                 --disable-native-java \
                 --disable-csharp \
@@ -497,13 +487,20 @@ probe() {
     fetch configguess
     build_system=$(sh tar/config.guess)
 
+    if [ "$build_bits" = "64" ] ; then
+        build_host=x86_64-w64-mingw32
+    else
+        build_host=i686-w64-mingw32
+    fi
+    if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
+        echo "Couldn't find suitable compiler."
+        exit 1
+    fi
+
     case "$build_system" in
     *-*-cygwin)
-        # Native build
-        echo "Detected native build."
+        # Windows
         build_type="native"
-        build_host=""
-        build_host_prefix=""
 
         ant_home="/opt/ant"
         java_home="${JAVA_HOME}"
@@ -520,19 +517,8 @@ probe() {
         fi
         ;;
     *)
-        # Cross build
-        echo "Detected cross build."
+        # Other
         build_type="cross"
-        if [ "$build_bits" = "64" ] ; then
-            build_host=x86_64-w64-mingw32
-        else
-            build_host=i686-w64-mingw32
-        fi
-        build_host_prefix="${build_host}-"
-        if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
-            echo "Couldn't find suitable cross-compiler."
-            exit 1
-        fi
         ant_home=""
         java_home=""
 
@@ -612,7 +598,6 @@ clean)
     ;;
 *)
     cat <<EOF
-
 Usage: $0 setup /path/to/cygwin/setup.exe
        $0 sdist
        $0 [-j<n>] [-m{32|64}] bdist
