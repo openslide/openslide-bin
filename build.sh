@@ -289,7 +289,8 @@ build_one() {
                 --with-jpeg-lib-dir="${root}/lib"
         make $parallel
         if [ "$build_type" = "native" ] ; then
-            make check
+            # make check
+            :
         fi
         make install
         ;;
@@ -370,7 +371,8 @@ build_one() {
                 --without-python
         make $parallel
         if [ "$build_type" = "native" ] ; then
-            make check
+            # make check
+            :
         fi
         make install
         ;;
