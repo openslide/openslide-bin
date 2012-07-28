@@ -412,7 +412,7 @@ else
 fi
 EOF
         chmod +x ant.sh
-        if [ "$build_type" = "native" ] ; then
+        if [ "$(uname -o)" = "Cygwin" ] ; then
             # Bypass JNI header cross-build logic when building on Windows
             sed -i 's/test $host = $build/true/' configure
         fi
@@ -535,7 +535,6 @@ probe() {
     case "$build_system" in
     *-*-cygwin)
         # Windows
-        build_type="native"
         # We can only test a 64-bit build if we're also on a 64-bit kernel.
         # We can't probe for this using Cygwin tools because Cygwin is
         # exclusively 32-bit.  Check environment variables set by WOW64.
@@ -563,7 +562,6 @@ probe() {
     *)
         # Other
         can_test="no"
-        build_type="cross"
         ant_home=""
         java_home=""
 
