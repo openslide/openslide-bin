@@ -5,6 +5,6 @@
 
 - Create import libraries in .lib format
 
-- Support native 64-bit builds
+- Fix cross builds
 
 - Check native builds
