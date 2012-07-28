@@ -253,7 +253,7 @@ build_one() {
         make -f win32/Makefile.gcc $parallel \
                 PREFIX="${build_host}-" \
                 IMPLIB=libz.dll.a all
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make -f win32/Makefile.gcc \
                 IMPLIB=libz.dll.a testdll
         fi
@@ -268,7 +268,7 @@ build_one() {
     png)
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -276,7 +276,7 @@ build_one() {
     jpeg)
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -288,7 +288,7 @@ build_one() {
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib"
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             # make check
             :
         fi
@@ -305,7 +305,7 @@ build_one() {
     iconv)
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -320,7 +320,7 @@ build_one() {
                 --disable-libasprintf \
                 --enable-threads=win32
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -328,7 +328,7 @@ build_one() {
     ffi)
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -340,7 +340,7 @@ build_one() {
         do_configure
         mv "${root}/lib/pkgconfig/tmp.pc" "${root}/lib/pkgconfig/zlib.pc"
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             # make check
             :
         fi
@@ -349,7 +349,7 @@ build_one() {
     pixman)
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             # make check
             :
         fi
@@ -360,7 +360,7 @@ build_one() {
                 --enable-ft=no \
                 --enable-xlib=no
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             # make check
             :
         fi
@@ -370,7 +370,7 @@ build_one() {
         do_configure \
                 --without-python
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             # make check
             :
         fi
@@ -382,7 +382,7 @@ build_one() {
         sed -i s/ftello/_openslide_ftell/g src/*
         do_configure
         make $parallel
-        if [ "$build_type" = "native" ] ; then
+        if [ "$can_test" = yes ] ; then
             make check
         fi
         make install
@@ -536,6 +536,15 @@ probe() {
     *-*-cygwin)
         # Windows
         build_type="native"
+        # We can only test a 64-bit build if we're also on a 64-bit kernel.
+        # We can't probe for this using Cygwin tools because Cygwin is
+        # exclusively 32-bit.  Check environment variables set by WOW64.
+        if [ "$build_bits" = 64 -a "$PROCESSOR_ARCHITECTURE" != AMD64 -a \
+                "$PROCESSOR_ARCHITEW6432" != AMD64 ] ; then
+            can_test="no"
+        else
+            can_test="yes"
+        fi
 
         ant_home="/opt/ant"
         java_home="${JAVA_HOME}"
@@ -553,6 +562,7 @@ probe() {
         ;;
     *)
         # Other
+        can_test="no"
         build_type="cross"
         ant_home=""
         java_home=""
