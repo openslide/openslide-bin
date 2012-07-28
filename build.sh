@@ -388,9 +388,38 @@ build_one() {
         make install
         ;;
     openslidejava)
+        # Work around various deficiencies in 0.10.0 build scripts
+        if [ -n "${java_home}" ] ; then
+            # Handle java_home containing spaces
+            ln -s "${java_home}" java_home
+            java_home="$(pwd)/java_home"
+        fi
+        # Convert Ant builddir property to a Windows path
+        cat > ant.sh <<'EOF'
+#!/bin/bash
+if [ "$(uname -o)" = "Cygwin" ] ; then
+    for arg in "$@"
+    do
+        dir="${arg#-Dbuilddir=}"
+        if [ "$arg" != "$dir" ] ; then
+            builddir=$(cygpath -w "$dir")
+            break
+        fi
+    done
+    $ANT_HOME/bin/ant "$@" -Dbuilddir="$builddir"
+else
+    $ANT_HOME/bin/ant "$@"
+fi
+EOF
+        chmod +x ant.sh
+        if [ "$build_type" = "native" ] ; then
+            # Bypass JNI header cross-build logic when building on Windows
+            sed -i 's/test $host = $build/true/' configure
+        fi
         do_configure \
-                ANT_HOME=${ant_home} \
-                JAVA_HOME=${java_home}
+                ANT="$(pwd)/ant.sh" \
+                ANT_HOME="${ant_home}" \
+                JAVA_HOME="${java_home}"
         make $parallel
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
