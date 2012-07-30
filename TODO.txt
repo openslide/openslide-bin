@@ -5,6 +5,4 @@
 
 - Create import libraries in .lib format
 
-- Fix cross builds
-
 - Check native builds

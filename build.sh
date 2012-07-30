@@ -377,7 +377,8 @@ build_one() {
         make install
         ;;
     openslide)
-        # Work around OpenSlide 3.2.6 compile failure on mingw-w64
+        # Work around OpenSlide 3.2.6 fseeko/ftello confusion on mingw-w64
+        sed -i s/-lmsvcr80// configure
         sed -i s/fseeko/_openslide_fseek/g src/*
         sed -i s/ftello/_openslide_ftell/g src/*
         do_configure
