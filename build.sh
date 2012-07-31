@@ -252,15 +252,14 @@ build_one() {
     zlib)
         make -f win32/Makefile.gcc $parallel \
                 PREFIX="${build_host}-" \
-                IMPLIB=libz.dll.a all
+                all
         if [ "$can_test" = yes ] ; then
             make -f win32/Makefile.gcc \
-                IMPLIB=libz.dll.a testdll
+                testdll
         fi
         make -f win32/Makefile.gcc \
                 SHARED_MODE=1 \
                 PREFIX="${build_host}-" \
-                IMPLIB=libz.dll.a \
                 BINARY_PATH="${root}/bin" \
                 INCLUDE_PATH="${root}/include" \
                 LIBRARY_PATH="${root}/lib" install
