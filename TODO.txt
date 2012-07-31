@@ -2,7 +2,3 @@
 
 - Compiler flags: -mms-bitfields, -mthreads?, -fexceptions?,
   --enable-auto-image-base
-
-- Create import libraries in .lib format
-
-- Check native builds

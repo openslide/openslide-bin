@@ -488,6 +488,8 @@ bdist() {
                     "${zipdir}/VERSIONS.txt"
         fi
     done
+    mkdir -p "${zipdir}/lib"
+    cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
     mkdir -p "${zipdir}/include"
     cp -r "${root}/include/openslide" "${zipdir}/include/"
     cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
