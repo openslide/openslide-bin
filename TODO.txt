@@ -1,4 +1,1 @@
 - Check whether every dependency is using a reasonable threading library
-
-- Compiler flags: -mms-bitfields, -mthreads?, -fexceptions?,
-  --enable-auto-image-base

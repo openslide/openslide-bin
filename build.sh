@@ -227,8 +227,10 @@ do_configure() {
             PKG_CONFIG=pkg-config \
             PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
             PKG_CONFIG_PATH= \
-            CPPFLAGS="-I${root}/include" \
-            LDFLAGS="-L${root}/lib" \
+            CPPFLAGS="${cppflags} -I${root}/include" \
+            CFLAGS="${cflags}" \
+            CXXFLAGS="${cxxflags}" \
+            LDFLAGS="${ldflags} -L${root}/lib" \
             "$@"
 }
 
@@ -252,6 +254,8 @@ build_one() {
     zlib)
         make -f win32/Makefile.gcc $parallel \
                 PREFIX="${build_host}-" \
+                CFLAGS="${cppflags} ${cflags}" \
+                LDFLAGS="${ldflags}" \
                 all
         if [ "$can_test" = yes ] ; then
             make -f win32/Makefile.gcc \
@@ -533,6 +537,11 @@ probe() {
         echo "Couldn't find suitable compiler."
         exit 1
     fi
+
+    cppflags="-D_FORTIFY_SOURCE=2"
+    cflags="-O2 -g -mms-bitfields -fexceptions"
+    cxxflags="${cflags}"
+    ldflags="-Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
     case "$build_system" in
     *-*-cygwin)
