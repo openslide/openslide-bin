@@ -453,7 +453,7 @@ sdist() {
         fetch "$package"
         cp "$(tarpath ${package})" "${zipdir}/tar/"
     done
-    cp build.sh README.txt TODO.txt "${zipdir}/"
+    cp build.sh README.markdown TODO.txt "${zipdir}/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
