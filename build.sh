@@ -1,4 +1,22 @@
 #!/bin/bash
+#
+# A script for building OpenSlide and its dependencies for Windows
+#
+# Copyright (c) 2011-2012 Carnegie Mellon University
+# All rights reserved.
+#
+# This script is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License, version 2.1,
+# as published by the Free Software Foundation.
+#
+# This script is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this script. If not, see <http://www.gnu.org/licenses/>.
+#
 
 set -eE
 
@@ -456,7 +474,7 @@ sdist() {
         fetch "$package"
         cp "$(tarpath ${package})" "${zipdir}/tar/"
     done
-    cp build.sh README.markdown TODO.txt "${zipdir}/"
+    cp build.sh README.markdown TODO.txt lgpl-2.1.txt "${zipdir}/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
