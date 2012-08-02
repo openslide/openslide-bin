@@ -1,1 +1,0 @@
-- Check whether every dependency is using a reasonable threading library
