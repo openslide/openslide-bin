@@ -59,8 +59,8 @@ glib_ver="${glib_basever}.3"
 pixman_ver="0.26.2"
 cairo_ver="1.12.2"
 xml_ver="2.8.0"
-openslide_ver="3.2.6"
-openslidejava_ver="0.10.0"
+openslide_ver="3.3.0"
+openslidejava_ver="0.11.0"
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
@@ -399,10 +399,6 @@ build_one() {
         make install
         ;;
     openslide)
-        # Work around OpenSlide 3.2.6 fseeko/ftello confusion on mingw-w64
-        sed -i s/-lmsvcr80// configure
-        sed -i s/fseeko/_openslide_fseek/g src/*
-        sed -i s/ftello/_openslide_ftell/g src/*
         do_configure
         make $parallel
         if [ "$can_test" = yes ] ; then
@@ -411,36 +407,7 @@ build_one() {
         make install
         ;;
     openslidejava)
-        # Work around various deficiencies in 0.10.0 build scripts
-        if [ -n "${java_home}" ] ; then
-            # Handle java_home containing spaces
-            ln -s "${java_home}" java_home
-            java_home="$(pwd)/java_home"
-        fi
-        # Convert Ant builddir property to a Windows path
-        cat > ant.sh <<'EOF'
-#!/bin/bash
-if [ "$(uname -o)" = "Cygwin" ] ; then
-    for arg in "$@"
-    do
-        dir="${arg#-Dbuilddir=}"
-        if [ "$arg" != "$dir" ] ; then
-            builddir=$(cygpath -w "$dir")
-            break
-        fi
-    done
-    $ANT_HOME/bin/ant "$@" -Dbuilddir="$builddir"
-else
-    $ANT_HOME/bin/ant "$@"
-fi
-EOF
-        chmod +x ant.sh
-        if [ "$(uname -o)" = "Cygwin" ] ; then
-            # Bypass JNI header cross-build logic when building on Windows
-            sed -i 's/test $host = $build/true/' configure
-        fi
         do_configure \
-                ANT="$(pwd)/ant.sh" \
                 ANT_HOME="${ant_home}" \
                 JAVA_HOME="${java_home}"
         make $parallel
