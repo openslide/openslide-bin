@@ -47,18 +47,18 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="fc7ed3ed"
 zlib_ver="1.2.7"
-png_ver="1.5.12"
+png_ver="1.5.13"
 jpeg_ver="1.2.1"
-tiff_ver="4.0.2"
-openjpeg_ver="1.5.0"
+tiff_ver="4.0.3"
+openjpeg_ver="1.5.1"
 iconv_ver="1.14"
 gettext_ver="0.18.1.1"
 ffi_ver="3.0.11"
-glib_basever="2.32"
-glib_ver="${glib_basever}.3"
+glib_basever="2.34"
+glib_ver="${glib_basever}.0"
 pixman_ver="0.26.2"
-cairo_ver="1.12.2"
-xml_ver="2.8.0"
+cairo_ver="1.12.4"
+xml_ver="2.9.0"
 openslide_ver="3.3.0"
 openslidejava_ver="0.11.0"
 
@@ -355,12 +355,11 @@ build_one() {
         make install
         ;;
     glib)
-        # Terrible workaround for glib 2.32 build bug
-        # https://bugzilla.gnome.org/show_bug.cgi?id=674483
-        mv "${root}/lib/pkgconfig/zlib.pc" "${root}/lib/pkgconfig/tmp.pc"
+        # DBUS_DAEMON: Work around Unixisms in gdbus-proxy test
+        # https://bugzilla.gnome.org/show_bug.cgi?id=684145
         do_configure \
-                --with-threads=win32
-        mv "${root}/lib/pkgconfig/tmp.pc" "${root}/lib/pkgconfig/zlib.pc"
+                --with-threads=win32 \
+                DBUS_DAEMON=no-such-dbus-daemon
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
