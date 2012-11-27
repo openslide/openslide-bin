@@ -414,6 +414,8 @@ build_one() {
         make $parallel
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
+        # 0.11.0 marks the DLL non-executable, which causes load failures
+        chmod +x openslide-jni.dll
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
         ;;
