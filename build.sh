@@ -368,7 +368,9 @@ build_one() {
         make install
         ;;
     pixman)
-        do_configure
+        # https://bugs.freedesktop.org/show_bug.cgi?id=57591
+        do_configure \
+                ac_cv_tls=__thread
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
