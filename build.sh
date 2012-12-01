@@ -59,7 +59,7 @@ glib_ver="${glib_basever}.3"
 pixman_ver="0.28.0"
 cairo_ver="1.12.8"
 xml_ver="2.9.0"
-openslide_ver="3.3.1"
+openslide_ver="3.3.2"
 openslidejava_ver="0.11.0"
 
 # Tarball URLs
