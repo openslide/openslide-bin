@@ -76,8 +76,8 @@ glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${gli
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
-openslide_url="http://github.com/downloads/openslide/openslide/openslide-${openslide_ver}.tar.xz"
-openslidejava_url="http://github.com/downloads/openslide/openslide-java/openslide-java-${openslidejava_ver}.tar.xz"
+openslide_url="http://download.openslide.org/releases/openslide/openslide-${openslide_ver}.tar.xz"
+openslidejava_url="http://download.openslide.org/releases/openslide-java/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
