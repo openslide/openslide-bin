@@ -56,7 +56,7 @@ gettext_ver="0.18.1.1"
 ffi_ver="3.0.11"
 glib_basever="2.34"
 glib_ver="${glib_basever}.3"
-pixman_ver="0.28.0"
+pixman_ver="0.28.2"
 cairo_ver="1.12.8"
 xml_ver="2.9.0"
 openslide_ver="3.3.2"
@@ -368,9 +368,7 @@ build_one() {
         make install
         ;;
     pixman)
-        # https://bugs.freedesktop.org/show_bug.cgi?id=57591
-        do_configure \
-                ac_cv_tls=__thread
+        do_configure
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
