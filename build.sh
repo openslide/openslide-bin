@@ -316,11 +316,15 @@ build_one() {
         make install
         ;;
     tiff)
+        # TIF_PLATFORM_CONSOLE prevents the default warning/error handlers
+        # from showing a dialog box.
+        # http://lists.andrew.cmu.edu/pipermail/openslide-users/2013-July/000630.html
         do_configure \
                 --with-zlib-include-dir="${root}/include" \
                 --with-zlib-lib-dir="${root}/lib" \
                 --with-jpeg-include-dir="${root}/include" \
-                --with-jpeg-lib-dir="${root}/lib"
+                --with-jpeg-lib-dir="${root}/lib" \
+                CPPFLAGS="${cppflags} -DTIF_PLATFORM_CONSOLE"
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
