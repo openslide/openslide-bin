@@ -153,11 +153,19 @@ expand() {
 tarpath() {
     # Print the tarball path for the specified package
     # $1  = the name of the program
+    local path xzpath
     if [ "$1" = "configguess" ] ; then
         # Can't be derived from URL
         echo "tar/config.guess"
     else
-        echo "tar/$(basename $(expand ${1}_url))"
+        path="tar/$(basename $(expand ${1}_url))"
+        xzpath="${path/%.gz/.xz}"
+        # Prefer tarball recompressed with xz, if available
+        if [ -e "$xzpath" ] ; then
+            echo "$xzpath"
+        else
+            echo "$path"
+        fi
     fi
 }
 
@@ -463,14 +471,23 @@ build() {
 
 sdist() {
     # Build source distribution
-    local package zipdir
+    local package path xzpath zipdir
     zipdir="openslide-winbuild-$(date +%Y%m%d)"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/tar"
     for package in $packages
     do
         fetch "$package"
-        cp "$(tarpath ${package})" "${zipdir}/tar/"
+        path="$(tarpath ${package})"
+        xzpath="${path/%.gz/.xz}"
+        if [ "$path" != "$xzpath" ] ; then
+            # Tarball is compressed with gzip.
+            # Recompress with xz to save space.
+            echo "Recompressing ${package}..."
+            gunzip -c "$path" | xz -9c > "${zipdir}/tar/$(basename ${xzpath})"
+        else
+            cp "$path" "${zipdir}/tar/"
+        fi
     done
     cp build.sh README.md lgpl-2.1.txt "${zipdir}/"
     rm -f "${zipdir}.zip"
