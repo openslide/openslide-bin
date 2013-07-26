@@ -253,6 +253,7 @@ do_configure() {
             --build=${build_system} \
             --prefix="$root" \
             --disable-static \
+            --disable-dependency-tracking \
             PKG_CONFIG=pkg-config \
             PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
             PKG_CONFIG_PATH= \
