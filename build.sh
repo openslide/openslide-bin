@@ -472,7 +472,7 @@ sdist() {
         fetch "$package"
         cp "$(tarpath ${package})" "${zipdir}/tar/"
     done
-    cp build.sh README.markdown lgpl-2.1.txt "${zipdir}/"
+    cp build.sh README.md lgpl-2.1.txt "${zipdir}/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
