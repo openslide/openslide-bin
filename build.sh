@@ -237,6 +237,9 @@ do_configure() {
     #
     # Use only our pkg-config library directory, even on cross builds
     # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    #
+    # -static-libgcc is in ${ldflags} but libtool filters it out, so we
+    # also pass it in CC
     ./configure \
             --host=${build_host} \
             --build=${build_system} \
@@ -245,6 +248,7 @@ do_configure() {
             PKG_CONFIG=pkg-config \
             PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
             PKG_CONFIG_PATH= \
+            CC="${build_host}-gcc -static-libgcc" \
             CPPFLAGS="${cppflags} -I${root}/include" \
             CFLAGS="${cflags}" \
             CXXFLAGS="${cxxflags}" \
@@ -553,7 +557,7 @@ probe() {
     cppflags="-D_FORTIFY_SOURCE=2"
     cflags="-O2 -g -mms-bitfields -fexceptions"
     cxxflags="${cflags}"
-    ldflags="-Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
+    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
     case "$build_system" in
     *-*-cygwin)
