@@ -45,26 +45,26 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions
-configguess_ver="fc7ed3ed"
-zlib_ver="1.2.7"
-png_ver="1.6.1"
-jpeg_ver="1.2.1"
+configguess_ver="28d244f1"
+zlib_ver="1.2.8"
+png_ver="1.6.3"
+jpeg_ver="1.3.0"
 tiff_ver="4.0.3"
 openjpeg_ver="1.5.1"
 iconv_ver="1.14"
-gettext_ver="0.18.2"
+gettext_ver="0.18.3"
 ffi_ver="3.0.13"
 glib_basever="2.36"
-glib_ver="${glib_basever}.0"
-pixman_ver="0.28.2"
+glib_ver="${glib_basever}.3"
+pixman_ver="0.30.0"
 cairo_ver="1.12.14"
-xml_ver="2.9.0"
+xml_ver="2.9.1"
 openslide_ver="3.3.3"
 openslidejava_ver="0.11.0"
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
-zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.bz2"
+zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${tiff_ver}.tar.gz"
@@ -355,6 +355,9 @@ build_one() {
         make install
         ;;
     glib)
+        # gtk-doc.make has a bogus timestamp, causing an attempt to
+        # regenerate docs/reference/glib/Makefile.in
+        touch -r configure gtk-doc.make
         do_configure \
                 --with-threads=win32
         make $parallel
