@@ -372,6 +372,9 @@ build_one() {
         make install
         ;;
     glib)
+        # Work around test case build failure on Win64
+        # https://bugzilla.gnome.org/show_bug.cgi?id=696970
+        sed -i s/g_sprintf// glib/tests/gdatetime.c
         # gtk-doc.make has a bogus timestamp, causing an attempt to
         # regenerate docs/reference/glib/Makefile.in
         touch -r configure gtk-doc.make
