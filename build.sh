@@ -387,12 +387,9 @@ build_one() {
         # regenerate docs/reference/glib/Makefile.in
         touch -r configure gtk-doc.make
         do_configure \
+                --disable-modular-tests \
                 --with-threads=win32
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            # make check
-            :
-        fi
         make install
         ;;
     gdkpixbuf)
