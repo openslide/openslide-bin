@@ -20,7 +20,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib pixman cairo xml openslide openslidejava"
+packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -38,6 +38,7 @@ iconv_name="libiconv"
 gettext_name="gettext"
 ffi_name="libffi"
 glib_name="glib"
+gdkpixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
 xml_name="libxml2"
@@ -56,6 +57,8 @@ gettext_ver="0.18.3"
 ffi_ver="3.0.13"
 glib_basever="2.36"
 glib_ver="${glib_basever}.3"
+gdkpixbuf_basever="2.28"
+gdkpixbuf_ver="${gdkpixbuf_basever}.2"
 pixman_ver="0.30.0"
 cairo_ver="1.12.14"
 xml_ver="2.9.1"
@@ -73,6 +76,7 @@ iconv_url="http://ftp.gnu.org/pub/gnu/libiconv/libiconv-${iconv_ver}.tar.gz"
 gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.gz"
 ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
 glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
+gdkpixbuf_url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
@@ -89,6 +93,7 @@ iconv_build="libiconv-${iconv_ver}"
 gettext_build="gettext-${gettext_ver}/gettext-runtime"
 ffi_build="libffi-${ffi_ver}"
 glib_build="glib-${glib_ver}"
+gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
@@ -105,6 +110,7 @@ iconv_licenses="COPYING.LIB"
 gettext_licenses="COPYING intl/COPYING.LIB"
 ffi_licenses="LICENSE"
 glib_licenses="COPYING"
+gdkpixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 xml_licenses="COPYING"
@@ -121,10 +127,11 @@ iconv_dependencies=""
 gettext_dependencies="iconv"
 ffi_dependencies=""
 glib_dependencies="zlib iconv gettext ffi"
+gdkpixbuf_dependencies="png jpeg tiff glib"
 pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
-openslide_dependencies="png jpeg tiff openjpeg glib cairo xml"
+openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -136,7 +143,8 @@ openjpeg_artifacts="libopenjpeg-1.dll"
 iconv_artifacts="libiconv-2.dll libcharset-1.dll"
 gettext_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-6.dll"
-glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll"
+glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
+gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 xml_artifacts="libxml2-2.dll"
@@ -384,6 +392,17 @@ build_one() {
         if [ "$can_test" = yes ] ; then
             # make check
             :
+        fi
+        make install
+        ;;
+    gdkpixbuf)
+        do_configure \
+                --disable-modules \
+                --with-included-loaders \
+                --without-gdiplus
+        make $parallel
+        if [ "$can_test" = yes ] ; then
+            make check
         fi
         make install
         ;;
