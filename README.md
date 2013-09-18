@@ -87,3 +87,7 @@ Parallel build with the specified parallelism.
 #### `-m{32|64}`
 
 Select 32-bit or 64-bit build (default: 32).
+
+#### `-s<suffix>`
+
+Append `suffix` to the Zip file names and the OpenSlide version string.

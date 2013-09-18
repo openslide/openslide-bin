@@ -442,7 +442,12 @@ build_one() {
         make install
         ;;
     openslide)
-        do_configure
+        local suffix_arg
+        if [ -n "${suffix}" ] ; then
+            suffix_arg="--with-version-suffix=${suffix}"
+        fi
+        do_configure \
+                "${suffix_arg}"
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
@@ -505,6 +510,9 @@ sdist() {
     # Build source distribution
     local package path xzpath zipdir
     zipdir="openslide-winbuild-$(date +%Y%m%d)"
+    if [ -n "${suffix}" ] ; then
+        zipdir="${zipdir}-${suffix}"
+    fi
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/tar"
     for package in $packages
@@ -529,12 +537,24 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name licensedir zipdir
+    local package name licensedir zipdir prev_suffix
+
+    # Rebuild OpenSlide if suffix changed
+    prev_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
+    if [ "${suffix}" != "${prev_suffix}" ] ; then
+        clean openslide
+        mkdir -p "${build_bits}"
+        echo "${suffix}" > "${build_bits}/.suffix"
+    fi
+
     for package in $packages
     do
         build_one "$package"
     done
     zipdir="openslide-win${build_bits}-$(date +%Y%m%d)"
+    if [ -n "${suffix}" ] ; then
+        zipdir="${zipdir}-${suffix}"
+    fi
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
     for package in $packages
@@ -679,7 +699,8 @@ fi
 # Parse command-line options
 parallel=""
 build_bits=32
-while getopts "j:m:" opt
+suffix=""
+while getopts "j:m:s:" opt
 do
     case "$opt" in
     j)
@@ -695,6 +716,9 @@ do
             exit 1
             ;;
         esac
+        ;;
+    s)
+        suffix="${OPTARG}"
         ;;
     esac
 done
@@ -718,8 +742,8 @@ clean)
 *)
     cat <<EOF
 Usage: $0 setup /path/to/cygwin/setup.exe
-       $0 sdist
-       $0 [-j<n>] [-m{32|64}] bdist
+       $0 [-s<suffix>] sdist
+       $0 [-j<n>] [-m{32|64}] [-s<suffix>] bdist
        $0 [-m{32|64}] clean [package...]
 
 Packages:
