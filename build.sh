@@ -450,31 +450,6 @@ build_one() {
             make check
         fi
         make install
-        # Rename import library members to fix problems with /OPT:REF
-        # http://sourceware.org/ml/binutils/2010-03/msg00126.html
-        # http://sourceware.org/ml/binutils/2010-03/msg00175.html
-        # http://lists.andrew.cmu.edu/pipermail/openslide-users/2013-April/000597.html
-        local tempdir implib dynlib
-        tempdir="${root}/lib/implib"
-        implib="../libopenslide.dll.a"
-        dynlib="libopenslide-0.dll"
-        mkdir "$tempdir"
-        pushd "$tempdir" >/dev/null
-        # If the archive contains <= 3 unique member names, assume it does not
-        # need to be patched.
-        if [ $(${build_host}-ar t "$implib" | sort -u | wc -l) -gt 3 ]; then
-            ${build_host}-ar x "$implib"
-            rm "$implib"
-            for file in *
-            do
-                mv "$file" "$dynlib"
-                ${build_host}-ar q "$implib" "$dynlib"
-                rm "$dynlib"
-            done
-            chmod +x "$implib"
-        fi
-        popd >/dev/null
-        rmdir "$tempdir"
         ;;
     openslidejava)
         do_configure \
