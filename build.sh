@@ -48,7 +48,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="28d244f1"
 zlib_ver="1.2.8"
-png_ver="1.6.6"
+png_ver="1.6.7"
 jpeg_ver="1.3.0"
 tiff_ver="4.0.3"
 openjpeg_ver="1.5.1"
@@ -56,10 +56,10 @@ iconv_ver="0.0.6"
 gettext_ver="0.18.3.1"
 ffi_ver="3.0.13"
 glib_basever="2.38"
-glib_ver="${glib_basever}.1"
+glib_ver="${glib_basever}.2"
 gdkpixbuf_basever="2.30"
-gdkpixbuf_ver="${gdkpixbuf_basever}.0"
-pixman_ver="0.30.2"
+gdkpixbuf_ver="${gdkpixbuf_basever}.2"
+pixman_ver="0.32.4"
 cairo_ver="1.12.16"
 xml_ver="2.9.1"
 openslide_ver="3.3.3"
@@ -395,10 +395,6 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
-        # Fix test build failure on 2.30.0
-        # https://bugzilla.gnome.org/show_bug.cgi?id=710690
-        sed -i -e '/resource.h/d' -e '/rlim/d' \
-                tests/pixbuf-randomly-modified.c
         do_configure \
                 --disable-modules \
                 --with-included-loaders \
