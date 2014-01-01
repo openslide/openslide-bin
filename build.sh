@@ -2,7 +2,7 @@
 #
 # A script for building OpenSlide and its dependencies for Windows
 #
-# Copyright (c) 2011-2013 Carnegie Mellon University
+# Copyright (c) 2011-2014 Carnegie Mellon University
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -20,7 +20,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml openslide openslidejava"
+packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -42,6 +42,7 @@ gdkpixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
 xml_name="libxml2"
+sqlite_name="SQLite"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
@@ -62,6 +63,9 @@ gdkpixbuf_ver="${gdkpixbuf_basever}.2"
 pixman_ver="0.32.4"
 cairo_ver="1.12.16"
 xml_ver="2.9.1"
+sqlite_year="2013"
+sqlite_ver="3.8.2"
+sqlite_vernum="3080200"
 openslide_ver="3.3.3"
 openslidejava_ver="0.11.0"
 
@@ -80,6 +84,7 @@ gdkpixbuf_url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${gdkpixbuf_bas
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
+sqlite_url="http://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="http://download.openslide.org/releases/openslide/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="http://download.openslide.org/releases/openslide-java/openslide-java-${openslidejava_ver}.tar.xz"
 
@@ -97,6 +102,7 @@ gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
+sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
@@ -114,6 +120,7 @@ gdkpixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 xml_licenses="COPYING"
+sqlite_licenses="PUBLIC-DOMAIN.txt"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt"
 openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 
@@ -131,7 +138,8 @@ gdkpixbuf_dependencies="png jpeg tiff glib"
 pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
-openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml"
+sqlite_dependencies=""
+openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -148,6 +156,7 @@ gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 xml_artifacts="libxml2-2.dll"
+sqlite_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
@@ -434,6 +443,13 @@ build_one() {
             :
         fi
         make install
+        ;;
+    sqlite)
+        do_configure
+        make $parallel
+        make install
+        # Extract public-domain dedication from the top of sqlite3.h
+        awk '/\*{8}/ {exit} /^\*{2}/ {print}' sqlite3.h > PUBLIC-DOMAIN.txt
         ;;
     openslide)
         local suffix_arg
