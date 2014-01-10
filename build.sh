@@ -191,10 +191,12 @@ setup_cygwin() {
     # $1  = path to Cygwin setup.exe
 
     # Install cygwin packages
-    # Avoid UAC setup.exe magic
-    cp "$1" cygwin.exe
-    ./cygwin.exe -q -P "${cygtools// /,}" >/dev/null
-    rm cygwin.exe
+    "$1" -q -P "${cygtools// /,}" >/dev/null
+
+    # Wait for cygwin installer
+    while [ ! -x /usr/bin/wget ] ; do
+        sleep 1
+    done
 
     # Install ant binary distribution in /opt/ant
     if [ ! -e /opt/ant ] ; then
