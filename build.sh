@@ -24,8 +24,8 @@ packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixb
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.8.4"
-ant_url="http://apache.cs.utah.edu/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
+ant_ver="1.9.3"
+ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
