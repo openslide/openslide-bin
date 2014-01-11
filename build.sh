@@ -377,8 +377,12 @@ build_one() {
         ;;
     gettext)
         # Missing tests for C++ compiler, which is only needed on Windows
+        #
+        # configure wrongly selects /usr/bin/nm during native builds
+        # https://savannah.gnu.org/bugs/index.php?41203
         do_configure \
                 CXX=${build_host}-g++ \
+                NM=${build_host}-nm \
                 --disable-java \
                 --disable-native-java \
                 --disable-csharp \
