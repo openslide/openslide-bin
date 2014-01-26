@@ -66,8 +66,8 @@ xml_ver="2.9.1"
 sqlite_year="2013"
 sqlite_ver="3.8.2"
 sqlite_vernum="3080200"
-openslide_ver="3.3.3"
-openslidejava_ver="0.11.0"
+openslide_ver="3.4.0"
+openslidejava_ver="0.12.0"
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
@@ -85,8 +85,8 @@ pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
 sqlite_url="http://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
-openslide_url="http://download.openslide.org/releases/openslide/openslide-${openslide_ver}.tar.xz"
-openslidejava_url="http://download.openslide.org/releases/openslide-java/openslide-java-${openslidejava_ver}.tar.xz"
+openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
+openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
@@ -479,8 +479,6 @@ build_one() {
         make $parallel
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
-        # 0.11.0 marks the DLL non-executable, which causes load failures
-        chmod +x openslide-jni.dll
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
         ;;
