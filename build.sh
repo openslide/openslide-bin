@@ -23,7 +23,7 @@ set -eE
 packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
-cygtools="wget zip pkg-config make mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
+cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
 ant_ver="1.9.3"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
@@ -147,7 +147,7 @@ zlib_artifacts="zlib1.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
-openjpeg_artifacts="libopenjpeg-1.dll"
+openjpeg_artifacts="libopenjpeg.dll"
 iconv_artifacts="iconv.dll"
 gettext_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-6.dll"
@@ -284,6 +284,33 @@ do_configure() {
             "$@"
 }
 
+do_cmake() {
+    # Run cmake with the appropriate parameters.
+    # Additional parameters can be specified as arguments.
+    #
+    # Certain cmake variables cannot be specified on the command-line.
+    # http://public.kitware.com/Bug/view.php?id=9980
+    cat > toolchain.cmake <<EOF
+SET(CMAKE_SYSTEM_NAME Windows)
+SET(CMAKE_C_COMPILER ${build_host}-gcc)
+SET(CMAKE_RC_COMPILER ${build_host}-windres)
+EOF
+    cmake -G "Unix Makefiles" \
+            -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" \
+            -DCMAKE_INSTALL_PREFIX="${root}" \
+            -DCMAKE_FIND_ROOT_PATH="${root}" \
+            -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+            -DCMAKE_C_FLAGS="${cppflags} ${cflags}" \
+            -DCMAKE_CXX_FLAGS="${cppflags} ${cxxflags}" \
+            -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
+            -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
+            -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
+            "$@" \
+            .
+}
+
 build_one() {
     # Build the specified package and its dependencies if not already built
     # $1  = package shortname
@@ -352,10 +379,11 @@ build_one() {
         make install
         ;;
     openjpeg)
-        do_configure \
-                --disable-doc \
-                TIFF_CFLAGS="-I${root}/include" \
-                TIFF_LIBS="-L${root}/lib -ltiff"
+        # Windows builds don't install pkg-config files
+        # http://code.google.com/p/openjpeg/issues/detail?id=340
+        sed -i 's/UNIX/1/' CMakeLists.txt
+        do_cmake \
+                -DBUILD_DOC=OFF
         make $parallel
         make install
         ;;
