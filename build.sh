@@ -663,7 +663,8 @@ probe() {
         ant_home="/opt/ant"
         java_home="${JAVA_HOME}"
         if [ -z "$java_home" ] ; then
-            java_home=$(cygpath c:/Program\ Files/Java/jdk*)
+            java_home=$(find "$(cygpath c:\\Program\ Files\\Java)" \
+                    -name "jdk*" -maxdepth 1 -print -quit)
         fi
         if [ ! -e "$ant_home" ] ; then
             echo "Ant directory not found."
