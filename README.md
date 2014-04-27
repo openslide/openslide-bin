@@ -4,10 +4,17 @@ of its dependencies, using MinGW-w64.
 Cross-compiling from Linux
 --------------------------
 
-You will need MinGW-w64, nasm, OpenJDK, Apache Ant, the gettext and glib2
-utility programs, and the native gcc and binutils for your build platform.
-You will also need the GNU Classpath version of `jni.h` installed.
-(On Fedora this is in the `libgcj-devel` package.)
+You will need:
+
+- MinGW-w64 `gcc` and `g++` for the target architecture (`i686` or `x86_64`)
+- NASM
+- OpenJDK
+- Apache Ant
+- gettext utility programs
+- glib2 utility programs
+- Native gcc and binutils for your build platform
+- The GNU Classpath version of `jni.h` must be installed.  (On Fedora this
+  is in the `libgcj-devel` package.)
 
 Then:
 
