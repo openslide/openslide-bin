@@ -370,6 +370,7 @@ build_one() {
                 --with-zlib-lib-dir="${root}/lib" \
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib" \
+                --disable-lzma \
                 CPPFLAGS="${cppflags} -DTIF_PLATFORM_CONSOLE"
         make $parallel
         if [ "$can_test" = yes ] ; then
@@ -472,6 +473,7 @@ build_one() {
         ;;
     xml)
         do_configure \
+                --without-lzma \
                 --without-python
         make $parallel
         if [ "$can_test" = yes ] ; then
