@@ -370,6 +370,7 @@ build_one() {
                 --with-zlib-lib-dir="${root}/lib" \
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib" \
+                --disable-jbig \
                 --disable-lzma \
                 CPPFLAGS="${cppflags} -DTIF_PLATFORM_CONSOLE"
         make $parallel
@@ -384,6 +385,8 @@ build_one() {
         # http://code.google.com/p/openjpeg/issues/detail?id=340
         sed -i 's/UNIX/1/' CMakeLists.txt
         do_cmake \
+                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
+                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
                 -DBUILD_DOC=OFF
         make $parallel
         make install
