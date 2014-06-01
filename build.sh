@@ -354,7 +354,8 @@ build_one() {
         make install
         ;;
     jpeg)
-        do_configure
+        do_configure \
+                --without-turbojpeg
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
