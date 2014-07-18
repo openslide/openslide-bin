@@ -202,6 +202,9 @@ openslide_upregex="archive/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
 
+# Helper script paths
+configguess_path="tar/config.guess-${configguess_ver}"
+
 
 expand() {
     # Print the contents of the named variable
@@ -215,7 +218,7 @@ tarpath() {
     local path xzpath
     if [ "$1" = "configguess" ] ; then
         # Can't be derived from URL
-        echo "tar/config.guess"
+        echo "$configguess_path"
     else
         path="tar/$(basename $(expand ${1}_url))"
         xzpath="${path/%.gz/.xz}"
@@ -260,7 +263,7 @@ fetch() {
         echo "Fetching ${1}..."
         if [ "$1" = "configguess" ] ; then
             # config.guess is special; we have to rename the saved file
-            wget -q -O tar/config.guess "$url"
+            wget -q -O "$configguess_path" "$url"
         else
             wget -P tar -q --no-check-certificate "$url"
         fi
@@ -691,7 +694,7 @@ probe() {
     mkdir -p "${root}"
 
     fetch configguess
-    build_system=$(sh tar/config.guess)
+    build_system=$(sh "$configguess_path")
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
