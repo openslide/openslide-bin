@@ -27,6 +27,8 @@ cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc
 ant_ver="1.9.3"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
+ant_upurl="http://archive.apache.org/dist/ant/binaries/"
+ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
@@ -668,7 +670,7 @@ clean() {
 updates() {
     # Report new releases of software packages
     local package curver newver
-    for package in $packages
+    for package in ant $packages
     do
         curver="$(expand ${package}_ver)"
         newver=$(wget -q --no-check-certificate -O- \
