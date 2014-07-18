@@ -24,7 +24,7 @@ packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixb
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.9.3"
+ant_ver="1.9.4"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -49,7 +49,7 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions
-configguess_ver="28d244f1"
+configguess_ver="47681e2a"
 zlib_ver="1.2.8"
 png_ver="1.6.12"
 jpeg_ver="1.3.1"
@@ -72,7 +72,7 @@ openslide_ver="3.4.0"
 openslidejava_ver="0.12.0"
 
 # Tarball URLs
-configguess_url="http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=${configguess_ver}"
+configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
