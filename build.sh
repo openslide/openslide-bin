@@ -163,7 +163,6 @@ openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-sh
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
-configguess_upurl="http://git.savannah.gnu.org/cgit/config.git/tree/config.guess"
 zlib_upurl="http://zlib.net/"
 png_upurl="http://www.libpng.org/pub/png/libpng-manual.txt"
 jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
@@ -182,7 +181,6 @@ openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
-configguess_upregex="blob: ([0-9a-f]{8})"
 zlib_upregex="source code, version ([0-9.]+)"
 png_upregex="libpng version ([0-9.]+) -"
 jpeg_upregex="libjpeg-turbo-([0-9.]+)\.tar"
@@ -672,12 +670,15 @@ clean() {
 
 updates() {
     # Report new releases of software packages
-    local package curver newver
+    local package url curver newver
     for package in ant $packages
     do
+        url="$(expand ${package}_upurl)"
+        if [ -z "$url" ] ; then
+            continue
+        fi
         curver="$(expand ${package}_ver)"
-        newver=$(wget -q --no-check-certificate -O- \
-                "$(expand ${package}_upurl)" | \
+        newver=$(wget -q --no-check-certificate -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
                 tail -n 1)
