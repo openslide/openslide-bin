@@ -49,23 +49,23 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="28d244f1"
 zlib_ver="1.2.8"
-png_ver="1.6.10"
+png_ver="1.6.12"
 jpeg_ver="1.3.1"
 tiff_ver="4.0.3"
 openjpeg_ver="1.5.2"
 iconv_ver="0.0.6"
-gettext_ver="0.18.3.2"
+gettext_ver="0.19.2"
 ffi_ver="3.1"
 glib_basever="2.40"
 glib_ver="${glib_basever}.0"
 gdkpixbuf_basever="2.30"
-gdkpixbuf_ver="${gdkpixbuf_basever}.7"
-pixman_ver="0.32.4"
+gdkpixbuf_ver="${gdkpixbuf_basever}.8"
+pixman_ver="0.32.6"
 cairo_ver="1.12.16"
 xml_ver="2.9.1"
 sqlite_year="2014"
-sqlite_ver="3.8.4.3"
-sqlite_vernum="3080403"
+sqlite_ver="3.8.5"
+sqlite_vernum="3080500"
 openslide_ver="3.4.0"
 openslidejava_ver="0.12.0"
 
@@ -77,7 +77,7 @@ jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_
 tiff_url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${tiff_ver}.tar.gz"
 openjpeg_url="http://prdownloads.sourceforge.net/openjpeg.mirror/openjpeg-${openjpeg_ver}.tar.gz"
 iconv_url="https://win-iconv.googlecode.com/files/win-iconv-${iconv_ver}.tar.bz2"
-gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.gz"
+gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
 ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
 glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
@@ -450,12 +450,8 @@ build_one() {
         ;;
     gettext)
         # Missing tests for C++ compiler, which is only needed on Windows
-        #
-        # configure wrongly selects /usr/bin/nm during native builds
-        # https://savannah.gnu.org/bugs/index.php?41203
         do_configure \
                 CXX=${build_host}-g++ \
-                NM=${build_host}-nm \
                 --disable-java \
                 --disable-native-java \
                 --disable-csharp \
