@@ -83,6 +83,10 @@ Delete build and binary directories, but not downloaded tarballs.  If one
 or more package shortnames is specified, delete only the build artifacts for
 those packages in the specified bitness.
 
+#### `updates`
+
+Check for new releases of software packages.
+
 Options
 -------
 

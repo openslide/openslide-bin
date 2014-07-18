@@ -160,6 +160,46 @@ sqlite_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
+# Update-checking URLs
+configguess_upurl="http://git.savannah.gnu.org/cgit/config.git/tree/config.guess"
+zlib_upurl="http://zlib.net/"
+png_upurl="http://www.libpng.org/pub/png/libpng-manual.txt"
+jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
+tiff_upurl="ftp://ftp.remotesensing.org/pub/libtiff/"
+openjpeg_upurl="http://openjpeg.googlecode.com/svn/tags/"
+iconv_upurl="http://win-iconv.googlecode.com/svn/tags/"
+gettext_upurl="http://ftp.gnu.org/pub/gnu/gettext/"
+ffi_upurl="ftp://sourceware.org/pub/libffi/"
+glib_upurl="https://git.gnome.org/browse/glib/refs/"
+gdkpixbuf_upurl="https://git.gnome.org/browse/gdk-pixbuf/refs/"
+pixman_upurl="http://cairographics.org/releases/"
+cairo_upurl="http://cairographics.org/releases/"
+xml_upurl="ftp://xmlsoft.org/libxml2/"
+sqlite_upurl="http://sqlite.org/download.html"
+openslide_upurl="https://github.com/openslide/openslide/tags"
+openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
+
+# Update-checking regexes
+configguess_upregex="blob: ([0-9a-f]{8})"
+zlib_upregex="source code, version ([0-9.]+)"
+png_upregex="libpng version ([0-9.]+) -"
+jpeg_upregex="libjpeg-turbo-([0-9.]+)\.tar"
+tiff_upregex="tiff-([0-9.]+)\.tar"
+openjpeg_upregex="version\.([0-9.]+)"
+iconv_upregex=">([0-9.]+)/<"
+gettext_upregex="gettext-([0-9.]+)\.tar"
+ffi_upregex="libffi-([0-9.]+)\.tar"
+glib_upregex="snapshot/glib-([0-9]+\.[0-9]*[02468]\.[0-9]+)\.tar"
+# Exclude 2.90.x
+gdkpixbuf_upregex="snapshot/gdk-pixbuf-2\.90.*|.*snapshot/gdk-pixbuf-([0-9.]+)\.tar"
+pixman_upregex="LATEST-pixman-([0-9.]+)"
+cairo_upregex="LATEST-cairo-([0-9.]+)"
+xml_upregex="LATEST_LIBXML2_IS_([0-9.]+)"
+sqlite_upregex="SQLite ([0-9.]+)"
+openslide_upregex="archive/v([0-9.]+)\.tar"
+# Exclude old v1.0.0 tag
+openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
+
 
 expand() {
     # Print the contents of the named variable
@@ -629,6 +669,23 @@ clean() {
     fi
 }
 
+updates() {
+    # Report new releases of software packages
+    local package curver newver
+    for package in $packages
+    do
+        curver="$(expand ${package}_ver)"
+        newver=$(wget -q --no-check-certificate -O- \
+                "$(expand ${package}_upurl)" | \
+                sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
+                sort -uV | \
+                tail -n 1)
+        if [ "${curver}" != "${newver}" ] ; then
+            printf "%-15s %10s  => %10s\n" "${package}" "${curver}" "${newver}"
+        fi
+    done
+}
+
 probe() {
     # Probe the build environment and set up variables
     build="${build_bits}/build"
@@ -765,12 +822,16 @@ clean)
     shift
     clean "$@"
     ;;
+updates)
+    updates
+    ;;
 *)
     cat <<EOF
 Usage: $0 setup /path/to/cygwin/setup.exe
        $0 [-s<suffix>] sdist
        $0 [-j<n>] [-m{32|64}] [-s<suffix>] bdist
        $0 [-m{32|64}] clean [package...]
+       $0 updates
 
 Packages:
 $packages
