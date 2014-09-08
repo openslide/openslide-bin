@@ -183,7 +183,7 @@ openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
 png_upregex="libpng version ([0-9.]+) -"
-jpeg_upregex="libjpeg-turbo-([0-9.]+)\.tar"
+jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
 openjpeg_upregex="version\.([0-9.]+)"
 iconv_upregex=">([0-9.]+)/<"
