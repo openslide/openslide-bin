@@ -10,6 +10,7 @@ You will need:
 - NASM
 - OpenJDK
 - Apache Ant
+- CMake
 - gettext utility programs
 - glib2 utility programs
 - Native gcc and binutils for your build platform
