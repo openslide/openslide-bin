@@ -56,18 +56,18 @@ jpeg_ver="1.3.1"
 tiff_ver="4.0.3"
 openjpeg_ver="1.5.2"
 iconv_ver="0.0.6"
-gettext_ver="0.19.2"
+gettext_ver="0.19.3"
 ffi_ver="3.1"
 glib_basever="2.42"
 glib_ver="${glib_basever}.0"
 gdkpixbuf_basever="2.31"
 gdkpixbuf_ver="${gdkpixbuf_basever}.1"
 pixman_ver="0.32.6"
-cairo_ver="1.12.16"
-xml_ver="2.9.1"
+cairo_ver="1.14.0"
+xml_ver="2.9.2"
 sqlite_year="2014"
-sqlite_ver="3.8.6"
-sqlite_vernum="3080600"
+sqlite_ver="3.8.7"
+sqlite_vernum="3080700"
 openslide_ver="3.4.0"
 openslidejava_ver="0.12.0"
 
@@ -504,9 +504,11 @@ build_one() {
         make install
         ;;
     cairo)
+        # https://bugs.freedesktop.org/show_bug.cgi?id=85120
         do_configure \
                 --enable-ft=no \
-                --enable-xlib=no
+                --enable-xlib=no \
+                ax_cv_c_float_words_bigendian=no
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
@@ -516,6 +518,7 @@ build_one() {
         ;;
     xml)
         do_configure \
+                --with-zlib="${root}" \
                 --without-lzma \
                 --without-python
         make $parallel
