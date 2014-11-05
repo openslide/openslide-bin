@@ -576,10 +576,7 @@ build() {
 sdist() {
     # Build source distribution
     local package path xzpath zipdir
-    zipdir="openslide-winbuild-$(date +%Y%m%d)"
-    if [ -n "${suffix}" ] ; then
-        zipdir="${zipdir}-${suffix}"
-    fi
+    zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/tar"
     for package in $packages
@@ -618,10 +615,7 @@ bdist() {
     do
         build_one "$package"
     done
-    zipdir="openslide-win${build_bits}-$(date +%Y%m%d)"
-    if [ -n "${suffix}" ] ; then
-        zipdir="${zipdir}-${suffix}"
-    fi
+    zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
     for package in $packages
@@ -787,8 +781,9 @@ fi
 # Parse command-line options
 parallel=""
 build_bits=32
+pkgver="$(date +%Y%m%d)-local"
 suffix=""
-while getopts "j:m:s:" opt
+while getopts "j:m:p:s:" opt
 do
     case "$opt" in
     j)
@@ -804,6 +799,9 @@ do
             exit 1
             ;;
         esac
+        ;;
+    p)
+        pkgver="${OPTARG}"
         ;;
     s)
         suffix="${OPTARG}"
@@ -833,8 +831,8 @@ updates)
 *)
     cat <<EOF
 Usage: $0 setup /path/to/cygwin/setup.exe
-       $0 [-s<suffix>] sdist
-       $0 [-j<n>] [-m{32|64}] [-s<suffix>] bdist
+       $0 [-p<pkgver>] sdist
+       $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] bdist
        $0 [-m{32|64}] clean [package...]
        $0 updates
 

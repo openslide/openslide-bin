@@ -101,6 +101,10 @@ Parallel build with the specified parallelism.
 
 Select 32-bit or 64-bit build (default: 32).
 
+#### `-p<pkgver>`
+
+Set package version string in Zip file names to `pkgver`.
+
 #### `-s<suffix>`
 
-Append `suffix` to the Zip file names and the OpenSlide version string.
+Append `suffix` to the OpenSlide version string.
