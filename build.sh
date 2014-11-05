@@ -536,12 +536,12 @@ build_one() {
         awk '/\*{8}/ {exit} /^\*{2}/ {print}' sqlite3.h > PUBLIC-DOMAIN.txt
         ;;
     openslide)
-        local suffix_arg
-        if [ -n "${suffix}" ] ; then
-            suffix_arg="--with-version-suffix=${suffix}"
+        local ver_suffix_arg
+        if [ -n "${ver_suffix}" ] ; then
+            ver_suffix_arg="--with-version-suffix=${ver_suffix}"
         fi
         do_configure \
-                "${suffix_arg}"
+                "${ver_suffix_arg}"
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
@@ -601,14 +601,14 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name licensedir zipdir prev_suffix
+    local package name licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
-    prev_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
-    if [ "${suffix}" != "${prev_suffix}" ] ; then
+    prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
+    if [ "${ver_suffix}" != "${prev_ver_suffix}" ] ; then
         clean openslide
         mkdir -p "${build_bits}"
-        echo "${suffix}" > "${build_bits}/.suffix"
+        echo "${ver_suffix}" > "${build_bits}/.suffix"
     fi
 
     for package in $packages
@@ -782,7 +782,7 @@ fi
 parallel=""
 build_bits=32
 pkgver="$(date +%Y%m%d)-local"
-suffix=""
+ver_suffix=""
 while getopts "j:m:p:s:" opt
 do
     case "$opt" in
@@ -804,7 +804,7 @@ do
         pkgver="${OPTARG}"
         ;;
     s)
-        suffix="${OPTARG}"
+        ver_suffix="${OPTARG}"
         ;;
     esac
 done
