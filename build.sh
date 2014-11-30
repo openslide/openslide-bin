@@ -164,7 +164,7 @@ openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
 zlib_upurl="http://zlib.net/"
-png_upurl="http://www.libpng.org/pub/png/libpng-manual.txt"
+png_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="http://download.osgeo.org/libtiff/"
 openjpeg_upurl="http://sourceforge.net/projects/openjpeg.mirror/files/"
@@ -182,7 +182,7 @@ openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
-png_upregex="libpng version ([0-9.]+) -"
+png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
 openjpeg_upregex="files/([0-9.]+)/"
