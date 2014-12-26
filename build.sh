@@ -193,7 +193,7 @@ glib_upregex="snapshot/glib-([0-9]+\.[0-9]*[02468]\.[0-9]+)\.tar"
 # Exclude 2.90.x
 gdkpixbuf_upregex="snapshot/gdk-pixbuf-2\.90.*|.*snapshot/gdk-pixbuf-([0-9.]+)\.tar"
 pixman_upregex="pixman-([0-9.]+)\.tar"
-cairo_upregex="cairo-([0-9.]+)\.tar"
+cairo_upregex="\"cairo-([0-9.]+)\.tar"
 xml_upregex="libxml2-([0-9.]+)\.tar"
 sqlite_upregex="SQLite ([0-9.]+)"
 openslide_upregex="archive/v([0-9.]+)\.tar"
