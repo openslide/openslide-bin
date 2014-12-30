@@ -479,6 +479,14 @@ build_one() {
         do_configure \
                 --disable-modular-tests \
                 --with-threads=win32
+        # https://bugzilla.gnome.org/show_bug.cgi?id=739656
+        case "$build_system" in
+        *-*-cygwin)
+            sed -i -e "s/.*HAVE_IF_INDEXTONAME.*/#define HAVE_IF_INDEXTONAME 1/" \
+                    -e "s/.*HAVE_IF_NAMETOINDEX.*/#define HAVE_IF_NAMETOINDEX 1/" \
+                    config.h
+            ;;
+        esac
         make $parallel
         make install
         ;;
