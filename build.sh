@@ -203,6 +203,9 @@ openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
 # Helper script paths
 configguess_path="tar/config.guess-${configguess_ver}"
 
+# wget standard options
+wget="wget -q --retry-connrefused"
+
 
 expand() {
     # Print the contents of the named variable
@@ -261,9 +264,9 @@ fetch() {
         echo "Fetching ${1}..."
         if [ "$1" = "configguess" ] ; then
             # config.guess is special; we have to rename the saved file
-            wget -q -O "$configguess_path" "$url"
+            ${wget} -O "$configguess_path" "$url"
         else
-            wget -P tar -q --no-check-certificate "$url"
+            ${wget} -P tar --no-check-certificate "$url"
         fi
     fi
 }
@@ -682,7 +685,7 @@ updates() {
             continue
         fi
         curver="$(expand ${package}_ver)"
-        newver=$(wget -q --no-check-certificate -O- "$url" | \
+        newver=$(${wget} --no-check-certificate -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
                 tail -n 1)
