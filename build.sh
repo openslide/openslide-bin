@@ -204,7 +204,7 @@ openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
 configguess_path="tar/config.guess-${configguess_ver}"
 
 # wget standard options
-wget="wget -q --retry-connrefused"
+wget="wget --retry-connrefused"
 
 
 expand() {
@@ -685,7 +685,7 @@ updates() {
             continue
         fi
         curver="$(expand ${package}_ver)"
-        newver=$(${wget} -O- "$url" | \
+        newver=$(${wget} -q -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
                 tail -n 1)
