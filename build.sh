@@ -209,6 +209,7 @@ configguess_path="tar/config.guess-${configguess_ver}"
 # shell.  This breaks the S3 signed URLs returned by GitHub when fetching
 # a release artifact.  Work around this by retrying many times so we will
 # hopefully receive a signature without a +.
+# http://lists.gnu.org/archive/html/bug-wget/2015-01/msg00004.html
 wget="wget -q --retry-connrefused --max-redirect=200"
 
 
