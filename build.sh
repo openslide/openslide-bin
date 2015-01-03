@@ -505,7 +505,15 @@ build_one() {
         make install
         ;;
     pixman)
-        do_configure
+        # Use explicit Win32 TLS calls instead of declaring variables with
+        # __thread.  This avoids a dependency on the winpthreads DLL if
+        # GCC was built with POSIX threads support.
+        do_configure \
+                ac_cv_tls=none
+        # Work around build failure with ac_cv_tls=none and recent
+        # MinGW-w64 headers
+        # https://sourceforge.net/p/mingw-w64/bugs/450/
+        echo "#undef IN" >> pixman/pixman-compiler.h
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
