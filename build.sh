@@ -204,7 +204,12 @@ openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
 configguess_path="tar/config.guess-${configguess_ver}"
 
 # wget standard options
-wget="wget -q --retry-connrefused"
+# On Cygwin, wget 1.16.1 with IRI support enabled will incorrectly convert
+# "%2B" in redirect URLs to "+", but only when not launched from a Cygwin
+# shell.  This breaks the S3 signed URLs returned by GitHub when fetching
+# a release artifact.  Work around this by retrying many times so we will
+# hopefully receive a signature without a +.
+wget="wget -q --retry-connrefused --max-redirect=200"
 
 
 expand() {
