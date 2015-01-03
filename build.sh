@@ -705,6 +705,8 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
+    local arch_cflags
+
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
     mkdir -p "${root}"
@@ -716,6 +718,7 @@ probe() {
         build_host=x86_64-w64-mingw32
     else
         build_host=i686-w64-mingw32
+        arch_cflags="-msse2 -mfpmath=sse"
     fi
     if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
@@ -723,7 +726,7 @@ probe() {
     fi
 
     cppflags="-D_FORTIFY_SOURCE=2"
-    cflags="-O2 -g -mms-bitfields -fexceptions"
+    cflags="-O2 -g -mms-bitfields -fexceptions ${arch_cflags}"
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
