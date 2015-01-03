@@ -727,6 +727,14 @@ probe() {
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
+    if ${build_host}-ld --help | grep -q -- --insert-timestamp ; then
+        # Disable deterministic build feature in GNU ld 2.24 (disabled
+        # by default in 2.25) which breaks detection of updated libraries
+        # by bound executables
+        # https://sourceware.org/bugzilla/show_bug.cgi?id=16887
+        ldflags="${ldflags} -Wl,--insert-timestamp"
+    fi
+
     case "$build_system" in
     *-*-cygwin)
         # Windows
