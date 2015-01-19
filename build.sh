@@ -176,7 +176,7 @@ gdkpixbuf_upurl="https://git.gnome.org/browse/gdk-pixbuf/refs/"
 pixman_upurl="http://cairographics.org/releases/"
 cairo_upurl="http://cairographics.org/releases/"
 xml_upurl="ftp://xmlsoft.org/libxml2/"
-sqlite_upurl="http://sqlite.org/download.html"
+sqlite_upurl="http://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
@@ -195,7 +195,7 @@ gdkpixbuf_upregex="snapshot/gdk-pixbuf-2\.90.*|.*snapshot/gdk-pixbuf-([0-9.]+)\.
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
 xml_upregex="libxml2-([0-9.]+)\.tar"
-sqlite_upregex="SQLite ([0-9.]+)"
+sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
 openslide_upregex="archive/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
