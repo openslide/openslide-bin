@@ -600,6 +600,25 @@ build() {
     done
 }
 
+split_debug() {
+    # Copy non-debug sections of PE binary to ${2}/bin/ and debug sections
+    # to separate file in ${2}/debug/
+    # $1 = source filename in ${root}/bin
+    # $2 = top-level destination directory
+    local buildid debugdir
+    buildid=$(${build_host}-objdump -p "${root}/bin/${1}" |
+            awk '/ signature [0-9a-f]{32} / { print $4 }')
+    if [ "${#buildid}" != 32 ] ; then
+        echo "Couldn't read build ID for ${1}."
+        exit 1
+    fi
+    debugdir="${2}/debug/.build-id/${buildid:0:2}"
+    mkdir -p "${2}/bin" "${debugdir}"
+    ${build_host}-objcopy --only-keep-debug \
+            "${root}/bin/${1}" "${debugdir}/${buildid:2}.debug"
+    ${build_host}-objcopy -S "${root}/bin/${1}" "${2}/bin/${1}"
+}
+
 sdist() {
     # Build source distribution
     local package path xzpath zipdir
@@ -649,7 +668,13 @@ bdist() {
     do
         for artifact in $(expand ${package}_artifacts)
         do
-            cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            if [ "${artifact}" != "${artifact%.dll}" -o \
+                    "${artifact}" != "${artifact%.exe}" ] ; then
+                echo "Stripping ${artifact}..."
+                split_debug "${artifact}" "${zipdir}"
+            else
+                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            fi
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
         mkdir -p "${licensedir}"
