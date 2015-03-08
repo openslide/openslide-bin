@@ -380,10 +380,12 @@ build_one() {
     pushd "$builddir" >/dev/null
     case "$1" in
     zlib)
+        # Don't strip binaries during build
         make -f win32/Makefile.gcc $parallel \
                 PREFIX="${build_host}-" \
                 CFLAGS="${cppflags} ${cflags}" \
                 LDFLAGS="${ldflags}" \
+                STRIP="true" \
                 all
         if [ "$can_test" = yes ] ; then
             make -f win32/Makefile.gcc \
@@ -444,6 +446,8 @@ build_one() {
         make install
         ;;
     iconv)
+        # Don't strip DLL during build
+        sed -i 's/-Wl,-s //' Makefile
         make \
                 CC="${build_host}-gcc" \
                 AR="${build_host}-ar" \
