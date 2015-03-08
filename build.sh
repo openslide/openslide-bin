@@ -365,7 +365,7 @@ EOF
 build_one() {
     # Build the specified package and its dependencies if not already built
     # $1  = package shortname
-    local builddir artifact
+    local builddir
 
     if is_built "$1" ; then
         return
