@@ -737,7 +737,7 @@ probe() {
     cppflags="-D_FORTIFY_SOURCE=2"
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
-    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
+    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -Wl,--build-id"
 
     if ${build_host}-ld --help | grep -q -- --insert-timestamp ; then
         # Disable deterministic build feature in GNU ld 2.24 (disabled
