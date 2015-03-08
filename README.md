@@ -7,6 +7,7 @@ Cross-compiling from Linux
 You will need:
 
 - MinGW-w64 gcc and g++ for the target architecture (`i686` or `x86_64`)
+- MinGW-w64 Binutils >= 2.25
 - NASM
 - OpenJDK
 - Apache Ant

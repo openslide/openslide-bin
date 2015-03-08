@@ -380,10 +380,12 @@ build_one() {
     pushd "$builddir" >/dev/null
     case "$1" in
     zlib)
+        # Don't strip binaries during build
         make -f win32/Makefile.gcc $parallel \
                 PREFIX="${build_host}-" \
                 CFLAGS="${cppflags} ${cflags}" \
                 LDFLAGS="${ldflags}" \
+                STRIP="true" \
                 all
         if [ "$can_test" = yes ] ; then
             make -f win32/Makefile.gcc \
@@ -444,6 +446,8 @@ build_one() {
         make install
         ;;
     iconv)
+        # Don't strip DLL during build
+        sed -i 's/-Wl,-s //' Makefile
         make \
                 CC="${build_host}-gcc" \
                 AR="${build_host}-ar" \
@@ -596,6 +600,25 @@ build() {
     done
 }
 
+split_debug() {
+    # Copy non-debug sections of PE binary to ${2}/bin/ and debug sections
+    # to separate file in ${2}/debug/
+    # $1 = source filename in ${root}/bin
+    # $2 = top-level destination directory
+    local buildid debugdir
+    buildid=$(${build_host}-objdump -p "${root}/bin/${1}" |
+            awk '/ signature [0-9a-f]{32} / { print $4 }')
+    if [ "${#buildid}" != 32 ] ; then
+        echo "Couldn't read build ID for ${1}."
+        exit 1
+    fi
+    debugdir="${2}/debug/.build-id/${buildid:0:2}"
+    mkdir -p "${2}/bin" "${debugdir}"
+    ${build_host}-objcopy --only-keep-debug \
+            "${root}/bin/${1}" "${debugdir}/${buildid:2}.debug"
+    ${build_host}-objcopy -S "${root}/bin/${1}" "${2}/bin/${1}"
+}
+
 sdist() {
     # Build source distribution
     local package path xzpath zipdir
@@ -645,7 +668,13 @@ bdist() {
     do
         for artifact in $(expand ${package}_artifacts)
         do
-            cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            if [ "${artifact}" != "${artifact%.dll}" -o \
+                    "${artifact}" != "${artifact%.exe}" ] ; then
+                echo "Stripping ${artifact}..."
+                split_debug "${artifact}" "${zipdir}"
+            else
+                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            fi
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
         mkdir -p "${licensedir}"
@@ -733,15 +762,7 @@ probe() {
     cppflags="-D_FORTIFY_SOURCE=2"
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
-    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
-
-    if ${build_host}-ld --help | grep -q -- --insert-timestamp ; then
-        # Disable deterministic build feature in GNU ld 2.24 (disabled
-        # by default in 2.25) which breaks detection of updated libraries
-        # by bound executables
-        # https://sourceware.org/bugzilla/show_bug.cgi?id=16887
-        ldflags="${ldflags} -Wl,--insert-timestamp"
-    fi
+    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -Wl,--build-id"
 
     case "$build_system" in
     *-*-cygwin)
