@@ -2,7 +2,7 @@
 #
 # A script for building OpenSlide and its dependencies for Windows
 #
-# Copyright (c) 2011-2014 Carnegie Mellon University
+# Copyright (c) 2011-2015 Carnegie Mellon University
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -649,7 +649,20 @@ bdist() {
     do
         for artifact in $(expand ${package}_artifacts)
         do
-            cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            if [ "${artifact}" != "${artifact%.dll}" -o \
+                    "${artifact}" != "${artifact%.exe}" ] ; then
+                echo "Stripping ${artifact}..."
+                ${build_host}-objcopy --only-keep-debug \
+                        "${root}/bin/${artifact}" \
+                        "${zipdir}/bin/${artifact}.debug"
+                chmod -x "${zipdir}/bin/${artifact}.debug"
+                ${build_host}-objcopy -S \
+                        --add-gnu-debuglink="${zipdir}/bin/${artifact}.debug" \
+                        "${root}/bin/${artifact}" \
+                        "${zipdir}/bin/${artifact}"
+            else
+                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            fi
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
         mkdir -p "${licensedir}"
