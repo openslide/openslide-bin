@@ -491,6 +491,13 @@ build_one() {
         do_configure \
                 --disable-modular-tests \
                 --with-threads=win32
+        # Fix 32-bit Cygwin builds in a uniform way
+        # https://bugzilla.gnome.org/show_bug.cgi?id=739656
+        sed -i 's/#include "config.h"/\0\n#undef _WIN32_WINNT\n#define _WIN32_WINNT 0x0600/' \
+                gio/gsocket.c
+        sed -i -e "s/.*HAVE_IF_INDEXTONAME.*/#define HAVE_IF_INDEXTONAME 1/" \
+                -e "s/.*HAVE_IF_NAMETOINDEX.*/#define HAVE_IF_NAMETOINDEX 1/" \
+                config.h
         make $parallel
         make install
         ;;
