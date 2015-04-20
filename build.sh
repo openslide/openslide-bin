@@ -68,8 +68,8 @@ xml_ver="2.9.2"
 sqlite_year="2015"
 sqlite_ver="3.8.9"
 sqlite_vernum="3080900"
-openslide_ver="3.4.0"
-openslidejava_ver="0.12.0"
+openslide_ver="3.4.1"
+openslidejava_ver="0.12.1"
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"

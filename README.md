@@ -14,8 +14,6 @@ You will need:
 - gettext utility programs
 - glib2 utility programs
 - Native gcc and binutils for your build platform
-- The GNU Classpath version of `jni.h` must be installed.  (On Fedora this
-  is in the `libgcj-devel` package.)
 
 Then:
 
