@@ -54,7 +54,7 @@ zlib_ver="1.2.8"
 png_ver="1.6.17"
 jpeg_ver="1.4.0"
 tiff_ver="4.0.3"
-openjpeg_ver="1.5.2"
+openjpeg_ver="2.1.0"
 iconv_ver="0.0.6"
 gettext_ver="0.19.4"
 ffi_ver="3.2.1"
@@ -149,7 +149,7 @@ zlib_artifacts="zlib1.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
-openjpeg_artifacts="libopenjpeg.dll"
+openjpeg_artifacts="libopenjp2.dll"
 iconv_artifacts="iconv.dll"
 gettext_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-6.dll"
@@ -435,12 +435,10 @@ build_one() {
         make install
         ;;
     openjpeg)
-        # Windows builds don't install pkg-config files
-        # http://code.google.com/p/openjpeg/issues/detail?id=340
-        sed -i 's/UNIX/1/' CMakeLists.txt
         do_cmake \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
+                -DBUILD_PKGCONFIG_FILES=ON \
                 -DBUILD_DOC=OFF
         make $parallel
         make install
