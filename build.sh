@@ -435,6 +435,12 @@ build_one() {
         make install
         ;;
     openjpeg)
+        local saved_cflags
+        # 32-bit binaries segfault in aperio-33005 test if OpenJPEG is built
+        # with -msse2 (observed with OpenJPEG 2.1.0, gcc 4.9.2)
+        saved_cflags="${cflags}"
+        cflags="${cflags/-msse2/}"
+        cflags="${cflags/-mfpmath=sse/}"
         do_cmake \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
@@ -442,6 +448,7 @@ build_one() {
                 -DBUILD_DOC=OFF
         make $parallel
         make install
+        cflags="${saved_cflags}"
         ;;
     iconv)
         # Don't strip DLL during build
