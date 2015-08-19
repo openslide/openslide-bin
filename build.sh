@@ -24,7 +24,7 @@ packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixb
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.9.5"
+ant_ver="1.9.6"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -51,23 +51,23 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
-png_ver="1.6.17"
+png_ver="1.6.18"
 jpeg_ver="1.4.1"
 tiff_ver="4.0.4"
 openjpeg_ver="2.1.0"
 iconv_ver="0.0.6"
-gettext_ver="0.19.4"
+gettext_ver="0.19.5.1"
 ffi_ver="3.2.1"
 glib_basever="2.44"
 glib_ver="${glib_basever}.1"
 gdkpixbuf_basever="2.31"
-gdkpixbuf_ver="${gdkpixbuf_basever}.1"
+gdkpixbuf_ver="${gdkpixbuf_basever}.6"
 pixman_ver="0.32.6"
 cairo_ver="1.14.2"
 xml_ver="2.9.2"
 sqlite_year="2015"
-sqlite_ver="3.8.10.2"
-sqlite_vernum="3081002"
+sqlite_ver="3.8.11.1"
+sqlite_vernum="3081101"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.1"
 
@@ -507,6 +507,9 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
+        # https://bugzilla.gnome.org/show_bug.cgi?id=740912
+        sed -i '1,/USE_GMODULE/s/ifdef USE_GMODULE/if 1/' \
+                gdk-pixbuf/gdk-pixbuf-io.c
         do_configure \
                 --disable-modules \
                 --with-included-loaders \
