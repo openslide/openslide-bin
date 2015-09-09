@@ -61,7 +61,7 @@ ffi_ver="3.2.1"
 glib_basever="2.44"
 glib_ver="${glib_basever}.1"
 gdkpixbuf_basever="2.31"
-gdkpixbuf_ver="${gdkpixbuf_basever}.6"
+gdkpixbuf_ver="${gdkpixbuf_basever}.7"
 pixman_ver="0.32.6"
 cairo_ver="1.14.2"
 xml_ver="2.9.2"
@@ -507,9 +507,8 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
-        # https://bugzilla.gnome.org/show_bug.cgi?id=740912
-        sed -i '1,/USE_GMODULE/s/ifdef USE_GMODULE/if 1/' \
-                gdk-pixbuf/gdk-pixbuf-io.c
+        # Fix 2.31.7 build, upstream 844bf5d4
+        sed -i 's/pixbuf-lowmem..EXEEXT. / /' tests/Makefile.in
         do_configure \
                 --disable-modules \
                 --with-included-loaders \
