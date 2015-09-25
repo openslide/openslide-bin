@@ -52,17 +52,17 @@ openslidejava_name="OpenSlide Java"
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
 png_ver="1.6.18"
-jpeg_ver="1.4.1"
+jpeg_ver="1.4.2"
 tiff_ver="4.0.6"
 openjpeg_ver="2.1.0"
 iconv_ver="0.0.6"
 gettext_ver="0.19.6"
 ffi_ver="3.2.1"
-glib_basever="2.44"
-glib_ver="${glib_basever}.1"
-gdkpixbuf_basever="2.31"
-gdkpixbuf_ver="${gdkpixbuf_basever}.7"
-pixman_ver="0.32.6"
+glib_basever="2.46"
+glib_ver="${glib_basever}.0"
+gdkpixbuf_basever="2.32"
+gdkpixbuf_ver="${gdkpixbuf_basever}.1"
+pixman_ver="0.32.8"
 cairo_ver="1.14.2"
 xml_ver="2.9.2"
 sqlite_year="2015"
@@ -507,8 +507,6 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
-        # Fix 2.31.7 build, upstream 844bf5d4
-        sed -i 's/pixbuf-lowmem..EXEEXT. / /' tests/Makefile.in
         do_configure \
                 --disable-modules \
                 --with-included-loaders \
