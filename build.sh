@@ -493,6 +493,8 @@ build_one() {
         make install
         ;;
     glib)
+        # https://bugzilla.gnome.org/show_bug.cgi?id=749161
+        sed -i 's/_wstat32i64/_wstati64/' gio/glocalfile.c
         do_configure \
                 --with-threads=win32
         # Fix 32-bit Cygwin builds in a uniform way
