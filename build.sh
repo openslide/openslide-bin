@@ -494,7 +494,6 @@ build_one() {
         ;;
     glib)
         do_configure \
-                --disable-modular-tests \
                 --with-threads=win32
         # Fix 32-bit Cygwin builds in a uniform way
         # https://bugzilla.gnome.org/show_bug.cgi?id=739656
