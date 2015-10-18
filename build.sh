@@ -59,15 +59,15 @@ iconv_ver="0.0.6"
 gettext_ver="0.19.6"
 ffi_ver="3.2.1"
 glib_basever="2.46"
-glib_ver="${glib_basever}.0"
+glib_ver="${glib_basever}.1"
 gdkpixbuf_basever="2.32"
 gdkpixbuf_ver="${gdkpixbuf_basever}.1"
 pixman_ver="0.32.8"
 cairo_ver="1.14.2"
 xml_ver="2.9.2"
 sqlite_year="2015"
-sqlite_ver="3.8.11.1"
-sqlite_vernum="3081101"
+sqlite_ver="3.9.1"
+sqlite_vernum="3090100"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.1"
 
@@ -493,8 +493,6 @@ build_one() {
         make install
         ;;
     glib)
-        # https://bugzilla.gnome.org/show_bug.cgi?id=749161
-        sed -i 's/_wstat32i64/_wstati64/' gio/glocalfile.c
         do_configure \
                 --with-threads=win32
         # Fix 32-bit Cygwin builds in a uniform way
