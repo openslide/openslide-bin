@@ -493,6 +493,9 @@ build_one() {
         make install
         ;;
     glib)
+        # https://bugzilla.gnome.org/show_bug.cgi?id=754431
+        sed -i 's/if defined(G_OS_WIN32)/& \&\& defined(MINGW_HAS_SECURE_API)/' \
+                glib/gstrfuncs.c
         do_configure \
                 --with-threads=win32
         # Fix 32-bit Cygwin builds in a uniform way
