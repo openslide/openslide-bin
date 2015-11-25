@@ -494,7 +494,7 @@ build_one() {
         ;;
     glib)
         # https://bugzilla.gnome.org/show_bug.cgi?id=754431
-        sed -i 's/if defined(G_OS_WIN32)/& \&\& defined(MINGW_HAS_SECURE_API)/' \
+        sed -i 's/#include "config.h"/&\n#define MINGW_HAS_SECURE_API 1/' \
                 glib/gstrfuncs.c
         do_configure \
                 --with-threads=win32
