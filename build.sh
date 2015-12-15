@@ -61,9 +61,9 @@ ffi_ver="3.2.1"
 glib_basever="2.46"
 glib_ver="${glib_basever}.2"
 gdkpixbuf_basever="2.33"
-gdkpixbuf_ver="${gdkpixbuf_basever}.1"
+gdkpixbuf_ver="${gdkpixbuf_basever}.2"
 pixman_ver="0.32.8"
-cairo_ver="1.14.2"
+cairo_ver="1.14.6"
 xml_ver="2.9.3"
 sqlite_year="2015"
 sqlite_ver="3.9.2"
@@ -538,11 +538,9 @@ build_one() {
         make install
         ;;
     cairo)
-        # https://bugs.freedesktop.org/show_bug.cgi?id=85120
         do_configure \
                 --enable-ft=no \
-                --enable-xlib=no \
-                ax_cv_c_float_words_bigendian=no
+                --enable-xlib=no
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
