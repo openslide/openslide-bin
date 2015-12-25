@@ -51,7 +51,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
-png_ver="1.6.19"
+png_ver="1.6.20"
 jpeg_ver="1.4.2"
 tiff_ver="4.0.6"
 openjpeg_ver="2.1.0"
