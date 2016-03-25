@@ -58,16 +58,16 @@ openjpeg_ver="2.1.0"
 iconv_ver="0.0.6"
 gettext_ver="0.19.7"
 ffi_ver="3.2.1"
-glib_basever="2.46"
-glib_ver="${glib_basever}.2"
-gdkpixbuf_basever="2.33"
-gdkpixbuf_ver="${gdkpixbuf_basever}.2"
+glib_basever="2.48"
+glib_ver="${glib_basever}.0"
+gdkpixbuf_basever="2.34"
+gdkpixbuf_ver="${gdkpixbuf_basever}.0"
 pixman_ver="0.34.0"
 cairo_ver="1.14.6"
 xml_ver="2.9.3"
 sqlite_year="2016"
-sqlite_ver="3.10.2"
-sqlite_vernum="3100200"
+sqlite_ver="3.11.1"
+sqlite_vernum="3110100"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.1"
 
@@ -497,6 +497,7 @@ build_one() {
         sed -i 's/#include "config.h"/&\n#define MINGW_HAS_SECURE_API 1/' \
                 glib/gstrfuncs.c
         do_configure \
+                --with-pcre=internal \
                 --with-threads=win32
         # Fix 32-bit Cygwin builds in a uniform way
         # https://bugzilla.gnome.org/show_bug.cgi?id=739656
