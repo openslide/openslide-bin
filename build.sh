@@ -24,7 +24,7 @@ packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixb
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.9.6"
+ant_ver="1.9.7"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -60,14 +60,14 @@ gettext_ver="0.19.7"
 ffi_ver="3.2.1"
 glib_basever="2.48"
 glib_ver="${glib_basever}.0"
-gdkpixbuf_basever="2.34"
-gdkpixbuf_ver="${gdkpixbuf_basever}.0"
+gdkpixbuf_basever="2.35"
+gdkpixbuf_ver="${gdkpixbuf_basever}.1"
 pixman_ver="0.34.0"
 cairo_ver="1.14.6"
 xml_ver="2.9.3"
 sqlite_year="2016"
-sqlite_ver="3.11.1"
-sqlite_vernum="3110100"
+sqlite_ver="3.12.2"
+sqlite_vernum="3120200"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.1"
 
