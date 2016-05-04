@@ -71,7 +71,7 @@ openslidejava_ver="0.12.1"
 # Derived package version strings
 glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
-sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%02d%02d%02d%02d\n", $1, $2, $3, $4)}')"
+sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
