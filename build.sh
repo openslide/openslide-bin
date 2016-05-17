@@ -288,7 +288,8 @@ unpack() {
     if [ -e "override/${1}" ] ; then
         echo "Unpacking ${1} from override directory..."
         rm -rf "${path}"
-        cp -r "override/${1}" "${path}"
+        # Preserve timestamps to avoid spurious rebuilds of distributed files
+        cp -pr "override/${1}" "${path}"
     else
         echo "Unpacking ${1}..."
         rm -rf "${path}"
