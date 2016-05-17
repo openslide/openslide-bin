@@ -206,12 +206,7 @@ openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
 configguess_path="tar/config.guess-${configguess_ver}"
 
 # wget standard options
-# On Cygwin, wget 1.16.1 with IRI support enabled will incorrectly convert
-# "%2B" in redirect URLs to "+", but only when not launched from a Cygwin
-# shell.  This breaks the S3 signed URLs returned by GitHub when fetching
-# a release artifact.
-# http://lists.gnu.org/archive/html/bug-wget/2015-01/msg00004.html
-wget="wget -q --no-iri"
+wget="wget -q"
 
 
 expand() {
