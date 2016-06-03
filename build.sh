@@ -744,7 +744,7 @@ probe() {
         build_host=x86_64-w64-mingw32
     else
         build_host=i686-w64-mingw32
-        arch_cflags="-msse2 -mfpmath=sse"
+        arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
     fi
     if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
