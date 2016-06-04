@@ -752,7 +752,7 @@ probe() {
     fi
 
     cppflags="-D_FORTIFY_SOURCE=2"
-    cflags="-O2 -g -mms-bitfields -fexceptions ${arch_cflags}"
+    cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
