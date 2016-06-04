@@ -485,8 +485,7 @@ build_one() {
         do_configure
         make $parallel
         if [ "$can_test" = yes ] ; then
-            # make check
-            :
+            make check
         fi
         make install
         ;;
