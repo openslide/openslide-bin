@@ -467,9 +467,7 @@ build_one() {
                 prefix="${root}"
         ;;
     gettext)
-        # Missing tests for C++ compiler, which is only needed on Windows
         do_configure \
-                CXX=${build_host}-g++ \
                 --disable-java \
                 --disable-native-java \
                 --disable-csharp \
@@ -490,19 +488,9 @@ build_one() {
         make install
         ;;
     glib)
-        # https://bugzilla.gnome.org/show_bug.cgi?id=754431
-        sed -i 's/#include "config.h"/&\n#define MINGW_HAS_SECURE_API 1/' \
-                glib/gstrfuncs.c
         do_configure \
                 --with-pcre=internal \
                 --with-threads=win32
-        # Fix 32-bit Cygwin builds in a uniform way
-        # https://bugzilla.gnome.org/show_bug.cgi?id=739656
-        sed -i 's/#include "config.h"/\0\n#undef _WIN32_WINNT\n#define _WIN32_WINNT 0x0600/' \
-                gio/gsocket.c
-        sed -i -e "s/.*HAVE_IF_INDEXTONAME.*/#define HAVE_IF_INDEXTONAME 1/" \
-                -e "s/.*HAVE_IF_NAMETOINDEX.*/#define HAVE_IF_NAMETOINDEX 1/" \
-                config.h
         make $parallel
         make install
         ;;
@@ -524,10 +512,6 @@ build_one() {
         # GCC was built with POSIX threads support.
         do_configure \
                 ac_cv_tls=none
-        # Work around build failure with ac_cv_tls=none and recent
-        # MinGW-w64 headers
-        # https://sourceforge.net/p/mingw-w64/bugs/450/
-        echo "#undef IN" >> pixman/pixman-compiler.h
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
