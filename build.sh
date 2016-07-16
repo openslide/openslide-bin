@@ -51,15 +51,15 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
-png_ver="1.6.22"
+png_ver="1.6.23"
 jpeg_ver="1.5.0"
 tiff_ver="4.0.6"
-openjpeg_ver="2.1.0"
+openjpeg_ver="2.1.1"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
 glib_ver="2.48.1"
-gdkpixbuf_ver="2.35.1"
+gdkpixbuf_ver="2.35.2"
 pixman_ver="0.34.0"
 cairo_ver="1.14.6"
 xml_ver="2.9.4"
@@ -79,7 +79,7 @@ zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="http://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
-openjpeg_url="http://prdownloads.sourceforge.net/openjpeg.mirror/openjpeg-${openjpeg_ver}.tar.gz"
+openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
 iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
 gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
 ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
@@ -169,7 +169,7 @@ zlib_upurl="http://zlib.net/"
 png_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="http://download.osgeo.org/libtiff/"
-openjpeg_upurl="http://sourceforge.net/projects/openjpeg.mirror/files/"
+openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
 iconv_upurl="https://github.com/win-iconv/win-iconv/tags"
 gettext_upurl="http://ftp.gnu.org/pub/gnu/gettext/"
 ffi_upurl="ftp://sourceware.org/pub/libffi/"
@@ -187,7 +187,7 @@ zlib_upregex="source code, version ([0-9.]+)"
 png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
-openjpeg_upregex="files/([0-9.]+)/"
+openjpeg_upregex="archive/v([0-9.]+)\.tar"
 iconv_upregex="archive/v([0-9.]+)\.tar"
 gettext_upregex="gettext-([0-9.]+)\.tar"
 ffi_upregex="libffi-([0-9.]+)\.tar"
@@ -433,12 +433,6 @@ build_one() {
         make install
         ;;
     openjpeg)
-        local saved_cflags
-        # 32-bit binaries segfault in aperio-33005 test if OpenJPEG is built
-        # with -msse2 (observed with OpenJPEG 2.1.0, gcc 4.9.2)
-        saved_cflags="${cflags}"
-        cflags="${cflags/-msse2/}"
-        cflags="${cflags/-mfpmath=sse/}"
         do_cmake \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
                 -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
@@ -446,7 +440,6 @@ build_one() {
                 -DBUILD_DOC=OFF
         make $parallel
         make install
-        cflags="${saved_cflags}"
         ;;
     iconv)
         # Don't strip DLL during build
