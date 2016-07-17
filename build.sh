@@ -309,6 +309,10 @@ do_configure() {
     # Run configure with the appropriate parameters.
     # Additional parameters can be specified as arguments.
     #
+    # openSUSE sets $CONFIG_SITE to a script which changes libdir to
+    # "${exec_prefix}/lib64" when building for 64-bit hosts
+    # https://lists.andrew.cmu.edu/pipermail/openslide-users/2016-July/001263.html
+    #
     # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
     #
     # Use only our pkg-config library directory, even on cross builds
@@ -322,6 +326,7 @@ do_configure() {
             --prefix="$root" \
             --disable-static \
             --disable-dependency-tracking \
+            CONFIG_SITE= \
             PKG_CONFIG=pkg-config \
             PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
             PKG_CONFIG_PATH= \
