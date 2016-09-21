@@ -20,7 +20,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -32,6 +32,7 @@ ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
+libzip_name="libzip"
 png_name="libpng"
 jpeg_name="libjpeg-turbo"
 tiff_name="libtiff"
@@ -67,6 +68,7 @@ sqlite_year="2016"
 sqlite_ver="3.14.2"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
+libzip_ver="1.1.2"
 
 # Derived package version strings
 glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
@@ -91,6 +93,8 @@ xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
 sqlite_url="http://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
+libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.gz"
+
 
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
@@ -109,6 +113,7 @@ xml_build="libxml2-${xml_ver}"
 sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
+libzip_build="libzip-${libzip_ver}"
 
 # Locations of license files within the source tree
 zlib_licenses="README"
@@ -127,6 +132,7 @@ xml_licenses="COPYING"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt"
 openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
+libzip_licenses="LICENSE"
 
 # Build dependencies
 zlib_dependencies=""
@@ -143,8 +149,9 @@ pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
 sqlite_dependencies=""
-openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite libzip"
 openslidejava_dependencies="openslide"
+libzip_dependencies="zlib"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
@@ -163,6 +170,7 @@ xml_artifacts="libxml2-2.dll"
 sqlite_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
+libzip_artifacts="libzip.dll"
 
 # Update-checking URLs
 zlib_upurl="http://zlib.net/"
@@ -181,6 +189,7 @@ xml_upurl="ftp://xmlsoft.org/libxml2/"
 sqlite_upurl="http://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
+libzip_upurl=""
 
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
@@ -201,6 +210,7 @@ sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
 openslide_upregex="archive/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
+libzip_upregex="nothingreallyhere"
 
 # Helper script paths
 configguess_path="tar/config.guess-${configguess_ver}"
@@ -263,7 +273,7 @@ fetch() {
     url="$(expand ${1}_url)"
     mkdir -p tar
     if [ ! -e "$(tarpath $1)" ] ; then
-        echo "Fetching ${1}..."
+        echo "Fetching ${1}...from ${url}"
         if [ "$1" = "configguess" ] ; then
             # config.guess is special; we have to rename the saved file
             ${wget} -O "$configguess_path" "$url"
@@ -552,6 +562,7 @@ build_one() {
         if [ -n "${ver_suffix}" ] ; then
             ver_suffix_arg="--with-version-suffix=${ver_suffix}"
         fi
+#	autoreconf -i
         do_configure \
                 "${ver_suffix_arg}"
         make $parallel
@@ -570,6 +581,24 @@ build_one() {
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
         ;;
+    libzip)
+#	autoconf
+#	do_configure
+	do_cmake \
+                -DBUILD_PKGCONFIG_FILES=ON \
+                -DBUILD_DOC=ON \
+		-DZLIB_DLL=ON \
+		-D_WIN32=ON
+#	cp zipconf.h ${root}/include
+	make $parallel
+	make install
+
+	autoconf
+	do_configure
+	cp libzip.pc ${root}/lib/pkgconfig
+	make $parallel
+	make install
+	;;
     esac
     popd >/dev/null
 }
