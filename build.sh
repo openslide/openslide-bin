@@ -52,6 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
+libzip_ver="1.1.3"
 png_ver="1.6.25"
 jpeg_ver="1.5.0"
 tiff_ver="4.0.6"
@@ -68,7 +69,6 @@ sqlite_year="2016"
 sqlite_ver="3.14.2"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
-libzip_ver="1.1.2"
 
 # Derived package version strings
 glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
@@ -78,6 +78,7 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
+libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.gz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="http://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
@@ -93,11 +94,10 @@ xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
 sqlite_url="http://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
-libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.gz"
-
 
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
+libzip_build="libzip-${libzip_ver}"
 png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
@@ -113,10 +113,10 @@ xml_build="libxml2-${xml_ver}"
 sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
-libzip_build="libzip-${libzip_ver}"
 
 # Locations of license files within the source tree
 zlib_licenses="README"
+libzip_licenses="LICENSE"
 png_licenses="png.h"  # !!!
 jpeg_licenses="LICENSE.md README.ijg simd/jsimdext.inc" # !!!
 tiff_licenses="COPYRIGHT"
@@ -132,10 +132,10 @@ xml_licenses="COPYING"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt"
 openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
-libzip_licenses="LICENSE"
 
 # Build dependencies
 zlib_dependencies=""
+libzip_dependencies="zlib"
 png_dependencies="zlib"
 jpeg_dependencies=""
 tiff_dependencies="zlib jpeg"
@@ -151,10 +151,10 @@ xml_dependencies="zlib iconv"
 sqlite_dependencies=""
 openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite libzip"
 openslidejava_dependencies="openslide"
-libzip_dependencies="zlib"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
+libzip_artifacts="libzip.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
@@ -170,10 +170,10 @@ xml_artifacts="libxml2-2.dll"
 sqlite_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
-libzip_artifacts="libzip.dll"
 
 # Update-checking URLs
 zlib_upurl="http://zlib.net/"
+libzip_upurl="https://nih.at/libzip/"
 png_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="http://download.osgeo.org/libtiff/"
@@ -189,10 +189,10 @@ xml_upurl="ftp://xmlsoft.org/libxml2/"
 sqlite_upurl="http://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
-libzip_upurl=""
 
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
+libzip_upregex="Current Version: ([0-9].[0-9].[0-9])"
 png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
@@ -210,7 +210,6 @@ sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
 openslide_upregex="archive/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
-libzip_upregex="nothingreallyhere"
 
 # Helper script paths
 configguess_path="tar/config.guess-${configguess_ver}"
@@ -273,7 +272,7 @@ fetch() {
     url="$(expand ${1}_url)"
     mkdir -p tar
     if [ ! -e "$(tarpath $1)" ] ; then
-        echo "Fetching ${1}...from ${url}"
+        echo "Fetching ${1}..."
         if [ "$1" = "configguess" ] ; then
             # config.guess is special; we have to rename the saved file
             ${wget} -O "$configguess_path" "$url"
@@ -410,6 +409,15 @@ build_one() {
                 BINARY_PATH="${root}/bin" \
                 INCLUDE_PATH="${root}/include" \
                 LIBRARY_PATH="${root}/lib" install
+        ;;
+    libzip)
+	do_cmake \
+                -DBUILD_PKGCONFIG_FILES=ON \
+                -DBUILD_DOC=ON \
+                -DZLIB_DLL=ON \
+                -D_WIN32=ON
+        make $parallel
+        make install
         ;;
     png)
         do_configure
@@ -562,7 +570,6 @@ build_one() {
         if [ -n "${ver_suffix}" ] ; then
             ver_suffix_arg="--with-version-suffix=${ver_suffix}"
         fi
-#	autoreconf -i
         do_configure \
                 "${ver_suffix_arg}"
         make $parallel
@@ -581,24 +588,6 @@ build_one() {
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
         ;;
-    libzip)
-#	autoconf
-#	do_configure
-	do_cmake \
-                -DBUILD_PKGCONFIG_FILES=ON \
-                -DBUILD_DOC=ON \
-		-DZLIB_DLL=ON \
-		-D_WIN32=ON
-#	cp zipconf.h ${root}/include
-	make $parallel
-	make install
-
-	autoconf
-	do_configure
-	cp libzip.pc ${root}/lib/pkgconfig
-	make $parallel
-	make install
-	;;
     esac
     popd >/dev/null
 }
