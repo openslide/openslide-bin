@@ -20,7 +20,7 @@
 
 set -eE
 
-packages="configguess zlib png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -32,6 +32,7 @@ ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 zlib_name="zlib"
+libzip_name="libzip"
 png_name="libpng"
 jpeg_name="libjpeg-turbo"
 tiff_name="libtiff"
@@ -51,6 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.8"
+libzip_ver="1.1.3"
 png_ver="1.6.25"
 jpeg_ver="1.5.0"
 tiff_ver="4.0.6"
@@ -76,6 +78,7 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
+libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.gz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="http://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
@@ -94,6 +97,7 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 
 # Unpacked source trees
 zlib_build="zlib-${zlib_ver}"
+libzip_build="libzip-${libzip_ver}"
 png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
@@ -112,6 +116,7 @@ openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
 zlib_licenses="README"
+libzip_licenses="LICENSE"
 png_licenses="png.h"  # !!!
 jpeg_licenses="LICENSE.md README.ijg simd/jsimdext.inc" # !!!
 tiff_licenses="COPYRIGHT"
@@ -130,6 +135,7 @@ openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 
 # Build dependencies
 zlib_dependencies=""
+libzip_dependencies="zlib"
 png_dependencies="zlib"
 jpeg_dependencies=""
 tiff_dependencies="zlib jpeg"
@@ -143,11 +149,12 @@ pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
 sqlite_dependencies=""
-openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite libzip"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
+libzip_artifacts="libzip.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
@@ -166,6 +173,7 @@ openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
 zlib_upurl="http://zlib.net/"
+libzip_upurl="https://nih.at/libzip/"
 png_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="http://download.osgeo.org/libtiff/"
@@ -184,6 +192,7 @@ openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
+libzip_upregex="Current Version: ([0-9].[0-9].[0-9])"
 png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
@@ -400,6 +409,15 @@ build_one() {
                 BINARY_PATH="${root}/bin" \
                 INCLUDE_PATH="${root}/include" \
                 LIBRARY_PATH="${root}/lib" install
+        ;;
+    libzip)
+	do_cmake \
+                -DBUILD_PKGCONFIG_FILES=ON \
+                -DBUILD_DOC=ON \
+                -DZLIB_DLL=ON \
+                -D_WIN32=ON
+        make $parallel
+        make install
         ;;
     png)
         do_configure
