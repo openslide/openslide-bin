@@ -78,7 +78,7 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
-libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.gz"
+libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.xz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="http://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
