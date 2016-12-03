@@ -66,7 +66,7 @@ pixman_ver="0.34.0"
 cairo_ver="1.14.6"
 xml_ver="2.9.4"
 sqlite_year="2016"
-sqlite_ver="3.15.1"
+sqlite_ver="3.15.2"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
