@@ -24,7 +24,7 @@ packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib 
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.9.7"
+ant_ver="1.10.0"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -51,9 +51,9 @@ openslidejava_name="OpenSlide Java"
 
 # Package versions
 configguess_ver="47681e2a"
-zlib_ver="1.2.8"
+zlib_ver="1.2.10"
 libzip_ver="1.1.3"
-png_ver="1.6.26"
+png_ver="1.6.27"
 jpeg_ver="1.5.1"
 tiff_ver="4.0.7"
 openjpeg_ver="2.1.2"
@@ -61,12 +61,12 @@ iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
 glib_ver="2.50.2"
-gdkpixbuf_ver="2.36.0"
+gdkpixbuf_ver="2.36.3"
 pixman_ver="0.34.0"
-cairo_ver="1.14.6"
+cairo_ver="1.14.8"
 xml_ver="2.9.4"
-sqlite_year="2016"
-sqlite_ver="3.15.2"
+sqlite_year="2017"
+sqlite_ver="3.16.2"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
