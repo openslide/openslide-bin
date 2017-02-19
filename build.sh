@@ -24,7 +24,7 @@ packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib 
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.10.0"
+ant_ver="1.10.1"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -52,7 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
-libzip_ver="1.1.3"
+libzip_ver="1.2.0"
 png_ver="1.6.28"
 jpeg_ver="1.5.1"
 tiff_ver="4.0.7"
@@ -60,13 +60,13 @@ openjpeg_ver="2.1.2"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
-glib_ver="2.50.2"
+glib_ver="2.50.3"
 gdkpixbuf_ver="2.36.4"
 pixman_ver="0.34.0"
 cairo_ver="1.14.8"
 xml_ver="2.9.4"
 sqlite_year="2017"
-sqlite_ver="3.16.2"
+sqlite_ver="3.17.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
@@ -154,7 +154,7 @@ openslidejava_dependencies="openslide"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
-libzip_artifacts="libzip-4.dll"
+libzip_artifacts="libzip-5.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
