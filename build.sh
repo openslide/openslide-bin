@@ -53,20 +53,20 @@ openslidejava_name="OpenSlide Java"
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
 libzip_ver="1.2.0"
-png_ver="1.6.28"
+png_ver="1.6.29"
 jpeg_ver="1.5.1"
 tiff_ver="4.0.7"
 openjpeg_ver="2.1.2"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
-glib_ver="2.50.3"
+glib_ver="2.52.0"
 gdkpixbuf_ver="2.36.4"
 pixman_ver="0.34.0"
 cairo_ver="1.14.8"
 xml_ver="2.9.4"
 sqlite_year="2017"
-sqlite_ver="3.17.0"
+sqlite_ver="3.18.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
@@ -419,7 +419,8 @@ build_one() {
         make install
         ;;
     png)
-        do_configure
+        do_configure \
+                --enable-intel-sse
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
