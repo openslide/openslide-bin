@@ -52,7 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
-libzip_ver="1.2.0"
+libzip_ver="1.3.0"
 png_ver="1.6.30"
 jpeg_ver="1.5.2"
 tiff_ver="4.0.8"
@@ -412,9 +412,6 @@ build_one() {
                 LIBRARY_PATH="${root}/lib" install
         ;;
     libzip)
-        # Avoid build failure in test suite
-        # https://nih.at/listarchive/libzip-discuss/msg00675.html
-        >regress/malloc.c
         do_configure
         make $parallel
         make install
