@@ -61,7 +61,7 @@ iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
 glib_ver="2.52.3"
-gdkpixbuf_ver="2.36.4"
+gdkpixbuf_ver="2.36.9"
 pixman_ver="0.34.0"
 cairo_ver="1.14.10"
 xml_ver="2.9.4"
@@ -509,10 +509,16 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
+        # We don't use the TIFF loader and it fails to build.  Disable
+        # everything but the BMP loader for now.
+        # https://bugzilla.gnome.org/show_bug.cgi?id=786342
         do_configure \
                 --disable-modules \
-                --with-included-loaders \
+                --with-included-loaders=bmp \
                 --without-gdiplus
+        # Disable thumbnailer: we don't use it and it fails to build.
+        # https://bugzilla.gnome.org/show_bug.cgi?id=779057
+        sed -i '/^SUBDIRS =/ s/ thumbnailer / /' Makefile
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
