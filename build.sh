@@ -56,7 +56,7 @@ libzip_ver="1.2.0"
 png_ver="1.6.30"
 jpeg_ver="1.5.2"
 tiff_ver="4.0.8"
-openjpeg_ver="2.1.2"
+openjpeg_ver="2.2.0"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
@@ -356,6 +356,7 @@ do_cmake() {
     cat > toolchain.cmake <<EOF
 SET(CMAKE_SYSTEM_NAME Windows)
 SET(CMAKE_C_COMPILER ${build_host}-gcc)
+SET(CMAKE_CXX_COMPILER ${build_host}-g++)
 SET(CMAKE_RC_COMPILER ${build_host}-windres)
 EOF
     cmake -G "Unix Makefiles" \
