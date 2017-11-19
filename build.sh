@@ -53,20 +53,20 @@ openslidejava_name="OpenSlide Java"
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
 libzip_ver="1.3.0"
-png_ver="1.6.32"
+png_ver="1.6.34"
 jpeg_ver="1.5.2"
-tiff_ver="4.0.8"
-openjpeg_ver="2.2.0"
+tiff_ver="4.0.9"
+openjpeg_ver="2.3.0"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
-glib_ver="2.54.0"
-gdkpixbuf_ver="2.36.10"
+glib_ver="2.54.2"
+gdkpixbuf_ver="2.36.11"
 pixman_ver="0.34.0"
 cairo_ver="1.14.10"
-xml_ver="2.9.5"
+xml_ver="2.9.7"
 sqlite_year="2017"
-sqlite_ver="3.20.1"
+sqlite_ver="3.21.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
@@ -509,12 +509,9 @@ build_one() {
         make install
         ;;
     gdkpixbuf)
-        # We don't use the TIFF loader and it fails to build.  Disable
-        # everything but the BMP loader for now.
-        # https://bugzilla.gnome.org/show_bug.cgi?id=786342
         do_configure \
                 --disable-modules \
-                --with-included-loaders=bmp \
+                --with-included-loaders \
                 --without-gdiplus
         # Disable thumbnailer: we don't use it and it fails to build.
         # https://bugzilla.gnome.org/show_bug.cgi?id=779057
