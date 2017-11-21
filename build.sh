@@ -52,7 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
-libzip_ver="1.3.0"
+libzip_ver="1.3.2"
 png_ver="1.6.34"
 jpeg_ver="1.5.2"
 tiff_ver="4.0.9"
@@ -413,6 +413,8 @@ build_one() {
         ;;
     libzip)
         do_configure
+        # https://libzip.org/libzip-discuss/msg00778.html
+        sed -i 's/ nonrandomopentest$(EXEEXT)//' regress/Makefile
         make $parallel
         make install
         ;;
