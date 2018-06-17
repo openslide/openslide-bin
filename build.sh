@@ -24,7 +24,7 @@ packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib 
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.10.1"
+ant_ver="1.10.3"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
 ant_upurl="http://archive.apache.org/dist/ant/binaries/"
@@ -60,13 +60,13 @@ openjpeg_ver="2.3.0"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
-glib_ver="2.54.2"
-gdkpixbuf_ver="2.36.11"
+glib_ver="2.56.1"
+gdkpixbuf_ver="2.36.12"
 pixman_ver="0.34.0"
 cairo_ver="1.14.12"
-xml_ver="2.9.7"
-sqlite_year="2017"
-sqlite_ver="3.21.0"
+xml_ver="2.9.8"
+sqlite_year="2018"
+sqlite_ver="3.24.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
@@ -517,6 +517,8 @@ build_one() {
         # Disable thumbnailer: we don't use it and it fails to build.
         # https://bugzilla.gnome.org/show_bug.cgi?id=779057
         sed -i '/^SUBDIRS =/ s/ thumbnailer / /' Makefile
+        # https://gitlab.gnome.org/GNOME/gdk-pixbuf/merge_requests/10
+        sed -i 's/Windows\.h/windows.h/' gdk-pixbuf/io-tiff.c
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
