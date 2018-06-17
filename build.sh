@@ -52,7 +52,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="47681e2a"
 zlib_ver="1.2.11"
-libzip_ver="1.3.2"
+libzip_ver="1.5.1"
 png_ver="1.6.34"
 jpeg_ver="1.5.3"
 tiff_ver="4.0.9"
@@ -154,7 +154,7 @@ openslidejava_dependencies="openslide"
 
 # Build artifacts
 zlib_artifacts="zlib1.dll"
-libzip_artifacts="libzip-5.dll"
+libzip_artifacts="libzip.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
@@ -411,9 +411,9 @@ build_one() {
                 LIBRARY_PATH="${root}/lib" install
         ;;
     libzip)
-        do_configure
-        # https://libzip.org/libzip-discuss/msg00778.html
-        sed -i 's/ nonrandomopentest$(EXEEXT)//' regress/Makefile
+        # No libdl on Windows
+        sed -i '/nonrandomopen/d' regress/CMakeLists.txt
+        do_cmake
         make $parallel
         make install
         ;;
