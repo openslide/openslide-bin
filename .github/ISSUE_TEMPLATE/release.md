@@ -7,5 +7,5 @@
 - [ ] Test binaries with Wine
 - [ ] Create and push signed tag
 - [ ] Attach OpenSlide and OpenSlide Java versions to [GitHub release](https://github.com/openslide/openslide-winbuild/releases/new); upload release artifacts
-- [ ] Update website: `_data/releases.yaml`, maybe `_includes/news.markdown`
+- [ ] Update website: `_data/releases.yaml`, maybe `_includes/news.md`
 - [ ] Possibly send mail to -announce and -users
