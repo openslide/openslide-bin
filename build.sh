@@ -627,7 +627,7 @@ sdist() {
             cp "$path" "${zipdir}/tar/"
         fi
     done
-    cp build.sh README.md lgpl-2.1.txt "${zipdir}/"
+    cp build.sh README.md COPYING.LESSER "${zipdir}/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
