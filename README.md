@@ -1,8 +1,9 @@
+# openslide-winbuild
+
 This is a set of scripts for building OpenSlide for Windows, including all
 of its dependencies, using MinGW-w64.
 
-Cross-compiling from Linux
---------------------------
+## Cross-compiling from Linux
 
 You will need:
 
@@ -19,8 +20,7 @@ Then:
 
     ./build.sh bdist
 
-Building natively on Windows
-----------------------------
+## Building natively on Windows
 
 ### One-time setup
 
@@ -51,16 +51,14 @@ address mismatch, follow the instructions [here][1].
 
 [1]: http://cygwin.wikia.com/wiki/Rebaseall
 
-Substitute Sources
-------------------
+## Substitute Sources
 
 To override the source tree used to build a package, create a top-level
 directory named `override` and place the substitute source tree in a
 subdirectory named after the package's shortname.  A list of shortnames
 can be obtained by running `build.sh` with no arguments.
 
-build.sh Subcommands
---------------------
+## build.sh Subcommands
 
 #### `setup`
 
@@ -86,8 +84,7 @@ those packages in the specified bitness.
 
 Check for new releases of software packages.
 
-Options
--------
+## Options
 
 These must be specified before the subcommand.
 
