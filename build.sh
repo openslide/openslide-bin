@@ -618,6 +618,9 @@ build_one() {
         # GCC was built with POSIX threads support.
         do_configure \
                 ac_cv_tls=none
+        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
+        sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
+                pixman/pixman-mmx.c
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
