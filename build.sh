@@ -807,10 +807,7 @@ probe() {
         do
             echo $hdr > conftest
             chmod +x conftest
-            if ./conftest 2>/dev/null ; then
-                # Awkward construct due to "set -e"
-                :
-            elif [ $? = 193 ] ; then
+            if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
                 rm conftest
                 echo "Wine is enabled in binfmt_misc.  Please disable it."
                 exit 1
