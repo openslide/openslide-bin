@@ -20,7 +20,7 @@
 
 set -eE
 
-packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess ssp zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -31,6 +31,7 @@ ant_upurl="http://archive.apache.org/dist/ant/binaries/"
 ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
+ssp_name="libssp"
 zlib_name="zlib"
 libzip_name="libzip"
 png_name="libpng"
@@ -51,6 +52,7 @@ openslidejava_name="OpenSlide Java"
 
 # Package versions
 configguess_ver="47681e2a"
+ssp_ver="12.1.0"
 zlib_ver="1.2.11"
 libzip_ver="1.5.1"
 png_ver="1.6.34"
@@ -77,6 +79,7 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 
 # Tarball URLs
 configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
+ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
 libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.xz"
 png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
@@ -96,6 +99,7 @@ openslide_url="https://github.com/openslide/openslide/releases/download/v${opens
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees
+ssp_build="gcc-${ssp_ver}/libssp"
 zlib_build="zlib-${zlib_ver}"
 libzip_build="libzip-${libzip_ver}"
 png_build="libpng-${png_ver}"
@@ -115,6 +119,7 @@ openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
+ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
 zlib_licenses="README"
 libzip_licenses="LICENSE"
 png_licenses="png.h"  # !!!
@@ -134,6 +139,7 @@ openslide_licenses="LICENSE.txt lgpl-2.1.txt"
 openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
 
 # Build dependencies
+ssp_dependencies=""
 zlib_dependencies=""
 libzip_dependencies="zlib"
 png_dependencies="zlib"
@@ -149,10 +155,11 @@ pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
 sqlite_dependencies=""
-openslide_dependencies="libzip png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp libzip png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
+ssp_artifacts="libssp-0.dll"
 zlib_artifacts="zlib1.dll"
 libzip_artifacts="libzip.dll"
 png_artifacts="libpng16-16.dll"
@@ -172,6 +179,7 @@ openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-sh
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
+ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
 zlib_upurl="http://zlib.net/"
 libzip_upurl="https://nih.at/libzip/"
 png_upurl="http://www.libpng.org/pub/png/libpng.html"
@@ -191,6 +199,7 @@ openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
+ssp_upregex="gcc-([0-9.]+)/"
 zlib_upregex="source code, version ([0-9.]+)"
 libzip_upregex="libzip-([0-9.]+)\.tar"
 png_upregex="libpng-([0-9.]+)-README.txt"
@@ -342,7 +351,7 @@ do_configure() {
             CPPFLAGS="${cppflags} -I${root}/include" \
             CFLAGS="${cflags}" \
             CXXFLAGS="${cxxflags}" \
-            LDFLAGS="${ldflags} -L${root}/lib" \
+            LDFLAGS="-L${root}/lib ${ldflags}" \
             "$@"
 }
 
@@ -391,6 +400,20 @@ build_one() {
     builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
+    ssp)
+        # This is only needed when building on Fedora, where the MinGW CRT
+        # is built with _FORTIFY_SOURCE.  Ship it everywhere for consistency.
+        # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
+        do_configure \
+                --disable-multilib \
+                --with-target-subdir=.
+        make $parallel
+        # Copy the DLL but not the import library.  We want everything to
+        # use the linkage that comes with the compiler, but want to supply
+        # our own DLL so we can provide complete corresponding source.
+        mkdir -p "${root}/bin"
+        cp ".libs/${ssp_artifacts}" "${root}/bin"
+        ;;
     zlib)
         # Don't strip binaries during build
         make -f win32/Makefile.gcc $parallel \
@@ -471,7 +494,7 @@ build_one() {
                 AR="${build_host}-ar" \
                 RANLIB="${build_host}-ranlib" \
                 DLLTOOL="${build_host}-dlltool" \
-                CFLAGS="${cppflags} ${cflags}" \
+                CFLAGS="${cppflags} ${cflags} ${ldflags}" \
                 SPECS_FLAGS="${ldflags} -static-libgcc"
         if [ "$can_test" = yes ] ; then
             make test \
@@ -754,10 +777,18 @@ probe() {
         exit 1
     fi
 
-    cppflags="-D_FORTIFY_SOURCE=2"
+    cppflags=""
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
+
+    # Check whether we need -lssp
+    # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
+    echo -e '#include <dirent.h>\nvoid main() { opendir("/"); }' > conftest.c
+    if ! ${build_host}-gcc -o conftest.exe conftest.c 2>/dev/null; then
+        ldflags="${ldflags} -lssp"
+    fi
+    rm -f conftest.{c,exe}
 
     if ${build_host}-ld --help | grep -q -- --insert-timestamp ; then
         # Disable deterministic build feature in GNU ld 2.24 (disabled
