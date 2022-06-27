@@ -12,6 +12,8 @@ You will need:
 - OpenJDK
 - Apache Ant
 - CMake
+- Meson
+- Ninja
 - gettext utility programs
 - glib2 utility programs
 - Native gcc and binutils for your build platform

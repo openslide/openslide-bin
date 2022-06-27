@@ -3,6 +3,7 @@
 # A script for building OpenSlide and its dependencies for Windows
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
+# Copyright (c) 2022      Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -20,10 +21,10 @@
 
 set -eE
 
-packages="configguess ssp zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess ssp zlib libzip png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
-cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
+cygtools="wget zip pkg-config make cmake meson mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
 ant_ver="1.10.3"
 ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
@@ -41,6 +42,7 @@ openjpeg_name="OpenJPEG"
 iconv_name="win-iconv"
 gettext_name="gettext"
 ffi_name="libffi"
+pcre_name="PCRE"
 glib_name="glib"
 gdkpixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
@@ -62,7 +64,8 @@ openjpeg_ver="2.3.0"
 iconv_ver="0.0.8"
 gettext_ver="0.19.8.1"
 ffi_ver="3.2.1"
-glib_ver="2.56.1"
+pcre_ver="8.45"
+glib_ver="2.72.2"
 gdkpixbuf_ver="2.36.12"
 pixman_ver="0.34.0"
 cairo_ver="1.14.12"
@@ -89,6 +92,7 @@ openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar
 iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
 gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
 ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
+pcre_url="https://prdownloads.sourceforge.net/pcre/pcre-${pcre_ver}.tar.gz"
 glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
@@ -109,6 +113,7 @@ openjpeg_build="openjpeg-${openjpeg_ver}"
 iconv_build="win-iconv-${iconv_ver}"
 gettext_build="gettext-${gettext_ver}/gettext-runtime"
 ffi_build="libffi-${ffi_ver}"
+pcre_build="pcre-${pcre_ver}"
 glib_build="glib-${glib_ver}"
 gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
@@ -129,6 +134,7 @@ openjpeg_licenses="LICENSE"
 iconv_licenses="readme.txt"
 gettext_licenses="COPYING intl/COPYING.LIB"
 ffi_licenses="LICENSE"
+pcre_licenses="LICENCE"
 glib_licenses="COPYING"
 gdkpixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
@@ -149,7 +155,8 @@ openjpeg_dependencies="png tiff"
 iconv_dependencies=""
 gettext_dependencies="iconv"
 ffi_dependencies=""
-glib_dependencies="zlib iconv gettext ffi"
+pcre_dependencies=""
+glib_dependencies="zlib iconv gettext ffi pcre"
 gdkpixbuf_dependencies="png jpeg tiff glib"
 pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
@@ -169,6 +176,7 @@ openjpeg_artifacts="libopenjp2.dll"
 iconv_artifacts="iconv.dll"
 gettext_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-6.dll"
+pcre_artifacts="libpcre-1.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
 gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
@@ -189,6 +197,7 @@ openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
 iconv_upurl="https://github.com/win-iconv/win-iconv/tags"
 gettext_upurl="http://ftp.gnu.org/pub/gnu/gettext/"
 ffi_upurl="ftp://sourceware.org/pub/libffi/"
+pcre_upurl="https://sourceforge.net/projects/pcre/files/pcre/"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
 gdkpixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="http://cairographics.org/releases/"
@@ -209,6 +218,7 @@ openjpeg_upregex="archive/v([0-9.]+)\.tar"
 iconv_upregex="archive/v([0-9.]+)\.tar"
 gettext_upregex="gettext-([0-9.]+)\.tar"
 ffi_upregex="libffi-([0-9.]+)\.tar"
+pcre_upregex="/projects/pcre/files/pcre/([0-9.]+)/"
 glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/glib-"
 gdkpixbuf_upregex="archive/([0-9.]+)/gdk-pixbuf-"
 pixman_upregex="pixman-([0-9.]+)\.tar"
@@ -383,6 +393,53 @@ EOF
             .
 }
 
+do_meson_setup() {
+    # Run meson setup with the appropriate parameters.
+    # Additional parameters can be specified as arguments.
+    #
+    # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
+    #
+    # Use only our pkg-config library directory, even on cross builds
+    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    cat > cross.ini <<EOF
+[built-in options]
+prefix = '${root}'
+c_args = $(make_meson_list "${cppflags} -I${root}/include ${cflags}")
+c_link_args = $(make_meson_list "-L${root}/lib ${ldflags}")
+cpp_args = $(make_meson_list "${cppflags} -I${root}/include ${cxxflags}")
+cpp_link_args = $(make_meson_list "-L${root}/lib ${ldflags}")
+pkg_config_path = ''
+
+[properties]
+pkg_config_libdir = '${root}/lib/pkgconfig'
+
+[binaries]
+ar = '${build_host}-ar'
+c = '${build_host}-gcc'
+cpp = '${build_host}-g++'
+ld = '${build_host}-ld'
+objcopy = '${build_host}-objcopy'
+pkgconfig = 'pkg-config'
+strip = '${build_host}-strip'
+windres = '${build_host}-windres'
+
+[host_machine]
+system = 'windows'
+endian = 'little'
+cpu_family = '${meson_cpu_family}'
+cpu = '${meson_cpu}'
+EOF
+    meson setup \
+            --buildtype plain \
+            --cross-file cross.ini \
+            --wrap-mode nofallback \
+            "$@"
+}
+
+make_meson_list() {
+    echo "$1" | sed -E -e "s/^ */['/" -e "s/ *$/']/" -e "s/ +/', '/g"
+}
+
 build_one() {
     # Build the specified package and its dependencies if not already built
     # $1  = package shortname
@@ -525,12 +582,18 @@ build_one() {
         fi
         make install
         ;;
-    glib)
-        do_configure \
-                --with-pcre=internal \
-                --with-threads=win32
+    pcre)
+        do_configure
         make $parallel
+        if [ "$can_test" = yes ] ; then
+            make check
+        fi
         make install
+        ;;
+    glib)
+        do_meson_setup build
+        meson compile -C build $parallel
+        meson install -C build
         ;;
     gdkpixbuf)
         do_configure \
@@ -768,8 +831,12 @@ probe() {
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
+        meson_cpu_family=x86_64
+        meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
+        meson_cpu_family=x86
+        meson_cpu=i686
         arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
     fi
     if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
