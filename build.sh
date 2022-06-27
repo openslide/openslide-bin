@@ -675,6 +675,8 @@ build_one() {
         do_configure \
                 ANT_HOME="${ant_home}" \
                 JAVA_HOME="${java_home}"
+        # https://github.com/openslide/openslide-java/commit/bfa80947
+        sed -i s/1.6/1.8/ build.xml
         make $parallel
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
