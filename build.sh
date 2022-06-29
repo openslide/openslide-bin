@@ -57,7 +57,7 @@ ssp_ver="12.1.0"
 zlib_ver="1.2.12"
 png_ver="1.6.37"
 jpeg_ver="1.5.3"
-tiff_ver="4.0.9"
+tiff_ver="4.4.0"
 openjpeg_ver="2.3.0"
 iconv_ver="0.0.8"
 gettext_ver="0.21"
@@ -85,7 +85,7 @@ ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_v
 zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
 png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
-tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
+tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
 openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
 iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
 gettext_url="https://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
@@ -501,17 +501,13 @@ build_one() {
         make install
         ;;
     tiff)
-        # TIF_PLATFORM_CONSOLE prevents the default warning/error handlers
-        # from showing a dialog box.
-        # http://lists.andrew.cmu.edu/pipermail/openslide-users/2013-July/000630.html
         do_configure \
                 --with-zlib-include-dir="${root}/include" \
                 --with-zlib-lib-dir="${root}/lib" \
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib" \
                 --disable-jbig \
-                --disable-lzma \
-                CPPFLAGS="${cppflags} -DTIF_PLATFORM_CONSOLE"
+                --disable-lzma
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
