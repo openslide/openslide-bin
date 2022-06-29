@@ -56,7 +56,7 @@ configguess_ver="02ba26b2"
 ssp_ver="12.1.0"
 zlib_ver="1.2.12"
 png_ver="1.6.37"
-jpeg_ver="1.5.3"
+jpeg_ver="2.1.3"
 tiff_ver="4.4.0"
 openjpeg_ver="2.5.0"
 iconv_ver="0.0.8"
@@ -124,7 +124,7 @@ openslidejava_build="openslide-java-${openslidejava_ver}"
 ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
 zlib_licenses="README"
 png_licenses="LICENSE"
-jpeg_licenses="LICENSE.md README.ijg simd/jsimdext.inc" # !!!
+jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 tiff_licenses="COPYRIGHT"
 openjpeg_licenses="LICENSE"
 iconv_licenses="readme.txt"
@@ -368,6 +368,7 @@ do_cmake() {
     # http://public.kitware.com/Bug/view.php?id=9980
     cat > toolchain.cmake <<EOF
 SET(CMAKE_SYSTEM_NAME Windows)
+SET(CMAKE_SYSTEM_PROCESSOR ${cmake_system_processor})
 SET(CMAKE_C_COMPILER ${build_host}-gcc)
 SET(CMAKE_CXX_COMPILER ${build_host}-g++)
 SET(CMAKE_RC_COMPILER ${build_host}-windres)
@@ -497,8 +498,8 @@ build_one() {
         make install
         ;;
     jpeg)
-        do_configure \
-                --without-turbojpeg
+        do_cmake \
+                -DWITH_TURBOJPEG=0
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
@@ -825,10 +826,12 @@ probe() {
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
+        cmake_system_processor=AMD64
         meson_cpu_family=x86_64
         meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
+        cmake_system_processor=x86
         meson_cpu_family=x86
         meson_cpu=i686
         arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
