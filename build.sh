@@ -58,7 +58,7 @@ zlib_ver="1.2.12"
 png_ver="1.6.37"
 jpeg_ver="1.5.3"
 tiff_ver="4.4.0"
-openjpeg_ver="2.3.0"
+openjpeg_ver="2.5.0"
 iconv_ver="0.0.8"
 gettext_ver="0.21"
 ffi_ver="3.4.2"
@@ -361,6 +361,9 @@ do_cmake() {
     # Run cmake with the appropriate parameters.
     # Additional parameters can be specified as arguments.
     #
+    # Use only our pkg-config library directory, even on cross builds
+    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    #
     # Certain cmake variables cannot be specified on the command-line.
     # http://public.kitware.com/Bug/view.php?id=9980
     cat > toolchain.cmake <<EOF
@@ -369,7 +372,9 @@ SET(CMAKE_C_COMPILER ${build_host}-gcc)
 SET(CMAKE_CXX_COMPILER ${build_host}-g++)
 SET(CMAKE_RC_COMPILER ${build_host}-windres)
 EOF
-    cmake -G "Unix Makefiles" \
+    PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
+            PKG_CONFIG_PATH= \
+            cmake -G "Unix Makefiles" \
             -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" \
             -DCMAKE_INSTALL_PREFIX="${root}" \
             -DCMAKE_FIND_ROOT_PATH="${root}" \
@@ -378,9 +383,9 @@ EOF
             -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
             -DCMAKE_C_FLAGS="${cppflags} ${cflags}" \
             -DCMAKE_CXX_FLAGS="${cppflags} ${cxxflags}" \
-            -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
+            -DCMAKE_EXE_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
+            -DCMAKE_MODULE_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
             "$@" \
             .
 }
