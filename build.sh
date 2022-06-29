@@ -64,7 +64,7 @@ gettext_ver="0.21"
 ffi_ver="3.4.2"
 pcre_ver="8.45"
 glib_ver="2.72.2"
-gdkpixbuf_ver="2.36.12"
+gdkpixbuf_ver="2.42.8"
 pixman_ver="0.34.0"
 cairo_ver="1.14.12"
 xml_ver="2.9.14"
@@ -152,7 +152,7 @@ gettext_dependencies="iconv"
 ffi_dependencies=""
 pcre_dependencies=""
 glib_dependencies="zlib iconv gettext ffi pcre"
-gdkpixbuf_dependencies="png jpeg tiff glib"
+gdkpixbuf_dependencies="glib"
 pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
@@ -582,21 +582,19 @@ build_one() {
         meson install -C build
         ;;
     gdkpixbuf)
-        do_configure \
-                --disable-modules \
-                --with-included-loaders \
-                --without-gdiplus
-        # Disable thumbnailer: we don't use it and it fails to build.
-        # https://bugzilla.gnome.org/show_bug.cgi?id=779057
-        sed -i '/^SUBDIRS =/ s/ thumbnailer / /' Makefile
-        # https://gitlab.gnome.org/GNOME/gdk-pixbuf/merge_requests/10
-        sed -i 's/Windows\.h/windows.h/' gdk-pixbuf/io-tiff.c
-        make $parallel
+        do_meson_setup build \
+                -Dpng=disabled \
+                -Dtiff=disabled \
+                -Djpeg=disabled \
+                -Dman=false \
+                -Dbuiltin_loaders="['bmp']" \
+                -Dinstalled_tests=false
+        meson compile -C build $parallel
         if [ "$can_test" = yes ] ; then
-            # make check
+            # meson test -C build
             :
         fi
-        make install
+        meson install -C build
         ;;
     pixman)
         # Use explicit Win32 TLS calls instead of declaring variables with
