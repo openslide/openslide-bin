@@ -65,8 +65,8 @@ ffi_ver="3.4.2"
 pcre_ver="8.45"
 glib_ver="2.72.2"
 gdkpixbuf_ver="2.42.8"
-pixman_ver="0.34.0"
-cairo_ver="1.14.12"
+pixman_ver="0.40.0"
+cairo_ver="1.16.0"
 xml_ver="2.9.14"
 sqlite_year="2022"
 sqlite_ver="3.39.0"
@@ -600,22 +600,27 @@ build_one() {
         # Use explicit Win32 TLS calls instead of declaring variables with
         # __thread.  This avoids a dependency on the winpthreads DLL if
         # GCC was built with POSIX threads support.
-        do_configure \
-                ac_cv_tls=none
+        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/61
+        sed -i "s/'TLS'/'TLS_disabled'/" meson.build
+        do_meson_setup build \
+                -Dopenmp=disabled
         # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
         sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
                 pixman/pixman-mmx.c
-        make $parallel
+        meson compile -C build $parallel
         if [ "$can_test" = yes ] ; then
-            # make check
+            # meson test -C build
             :
         fi
-        make install
+        meson install -C build
         ;;
     cairo)
         do_configure \
                 --enable-ft=no \
                 --enable-xlib=no
+        # Test requires freetype but is compiled unconditionally
+        # Fixed in cairo d331c69f65
+        >test/font-variations.c
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
