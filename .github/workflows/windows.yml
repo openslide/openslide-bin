@@ -50,6 +50,7 @@ jobs:
     container: registry.fedoraproject.org/fedora:36
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
+      version_suffix: ${{ steps.prep.outputs.version_suffix }}
     steps:
       - name: Install dependencies
         run: |
@@ -129,6 +130,10 @@ jobs:
           echo "::set-output name=artifact::$artifact"
           mkdir -p "artifacts/$artifact"
           mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
+          if [ -d override/openslide ]; then
+              suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
+              echo "::set-output name=version_suffix::$suffix"
+          fi
       - name: Upload artifact
         # https://github.com/actions/upload-artifact/issues/233#issuecomment-991419457
         uses: actions/upload-artifact@v2.2.4
@@ -169,7 +174,8 @@ jobs:
           path: tar
       - name: Build binary zip
         run: |
-          ./build.sh -j4 -m${{ matrix.bits }} -p "${{ inputs.pkgver }}" bdist
+          suffix="${{ needs.sdist.outputs.version_suffix }}"
+          ./build.sh -j4 -m${{ matrix.bits }} ${suffix:+-s$suffix} -p "${{ inputs.pkgver }}" bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
           mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
