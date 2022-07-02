@@ -1,0 +1,54 @@
+# Automatically create a release when tagged
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency: release-${{ github.ref }}
+
+jobs:
+  setup:
+    name: Set up
+    runs-on: ubuntu-latest
+    outputs:
+      pkgver: ${{ steps.params.outputs.pkgver }}
+    steps:
+      - name: Calculate parameters
+        id: params
+        run: echo "::set-output name=pkgver::${GITHUB_REF#refs/tags/v}"
+
+  stable:
+    name: Stable
+    needs: setup
+    uses: ./.github/workflows/windows.yml
+    with:
+      openslide_winbuild_repo: ${{ github.repository }}
+      openslide_winbuild_ref: ${{ github.ref }}
+      pkgver: ${{ needs.setup.outputs.pkgver }}
+
+  release:
+    name: Release
+    needs: [setup, stable]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.stable.outputs.artifact }}
+      - name: Generate release notes
+        run: |
+          unzip "${{ needs.stable.outputs.artifact }}/openslide-win32-${{ needs.setup.outputs.pkgver }}.zip"
+          grep OpenSlide "openslide-win32-${{ needs.setup.outputs.pkgver }}/VERSIONS.txt" |
+              sed -E 's/ +/ /g' > notes.md
+      - name: Create release
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          name: Windows build ${{ needs.setup.outputs.pkgver }}
+          body_path: notes.md
+          files: "${{ needs.stable.outputs.artifact }}/*"
+          fail_on_unmatched_files: true
