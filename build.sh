@@ -3,6 +3,7 @@
 # A script for building OpenSlide and its dependencies for Windows
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
+# Copyright (c) 2022      Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -20,19 +21,19 @@
 
 set -eE
 
-packages="configguess zlib libzip png jpeg tiff openjpeg iconv gettext ffi glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess ssp zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
-cygtools="wget zip pkg-config make cmake mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.10.3"
-ant_url="http://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.bz2"
+cygtools="wget zip pkg-config make cmake meson mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
+ant_ver="1.10.12"
+ant_url="https://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.xz"
 ant_build="apache-ant-${ant_ver}"  # not actually a source tree
-ant_upurl="http://archive.apache.org/dist/ant/binaries/"
+ant_upurl="https://archive.apache.org/dist/ant/binaries/"
 ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
+ssp_name="libssp"
 zlib_name="zlib"
-libzip_name="libzip"
 png_name="libpng"
 jpeg_name="libjpeg-turbo"
 tiff_name="libtiff"
@@ -40,6 +41,7 @@ openjpeg_name="OpenJPEG"
 iconv_name="win-iconv"
 gettext_name="gettext"
 ffi_name="libffi"
+pcre_name="PCRE"
 glib_name="glib"
 gdkpixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
@@ -50,54 +52,57 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions
-configguess_ver="47681e2a"
-zlib_ver="1.2.11"
-libzip_ver="1.5.1"
-png_ver="1.6.34"
-jpeg_ver="1.5.3"
-tiff_ver="4.0.9"
-openjpeg_ver="2.3.0"
+configguess_ver="02ba26b2"
+ssp_ver="12.1.0"
+zlib_ver="1.2.12"
+png_ver="1.6.37"
+jpeg_ver="2.1.3"
+tiff_ver="4.4.0"
+openjpeg_ver="2.5.0"
 iconv_ver="0.0.8"
-gettext_ver="0.19.8.1"
-ffi_ver="3.2.1"
-glib_ver="2.56.1"
-gdkpixbuf_ver="2.36.12"
-pixman_ver="0.34.0"
-cairo_ver="1.14.12"
-xml_ver="2.9.8"
-sqlite_year="2018"
-sqlite_ver="3.24.0"
+gettext_ver="0.21"
+ffi_ver="3.4.2"
+pcre_ver="8.45"
+glib_ver="2.72.2"
+gdkpixbuf_ver="2.42.8"
+pixman_ver="0.40.0"
+cairo_ver="1.16.0"
+xml_ver="2.9.14"
+sqlite_year="2022"
+sqlite_ver="3.39.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.2"
 
 # Derived package version strings
 glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
+xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs
-configguess_url="http://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
-zlib_url="http://prdownloads.sourceforge.net/libpng/zlib-${zlib_ver}.tar.xz"
-libzip_url="http://www.nih.at/libzip/libzip-${libzip_ver}.tar.xz"
-png_url="http://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
-jpeg_url="http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
-tiff_url="http://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.gz"
+configguess_url="https://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
+ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
+zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
+png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
+jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
+tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
 openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
 iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
-gettext_url="http://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
-ffi_url="ftp://sourceware.org/pub/libffi/libffi-${ffi_ver}.tar.gz"
-glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
-gdkpixbuf_url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
-pixman_url="http://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
-cairo_url="http://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
-xml_url="ftp://xmlsoft.org/libxml2/libxml2-${xml_ver}.tar.gz"
-sqlite_url="http://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
+gettext_url="https://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
+ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
+pcre_url="https://prdownloads.sourceforge.net/pcre/pcre-${pcre_ver}.tar.gz"
+glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
+gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
+pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
+cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
+xml_url="https://download.gnome.org/sources/libxml2/${xml_basever}/libxml2-${xml_ver}.tar.xz"
+sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees
+ssp_build="gcc-${ssp_ver}/libssp"
 zlib_build="zlib-${zlib_ver}"
-libzip_build="libzip-${libzip_ver}"
 png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
@@ -105,6 +110,7 @@ openjpeg_build="openjpeg-${openjpeg_ver}"
 iconv_build="win-iconv-${iconv_ver}"
 gettext_build="gettext-${gettext_ver}/gettext-runtime"
 ffi_build="libffi-${ffi_ver}"
+pcre_build="pcre-${pcre_ver}"
 glib_build="glib-${glib_ver}"
 gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
@@ -115,27 +121,29 @@ openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
+ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
 zlib_licenses="README"
-libzip_licenses="LICENSE"
-png_licenses="png.h"  # !!!
-jpeg_licenses="LICENSE.md README.ijg simd/jsimdext.inc" # !!!
+png_licenses="LICENSE"
+jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 tiff_licenses="COPYRIGHT"
 openjpeg_licenses="LICENSE"
 iconv_licenses="readme.txt"
 gettext_licenses="COPYING intl/COPYING.LIB"
 ffi_licenses="LICENSE"
+pcre_licenses="LICENCE"
 glib_licenses="COPYING"
 gdkpixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 xml_licenses="COPYING"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
-openslide_licenses="LICENSE.txt lgpl-2.1.txt"
-openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
+# Remove workaround in bdist() when updating these
+openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
+openslidejava_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 
 # Build dependencies
+ssp_dependencies=""
 zlib_dependencies=""
-libzip_dependencies="zlib"
 png_dependencies="zlib"
 jpeg_dependencies=""
 tiff_dependencies="zlib jpeg"
@@ -143,25 +151,27 @@ openjpeg_dependencies="png tiff"
 iconv_dependencies=""
 gettext_dependencies="iconv"
 ffi_dependencies=""
-glib_dependencies="zlib iconv gettext ffi"
-gdkpixbuf_dependencies="png jpeg tiff glib"
+pcre_dependencies=""
+glib_dependencies="zlib iconv gettext ffi pcre"
+gdkpixbuf_dependencies="glib"
 pixman_dependencies=""
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
 sqlite_dependencies=""
-openslide_dependencies="libzip png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
+ssp_artifacts="libssp-0.dll"
 zlib_artifacts="zlib1.dll"
-libzip_artifacts="libzip.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-5.dll"
 openjpeg_artifacts="libopenjp2.dll"
 iconv_artifacts="iconv.dll"
 gettext_artifacts="libintl-8.dll"
-ffi_artifacts="libffi-6.dll"
+ffi_artifacts="libffi-8.dll"
+pcre_artifacts="libpcre-1.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
 gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
@@ -172,43 +182,45 @@ openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-sh
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
-zlib_upurl="http://zlib.net/"
-libzip_upurl="https://nih.at/libzip/"
+ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
+zlib_upurl="https://zlib.net/"
 png_upurl="http://www.libpng.org/pub/png/libpng.html"
-jpeg_upurl="http://sourceforge.net/projects/libjpeg-turbo/files/"
-tiff_upurl="http://download.osgeo.org/libtiff/"
+jpeg_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
+tiff_upurl="https://download.osgeo.org/libtiff/"
 openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
 iconv_upurl="https://github.com/win-iconv/win-iconv/tags"
-gettext_upurl="http://ftp.gnu.org/pub/gnu/gettext/"
-ffi_upurl="ftp://sourceware.org/pub/libffi/"
+gettext_upurl="https://ftp.gnu.org/pub/gnu/gettext/"
+ffi_upurl="https://github.com/libffi/libffi/tags"
+pcre_upurl="https://sourceforge.net/projects/pcre/files/pcre/"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
 gdkpixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
-pixman_upurl="http://cairographics.org/releases/"
-cairo_upurl="http://cairographics.org/releases/"
-xml_upurl="ftp://xmlsoft.org/libxml2/"
-sqlite_upurl="http://sqlite.org/changes.html"
+pixman_upurl="https://cairographics.org/releases/"
+cairo_upurl="https://cairographics.org/releases/"
+xml_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
+sqlite_upurl="https://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
+ssp_upregex="gcc-([0-9.]+)/"
 zlib_upregex="source code, version ([0-9.]+)"
-libzip_upregex="libzip-([0-9.]+)\.tar"
 png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
-openjpeg_upregex="archive/v([0-9.]+)\.tar"
-iconv_upregex="archive/v([0-9.]+)\.tar"
+openjpeg_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+iconv_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 gettext_upregex="gettext-([0-9.]+)\.tar"
-ffi_upregex="libffi-([0-9.]+)\.tar"
-glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/glib-"
-gdkpixbuf_upregex="archive/([0-9.]+)/gdk-pixbuf-"
+ffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+pcre_upregex="/projects/pcre/files/pcre/([0-9.]+)/"
+glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
+gdkpixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
-xml_upregex="libxml2-([0-9.]+)\.tar"
+xml_upregex="archive/v([0-9.]+)/"
 sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
-openslide_upregex="archive/v([0-9.]+)\.tar"
+openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
-openslidejava_upregex="archive/v1\.0\.0\.tar.*|.*archive/v([0-9.]+)\.tar"
+openslidejava_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
 
 # Helper script paths
 configguess_path="tar/config.guess-${configguess_ver}"
@@ -342,7 +354,7 @@ do_configure() {
             CPPFLAGS="${cppflags} -I${root}/include" \
             CFLAGS="${cflags}" \
             CXXFLAGS="${cxxflags}" \
-            LDFLAGS="${ldflags} -L${root}/lib" \
+            LDFLAGS="-L${root}/lib ${ldflags}" \
             "$@"
 }
 
@@ -350,15 +362,21 @@ do_cmake() {
     # Run cmake with the appropriate parameters.
     # Additional parameters can be specified as arguments.
     #
+    # Use only our pkg-config library directory, even on cross builds
+    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    #
     # Certain cmake variables cannot be specified on the command-line.
     # http://public.kitware.com/Bug/view.php?id=9980
     cat > toolchain.cmake <<EOF
 SET(CMAKE_SYSTEM_NAME Windows)
+SET(CMAKE_SYSTEM_PROCESSOR ${cmake_system_processor})
 SET(CMAKE_C_COMPILER ${build_host}-gcc)
 SET(CMAKE_CXX_COMPILER ${build_host}-g++)
 SET(CMAKE_RC_COMPILER ${build_host}-windres)
 EOF
-    cmake -G "Unix Makefiles" \
+    PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
+            PKG_CONFIG_PATH= \
+            cmake -G "Unix Makefiles" \
             -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" \
             -DCMAKE_INSTALL_PREFIX="${root}" \
             -DCMAKE_FIND_ROOT_PATH="${root}" \
@@ -367,11 +385,58 @@ EOF
             -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
             -DCMAKE_C_FLAGS="${cppflags} ${cflags}" \
             -DCMAKE_CXX_FLAGS="${cppflags} ${cxxflags}" \
-            -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
+            -DCMAKE_EXE_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
+            -DCMAKE_MODULE_LINKER_FLAGS="-L${root}/lib ${ldflags}" \
             "$@" \
             .
+}
+
+do_meson_setup() {
+    # Run meson setup with the appropriate parameters.
+    # Additional parameters can be specified as arguments.
+    #
+    # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
+    #
+    # Use only our pkg-config library directory, even on cross builds
+    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
+    cat > cross.ini <<EOF
+[built-in options]
+prefix = '${root}'
+c_args = $(make_meson_list "${cppflags} -I${root}/include ${cflags}")
+c_link_args = $(make_meson_list "-L${root}/lib ${ldflags}")
+cpp_args = $(make_meson_list "${cppflags} -I${root}/include ${cxxflags}")
+cpp_link_args = $(make_meson_list "-L${root}/lib ${ldflags}")
+pkg_config_path = ''
+
+[properties]
+pkg_config_libdir = '${root}/lib/pkgconfig'
+
+[binaries]
+ar = '${build_host}-ar'
+c = '${build_host}-gcc'
+cpp = '${build_host}-g++'
+ld = '${build_host}-ld'
+objcopy = '${build_host}-objcopy'
+pkgconfig = 'pkg-config'
+strip = '${build_host}-strip'
+windres = '${build_host}-windres'
+
+[host_machine]
+system = 'windows'
+endian = 'little'
+cpu_family = '${meson_cpu_family}'
+cpu = '${meson_cpu}'
+EOF
+    meson setup \
+            --buildtype plain \
+            --cross-file cross.ini \
+            --wrap-mode nofallback \
+            "$@"
+}
+
+make_meson_list() {
+    echo "$1" | sed -E -e "s/^ */['/" -e "s/ *$/']/" -e "s/ +/', '/g"
 }
 
 build_one() {
@@ -391,6 +456,20 @@ build_one() {
     builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
+    ssp)
+        # This is only needed when building on Fedora, where the MinGW CRT
+        # is built with _FORTIFY_SOURCE.  Ship it everywhere for consistency.
+        # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
+        do_configure \
+                --disable-multilib \
+                --with-target-subdir=.
+        make $parallel
+        # Copy the DLL but not the import library.  We want everything to
+        # use the linkage that comes with the compiler, but want to supply
+        # our own DLL so we can provide complete corresponding source.
+        mkdir -p "${root}/bin"
+        cp ".libs/${ssp_artifacts}" "${root}/bin"
+        ;;
     zlib)
         # Don't strip binaries during build
         make -f win32/Makefile.gcc $parallel \
@@ -410,13 +489,6 @@ build_one() {
                 INCLUDE_PATH="${root}/include" \
                 LIBRARY_PATH="${root}/lib" install
         ;;
-    libzip)
-        # No libdl on Windows
-        sed -i '/nonrandomopen/d' regress/CMakeLists.txt
-        do_cmake
-        make $parallel
-        make install
-        ;;
     png)
         do_configure \
                 --enable-intel-sse
@@ -427,8 +499,8 @@ build_one() {
         make install
         ;;
     jpeg)
-        do_configure \
-                --without-turbojpeg
+        do_cmake \
+                -DWITH_TURBOJPEG=0
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
@@ -436,17 +508,13 @@ build_one() {
         make install
         ;;
     tiff)
-        # TIF_PLATFORM_CONSOLE prevents the default warning/error handlers
-        # from showing a dialog box.
-        # http://lists.andrew.cmu.edu/pipermail/openslide-users/2013-July/000630.html
         do_configure \
                 --with-zlib-include-dir="${root}/include" \
                 --with-zlib-lib-dir="${root}/lib" \
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib" \
                 --disable-jbig \
-                --disable-lzma \
-                CPPFLAGS="${cppflags} -DTIF_PLATFORM_CONSOLE"
+                --disable-lzma
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
@@ -471,7 +539,7 @@ build_one() {
                 AR="${build_host}-ar" \
                 RANLIB="${build_host}-ranlib" \
                 DLLTOOL="${build_host}-dlltool" \
-                CFLAGS="${cppflags} ${cflags}" \
+                CFLAGS="${cppflags} ${cflags} ${ldflags}" \
                 SPECS_FLAGS="${ldflags} -static-libgcc"
         if [ "$can_test" = yes ] ; then
             make test \
@@ -502,47 +570,59 @@ build_one() {
         fi
         make install
         ;;
-    glib)
-        do_configure \
-                --with-pcre=internal \
-                --with-threads=win32
-        make $parallel
-        make install
-        ;;
-    gdkpixbuf)
-        do_configure \
-                --disable-modules \
-                --with-included-loaders \
-                --without-gdiplus
-        # Disable thumbnailer: we don't use it and it fails to build.
-        # https://bugzilla.gnome.org/show_bug.cgi?id=779057
-        sed -i '/^SUBDIRS =/ s/ thumbnailer / /' Makefile
-        # https://gitlab.gnome.org/GNOME/gdk-pixbuf/merge_requests/10
-        sed -i 's/Windows\.h/windows.h/' gdk-pixbuf/io-tiff.c
+    pcre)
+        do_configure
         make $parallel
         if [ "$can_test" = yes ] ; then
-            # make check
-            :
+            make check
         fi
         make install
+        ;;
+    glib)
+        do_meson_setup build
+        meson compile -C build $parallel
+        meson install -C build
+        ;;
+    gdkpixbuf)
+        do_meson_setup build \
+                -Dpng=disabled \
+                -Dtiff=disabled \
+                -Djpeg=disabled \
+                -Dman=false \
+                -Dbuiltin_loaders="['bmp']" \
+                -Dinstalled_tests=false
+        meson compile -C build $parallel
+        if [ "$can_test" = yes ] ; then
+            # meson test -C build
+            :
+        fi
+        meson install -C build
         ;;
     pixman)
         # Use explicit Win32 TLS calls instead of declaring variables with
         # __thread.  This avoids a dependency on the winpthreads DLL if
         # GCC was built with POSIX threads support.
-        do_configure \
-                ac_cv_tls=none
-        make $parallel
+        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/61
+        sed -i "s/'TLS'/'TLS_disabled'/" meson.build
+        do_meson_setup build \
+                -Dopenmp=disabled
+        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
+        sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
+                pixman/pixman-mmx.c
+        meson compile -C build $parallel
         if [ "$can_test" = yes ] ; then
-            # make check
+            # meson test -C build
             :
         fi
-        make install
+        meson install -C build
         ;;
     cairo)
         do_configure \
                 --enable-ft=no \
                 --enable-xlib=no
+        # Test requires freetype but is compiled unconditionally
+        # Fixed in cairo d331c69f65
+        >test/font-variations.c
         make $parallel
         if [ "$can_test" = yes ] ; then
             # make check
@@ -586,6 +666,8 @@ build_one() {
         do_configure \
                 ANT_HOME="${ant_home}" \
                 JAVA_HOME="${java_home}"
+        # https://github.com/openslide/openslide-java/commit/bfa80947
+        sed -i s/1.6/1.8/ build.xml
         make $parallel
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
@@ -675,8 +757,17 @@ bdist() {
         mkdir -p "${licensedir}"
         for artifact in $(expand ${package}_licenses)
         do
-            cp "${build}/$(expand ${package}_build)/${artifact}" \
-                    "${licensedir}"
+            if ! cp "${build}/$(expand ${package}_build)/${artifact}" \
+                    "${licensedir}" 2>/dev/null; then
+                # OpenSlide and OpenSlide Java license files were renamed;
+                # support both until the next releases
+                case "${package}" in
+                openslide|openslidejava) ;;
+                *)
+                    echo "Failed to copy ${artifact} from ${package}."
+                    exit 1
+                esac
+            fi
         done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
@@ -688,7 +779,11 @@ bdist() {
     cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
     mkdir -p "${zipdir}/include"
     cp -r "${root}/include/openslide" "${zipdir}/include/"
-    cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
+    if [ -f "${build}/${openslide_build}/README.md" ]; then
+        cp "${build}/${openslide_build}/README.md" "${zipdir}/"
+    else
+        cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
+    fi
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -745,8 +840,14 @@ probe() {
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
+        cmake_system_processor=AMD64
+        meson_cpu_family=x86_64
+        meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
+        cmake_system_processor=x86
+        meson_cpu_family=x86
+        meson_cpu=i686
         arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
     fi
     if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
@@ -754,18 +855,18 @@ probe() {
         exit 1
     fi
 
-    cppflags="-D_FORTIFY_SOURCE=2"
+    cppflags=""
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
 
-    if ${build_host}-ld --help | grep -q -- --insert-timestamp ; then
-        # Disable deterministic build feature in GNU ld 2.24 (disabled
-        # by default in 2.25) which breaks detection of updated libraries
-        # by bound executables
-        # https://sourceware.org/bugzilla/show_bug.cgi?id=16887
-        ldflags="${ldflags} -Wl,--insert-timestamp"
+    # Check whether we need -lssp
+    # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
+    echo -e '#include <dirent.h>\nvoid main() { opendir("/"); }' > conftest.c
+    if ! ${build_host}-gcc -o conftest.exe conftest.c 2>/dev/null; then
+        ldflags="${ldflags} -lssp"
     fi
+    rm -f conftest.{c,exe}
 
     case "$build_system" in
     *-*-cygwin)
@@ -807,10 +908,7 @@ probe() {
         do
             echo $hdr > conftest
             chmod +x conftest
-            if ./conftest 2>/dev/null ; then
-                # Awkward construct due to "set -e"
-                :
-            elif [ $? = 193 ] ; then
+            if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
                 rm conftest
                 echo "Wine is enabled in binfmt_misc.  Please disable it."
                 exit 1
