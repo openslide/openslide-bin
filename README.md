@@ -17,6 +17,7 @@ You will need:
 - gettext utility programs
 - glib2 utility programs
 - Native gcc and binutils for your build platform
+- zip
 
 Then:
 
