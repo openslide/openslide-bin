@@ -137,8 +137,9 @@ pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 xml_licenses="COPYING"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
-openslide_licenses="LICENSE.txt lgpl-2.1.txt"
-openslidejava_licenses="LICENSE.txt lgpl-2.1.txt"
+# Remove workaround in bdist() when updating these
+openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
+openslidejava_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 
 # Build dependencies
 ssp_dependencies=""
@@ -756,8 +757,17 @@ bdist() {
         mkdir -p "${licensedir}"
         for artifact in $(expand ${package}_licenses)
         do
-            cp "${build}/$(expand ${package}_build)/${artifact}" \
-                    "${licensedir}"
+            if ! cp "${build}/$(expand ${package}_build)/${artifact}" \
+                    "${licensedir}" 2>/dev/null; then
+                # OpenSlide and OpenSlide Java license files were renamed;
+                # support both until the next releases
+                case "${package}" in
+                openslide|openslidejava) ;;
+                *)
+                    echo "Failed to copy ${artifact} from ${package}."
+                    exit 1
+                esac
+            fi
         done
         name="$(expand ${package}_name)"
         if [ -n "$name" ] ; then
@@ -769,7 +779,11 @@ bdist() {
     cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
     mkdir -p "${zipdir}/include"
     cp -r "${root}/include/openslide" "${zipdir}/include/"
-    cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
+    if [ -f "${build}/${openslide_build}/README.md" ]; then
+        cp "${build}/${openslide_build}/README.md" "${zipdir}/"
+    else
+        cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
+    fi
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
