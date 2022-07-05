@@ -47,14 +47,11 @@ jobs:
   sdist:
     name: Build source zip
     runs-on: ubuntu-latest
-    container: registry.fedoraproject.org/fedora:36
+    container: ghcr.io/openslide/winbuild-builder:latest
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
     steps:
-      - name: Install dependencies
-        run: |
-          dnf install -y git-core mingw32-gcc wget xz zip
       - name: Check out repo
         uses: actions/checkout@v3
         with:
@@ -145,15 +142,11 @@ jobs:
     name: Build
     needs: sdist
     runs-on: ubuntu-latest
-    container: registry.fedoraproject.org/fedora:36
+    container: ghcr.io/openslide/winbuild-builder:latest
     strategy:
       matrix:
         bits: [32, 64]
     steps:
-      - name: Install dependencies
-        run: |
-          dnf install -y ant cmake gcc gettext git-core glib2-devel java \
-              meson mingw${{ matrix.bits }}-gcc-c++ nasm wget xz zip
       - name: Check out repo
         uses: actions/checkout@v3
         with:
