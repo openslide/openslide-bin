@@ -709,7 +709,7 @@ sdist() {
             cp "$path" "${zipdir}/tar/"
         fi
     done
-    cp build.sh README.md COPYING.LESSER "${zipdir}/"
+    cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"

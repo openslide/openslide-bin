@@ -3,6 +3,15 @@
 This is a set of scripts for building OpenSlide for Windows, including all
 of its dependencies, using MinGW-w64.
 
+## Using the builder container (recommended)
+
+`Dockerfile.builder` defines a container with the dependencies needed to
+run the build script.  To pull the container image and use it to run a
+build:
+
+    docker run -ti --rm -v .:/work -w /work \
+        ghcr.io/openslide/winbuild-builder ./build.sh bdist
+
 ## Cross-compiling from Linux
 
 You will need:
