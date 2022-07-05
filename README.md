@@ -12,26 +12,6 @@ build:
     docker run -ti --rm -v $PWD:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./build.sh bdist
 
-## Cross-compiling from Linux
-
-You will need:
-
-- MinGW-w64 gcc and g++ for the target architecture (`i686` or `x86_64`)
-- NASM
-- OpenJDK
-- Apache Ant
-- CMake
-- Meson
-- Ninja
-- gettext utility programs
-- glib2 utility programs
-- Native gcc and binutils for your build platform
-- zip, gzip, bzip2, xz
-
-Then:
-
-    ./build.sh bdist
-
 ## Building natively on Windows
 
 ### One-time setup

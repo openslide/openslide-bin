@@ -465,8 +465,8 @@ build_one() {
     pushd "$builddir" >/dev/null
     case "$1" in
     ssp)
-        # This is only needed when building on Fedora, where the MinGW CRT
-        # is built with _FORTIFY_SOURCE.  Ship it everywhere for consistency.
+        # On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need
+        # to ship libssp.
         # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
         do_configure \
                 --disable-multilib \
@@ -879,15 +879,7 @@ probe() {
     cppflags=""
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
-    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat"
-
-    # Check whether we need -lssp
-    # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
-    echo -e '#include <dirent.h>\nvoid main() { opendir("/"); }' > conftest.c
-    if ! ${build_host}-gcc -o conftest.exe conftest.c 2>/dev/null; then
-        ldflags="${ldflags} -lssp"
-    fi
-    rm -f conftest.{c,exe}
+    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
 
     case "$build_system" in
     *-*-cygwin)
