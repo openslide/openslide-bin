@@ -23,14 +23,6 @@ set -eE
 
 packages="configguess ssp pthread zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
-# Tool configuration for Cygwin
-cygtools="wget zip pkg-config make cmake meson mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
-ant_ver="1.10.12"
-ant_url="https://archive.apache.org/dist/ant/binaries/apache-ant-${ant_ver}-bin.tar.xz"
-ant_build="apache-ant-${ant_ver}"  # not actually a source tree
-ant_upurl="https://archive.apache.org/dist/ant/binaries/"
-ant_upregex="apache-ant-([0-9.]+)-bin"
-
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 ssp_name="libssp"
 pthread_name="winpthreads"
@@ -262,28 +254,6 @@ tarpath() {
     fi
 }
 
-setup_cygwin() {
-    # Install necessary tools for Cygwin builds.
-    # $1  = path to Cygwin setup.exe
-
-    # Install cygwin packages
-    "$1" -q -P "${cygtools// /,}" >/dev/null
-
-    # Wait for cygwin installer
-    while [ ! -x /usr/bin/wget ] ; do
-        sleep 1
-    done
-
-    # Install ant binary distribution in /opt/ant
-    if [ ! -e /opt/ant ] ; then
-        fetch ant
-        echo "Installing ant..."
-        mkdir -p /opt
-        tar xf "$(tarpath ant)" -C /opt
-        mv "/opt/${ant_build}" /opt/ant
-    fi
-}
-
 fetch() {
     # Fetch the specified package
     # $1  = package shortname
@@ -481,10 +451,6 @@ build_one() {
     pthread)
         do_configure
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            # make check
-            :
-        fi
         make install
         ;;
     zlib)
@@ -495,10 +461,6 @@ build_one() {
                 LDFLAGS="${ldflags}" \
                 STRIP="true" \
                 all
-        if [ "$can_test" = yes ] ; then
-            make -f win32/Makefile.gcc \
-                testdll
-        fi
         make -f win32/Makefile.gcc \
                 SHARED_MODE=1 \
                 PREFIX="${build_host}-" \
@@ -510,18 +472,12 @@ build_one() {
         do_configure \
                 --enable-intel-sse
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     jpeg)
         do_cmake \
                 -DWITH_TURBOJPEG=0
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     tiff)
@@ -533,10 +489,6 @@ build_one() {
                 --disable-jbig \
                 --disable-lzma
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            # make check
-            :
-        fi
         make install
         ;;
     openjpeg)
@@ -558,11 +510,6 @@ build_one() {
                 DLLTOOL="${build_host}-dlltool" \
                 CFLAGS="${cppflags} ${cflags} ${ldflags}" \
                 SPECS_FLAGS="${ldflags} -static-libgcc"
-        if [ "$can_test" = yes ] ; then
-            make test \
-                    CC="${build_host}-gcc" \
-                    CFLAGS="${cppflags} ${cflags} ${ldflags}"
-        fi
         make install \
                 prefix="${root}"
         ;;
@@ -574,26 +521,17 @@ build_one() {
                 --disable-libasprintf \
                 --enable-threads=win32
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     ffi)
         do_configure \
                 --disable-builddir
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     pcre)
         do_configure
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     glib)
@@ -610,10 +548,6 @@ build_one() {
                 -Dbuiltin_loaders="['bmp']" \
                 -Dinstalled_tests=false
         meson compile -C build $parallel
-        if [ "$can_test" = yes ] ; then
-            # meson test -C build
-            :
-        fi
         meson install -C build
         ;;
     pixman)
@@ -623,10 +557,6 @@ build_one() {
         sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
                 pixman/pixman-mmx.c
         meson compile -C build $parallel
-        if [ "$can_test" = yes ] ; then
-            # meson test -C build
-            :
-        fi
         meson install -C build
         ;;
     cairo)
@@ -637,10 +567,6 @@ build_one() {
         # Fixed in cairo d331c69f65
         >test/font-variations.c
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            # make check
-            :
-        fi
         make install
         ;;
     xml)
@@ -649,10 +575,6 @@ build_one() {
                 --without-lzma \
                 --without-python
         make $parallel
-        if [ "$can_test" = yes ] ; then
-            # make check
-            :
-        fi
         make install
         ;;
     sqlite)
@@ -671,15 +593,10 @@ build_one() {
                 "${ver_suffix_arg}"
         make $parallel \
                 CFLAGS="${cflags} ${openslide_werror}"
-        if [ "$can_test" = yes ] ; then
-            make check
-        fi
         make install
         ;;
     openslidejava)
-        do_configure \
-                ANT_HOME="${ant_home}" \
-                JAVA_HOME="${java_home}"
+        do_configure
         # https://github.com/openslide/openslide-java/commit/bfa80947
         sed -i s/1.6/1.8/ build.xml
         make $parallel \
@@ -831,7 +748,7 @@ clean() {
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in ant $packages
+    for package in $packages
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
@@ -881,54 +798,19 @@ probe() {
     cxxflags="${cflags}"
     ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
 
-    case "$build_system" in
-    *-*-cygwin)
-        # Windows
-        # We can only test a 64-bit build if we're also on a 64-bit kernel.
-        # We can't probe for this using Cygwin tools because Cygwin is
-        # exclusively 32-bit.  Check environment variables set by WOW64.
-        if [ "$build_bits" = 64 -a "$PROCESSOR_ARCHITECTURE" != AMD64 -a \
-                "$PROCESSOR_ARCHITEW6432" != AMD64 ] ; then
-            can_test="no"
-        else
-            can_test="yes"
-        fi
-
-        ant_home="/opt/ant"
-        java_home="${JAVA_HOME}"
-        if [ -z "$java_home" ] ; then
-            java_home=$(find "$(cygpath c:\\Program\ Files\\Java)" \
-                    -maxdepth 1 -name "jdk*" -print -quit)
-        fi
-        if [ ! -e "$ant_home" ] ; then
-            echo "Ant directory not found."
-            exit 1
-        fi
-        if [ ! -e "$java_home" ] ; then
-            echo "Java directory not found."
-            exit 1
-        fi
-        ;;
-    *)
-        # Other
-        can_test="no"
-        ant_home=""
-        java_home=""
-
-        # Ensure Wine is not run via binfmt_misc, since some packages
-        # attempt to run programs after building them.
-        for hdr in PE MZ
-        do
-            echo $hdr > conftest
-            chmod +x conftest
-            if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
-                rm conftest
-                echo "Wine is enabled in binfmt_misc.  Please disable it."
-                exit 1
-            fi
+    # Ensure Wine is not run via binfmt_misc, since some packages
+    # attempt to run programs after building them.
+    for hdr in PE MZ
+    do
+        echo $hdr > conftest
+        chmod +x conftest
+        if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
             rm conftest
-        done
-    esac
+            echo "Wine is enabled in binfmt_misc.  Please disable it."
+            exit 1
+        fi
+        rm conftest
+    done
 }
 
 fail_handler() {
@@ -940,12 +822,6 @@ fail_handler() {
 
 # Set up error handling
 trap fail_handler ERR
-
-# Cygwin setup bypasses normal startup
-if [ "$1" = "setup" ] ; then
-    setup_cygwin "$2"
-    exit 0
-fi
 
 # Parse command-line options
 parallel=""
@@ -1003,8 +879,7 @@ updates)
     ;;
 *)
     cat <<EOF
-Usage: $0 setup /path/to/cygwin/setup.exe
-       $0 [-p<pkgver>] sdist
+Usage: $0 [-p<pkgver>] sdist
        $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
        $0 [-m{32|64}] clean [package...]
        $0 updates
