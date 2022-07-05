@@ -1,0 +1,43 @@
+# Build and push builder container
+
+name: Container
+
+on:
+  push:
+    branches: [main]
+    paths: [Dockerfile.builder]
+  pull_request:
+    branches: [main]
+    paths: [Dockerfile.builder]
+  workflow_dispatch:
+  # openslide/builds invokes this from a scheduled build
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+# Separate PRs can run concurrently; everything else has to queue
+concurrency: container-${{ github.event.number }}
+
+env:
+  CONTAINER_IMAGE: ghcr.io/${{ github.repository_owner }}/winbuild-builder:latest
+
+jobs:
+  container:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/openslide-winbuild
+      - name: Build container
+        run: |
+          podman build -t $CONTAINER_IMAGE -f Dockerfile.builder .
+      - name: Push container
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" |
+              podman login ghcr.io -u $ --password-stdin
+          podman push $CONTAINER_IMAGE
