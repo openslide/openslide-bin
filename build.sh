@@ -21,7 +21,7 @@
 
 set -eE
 
-packages="configguess ssp pthread zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="ssp pthread zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 ssp_name="libssp"
@@ -45,7 +45,6 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions
-configguess_ver="02ba26b2"
 ssp_ver="12.1.0"
 pthread_ver="10.0.0"
 zlib_ver="1.2.12"
@@ -74,7 +73,6 @@ xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs
-configguess_url="https://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
 zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
@@ -221,9 +219,6 @@ openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
 
-# Helper script paths
-configguess_path="tar/config.guess-${configguess_ver}"
-
 # wget standard options
 wget="wget -q"
 
@@ -238,19 +233,14 @@ tarpath() {
     # Print the tarball path for the specified package
     # $1  = the name of the program
     local path xzpath
-    if [ "$1" = "configguess" ] ; then
-        # Can't be derived from URL
-        echo "$configguess_path"
+    path="tar/$(basename $(expand ${1}_url))"
+    xzpath="${path/%.gz/.xz}"
+    xzpath="${xzpath/%.bz2/.xz}"
+    # Prefer tarball recompressed with xz, if available
+    if [ -e "$xzpath" ] ; then
+        echo "$xzpath"
     else
-        path="tar/$(basename $(expand ${1}_url))"
-        xzpath="${path/%.gz/.xz}"
-        xzpath="${xzpath/%.bz2/.xz}"
-        # Prefer tarball recompressed with xz, if available
-        if [ -e "$xzpath" ] ; then
-            echo "$xzpath"
-        else
-            echo "$path"
-        fi
+        echo "$path"
     fi
 }
 
@@ -262,12 +252,7 @@ fetch() {
     mkdir -p tar
     if [ ! -e "$(tarpath $1)" ] ; then
         echo "Fetching ${1}..."
-        if [ "$1" = "configguess" ] ; then
-            # config.guess is special; we have to rename the saved file
-            ${wget} -O "$configguess_path" "$url"
-        else
-            ${wget} -P tar "$url"
-        fi
+        ${wget} -P tar "$url"
     fi
 }
 
@@ -320,7 +305,7 @@ do_configure() {
     # also pass it in CC
     ./configure \
             --host=${build_host} \
-            --build=${build_system} \
+            --build=x86_64-pc-linux-gnu \
             --prefix="$root" \
             --disable-static \
             --disable-dependency-tracking \
@@ -772,9 +757,6 @@ probe() {
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
     mkdir -p "${root}"
-
-    fetch configguess
-    build_system=$(sh "$configguess_path")
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
