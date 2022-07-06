@@ -115,3 +115,7 @@ Set package version string in Zip file names to `pkgver`.
 #### `-s<suffix>`
 
 Append `suffix` to the OpenSlide version string.
+
+#### `-w`
+
+Treat OpenSlide and OpenSlide Java build warnings as errors.

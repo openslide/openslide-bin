@@ -656,7 +656,8 @@ build_one() {
         fi
         do_configure \
                 "${ver_suffix_arg}"
-        make $parallel
+        make $parallel \
+                CFLAGS="${cflags} ${openslide_werror}"
         if [ "$can_test" = yes ] ; then
             make check
         fi
@@ -668,7 +669,8 @@ build_one() {
                 JAVA_HOME="${java_home}"
         # https://github.com/openslide/openslide-java/commit/bfa80947
         sed -i s/1.6/1.8/ build.xml
-        make $parallel
+        make $parallel \
+                CFLAGS="${cflags} ${openslide_werror}"
         make install
         pushd "${root}/lib/openslide-java" >/dev/null
         cp ${openslidejava_artifacts} "${root}/bin/"
@@ -939,7 +941,8 @@ parallel=""
 build_bits=32
 pkgver="$(date +%Y%m%d)-local"
 ver_suffix=""
-while getopts "j:m:p:s:" opt
+openslide_werror=""
+while getopts "j:m:p:s:w" opt
 do
     case "$opt" in
     j)
@@ -961,6 +964,9 @@ do
         ;;
     s)
         ver_suffix="${OPTARG}"
+        ;;
+    w)
+        openslide_werror="-Werror"
         ;;
     esac
 done
@@ -988,7 +994,7 @@ updates)
     cat <<EOF
 Usage: $0 setup /path/to/cygwin/setup.exe
        $0 [-p<pkgver>] sdist
-       $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] bdist
+       $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
        $0 [-m{32|64}] clean [package...]
        $0 updates
 
