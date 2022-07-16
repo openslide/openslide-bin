@@ -21,7 +21,7 @@
 
 set -eE
 
-packages="configguess ssp zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="configguess ssp pthread zlib png jpeg tiff openjpeg iconv gettext ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Tool configuration for Cygwin
 cygtools="wget zip pkg-config make cmake meson mingw64-i686-gcc-g++ mingw64-x86_64-gcc-g++ binutils nasm gettext-devel libglib2.0-devel"
@@ -33,6 +33,7 @@ ant_upregex="apache-ant-([0-9.]+)-bin"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 ssp_name="libssp"
+pthread_name="winpthreads"
 zlib_name="zlib"
 png_name="libpng"
 jpeg_name="libjpeg-turbo"
@@ -54,6 +55,7 @@ openslidejava_name="OpenSlide Java"
 # Package versions
 configguess_ver="02ba26b2"
 ssp_ver="12.1.0"
+pthread_ver="10.0.0"
 zlib_ver="1.2.12"
 png_ver="1.6.37"
 jpeg_ver="2.1.3"
@@ -82,6 +84,7 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs
 configguess_url="https://git.savannah.gnu.org/cgit/config.git/plain/config.guess?id=${configguess_ver}"
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
+pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
 zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
 png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
@@ -102,6 +105,7 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 
 # Unpacked source trees
 ssp_build="gcc-${ssp_ver}/libssp"
+pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
 zlib_build="zlib-${zlib_ver}"
 png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
@@ -122,6 +126,7 @@ openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
 ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
+pthread_licenses="COPYING"
 zlib_licenses="README"
 png_licenses="LICENSE"
 jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
@@ -143,6 +148,7 @@ openslidejava_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 
 # Build dependencies
 ssp_dependencies=""
+pthread_dependencies=""
 zlib_dependencies=""
 png_dependencies="zlib"
 jpeg_dependencies=""
@@ -154,15 +160,16 @@ ffi_dependencies=""
 pcre_dependencies=""
 glib_dependencies="zlib iconv gettext ffi pcre"
 gdkpixbuf_dependencies="glib"
-pixman_dependencies=""
+pixman_dependencies="pthread"
 cairo_dependencies="zlib png pixman"
 xml_dependencies="zlib iconv"
 sqlite_dependencies=""
-openslide_dependencies="ssp png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp pthread png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
+pthread_artifacts="libwinpthread-1.dll"
 zlib_artifacts="zlib1.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
@@ -471,6 +478,15 @@ build_one() {
         mkdir -p "${root}/bin"
         cp ".libs/${ssp_artifacts}" "${root}/bin"
         ;;
+    pthread)
+        do_configure
+        make $parallel
+        if [ "$can_test" = yes ] ; then
+            # make check
+            :
+        fi
+        make install
+        ;;
     zlib)
         # Don't strip binaries during build
         make -f win32/Makefile.gcc $parallel \
@@ -600,11 +616,6 @@ build_one() {
         meson install -C build
         ;;
     pixman)
-        # Use explicit Win32 TLS calls instead of declaring variables with
-        # __thread.  This avoids a dependency on the winpthreads DLL if
-        # GCC was built with POSIX threads support.
-        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/61
-        sed -i "s/'TLS'/'TLS_disabled'/" meson.build
         do_meson_setup build \
                 -Dopenmp=disabled
         # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
