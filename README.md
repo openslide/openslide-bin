@@ -9,7 +9,7 @@ of its dependencies, using MinGW-w64.
 run the build script.  To pull the container image and use it to run a
 build:
 
-    docker run -ti --rm -v .:/work -w /work \
+    docker run -ti --rm -v $PWD:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./build.sh bdist
 
 ## Cross-compiling from Linux
