@@ -580,7 +580,8 @@ build_one() {
         make install
         ;;
     ffi)
-        do_configure
+        do_configure \
+                --disable-builddir
         make $parallel
         if [ "$can_test" = yes ] ; then
             make check
