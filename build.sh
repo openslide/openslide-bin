@@ -90,7 +90,7 @@ openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar
 iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
 gettext_url="https://ftp.gnu.org/pub/gnu/gettext/gettext-${gettext_ver}.tar.xz"
 ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
-pcre_url="https://prdownloads.sourceforge.net/pcre/pcre-${pcre_ver}.tar.gz"
+pcre_url="https://prdownloads.sourceforge.net/pcre/pcre-${pcre_ver}.tar.bz2"
 glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
@@ -245,6 +245,7 @@ tarpath() {
     else
         path="tar/$(basename $(expand ${1}_url))"
         xzpath="${path/%.gz/.xz}"
+        xzpath="${xzpath/%.bz2/.xz}"
         # Prefer tarball recompressed with xz, if available
         if [ -e "$xzpath" ] ; then
             echo "$xzpath"
@@ -702,11 +703,17 @@ sdist() {
         fetch "$package"
         path="$(tarpath ${package})"
         xzpath="${path/%.gz/.xz}"
-        if [ "$path" != "$xzpath" ] ; then
+        xzpath="${xzpath/%.bz2/.xz}"
+        if [ "${path%.gz}" != "$path" ] ; then
             # Tarball is compressed with gzip.
             # Recompress with xz to save space.
-            echo "Recompressing ${package}..."
+            echo "Recompressing ${package} from gzip..."
             gunzip -c "$path" | xz -9c > "${zipdir}/tar/$(basename ${xzpath})"
+        elif [ "${path%.bz2}" != "$path" ] ; then
+            # Tarball is compressed with bzip2.
+            # Recompress with xz to save space.
+            echo "Recompressing ${package} from bzip2..."
+            bunzip2 -c "$path" | xz -9c > "${zipdir}/tar/$(basename ${xzpath})"
         else
             cp "$path" "${zipdir}/tar/"
         fi
