@@ -3,7 +3,7 @@
 This is a set of scripts for building OpenSlide for Windows, including all
 of its dependencies, using MinGW-w64.
 
-## Using the builder container (recommended)
+## Building
 
 `Dockerfile.builder` defines a container with the dependencies needed to
 run the build script.  To pull the container image and use it to run a
@@ -11,57 +11,6 @@ build:
 
     docker run -ti --rm -v $PWD:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./build.sh bdist
-
-## Cross-compiling from Linux
-
-You will need:
-
-- MinGW-w64 gcc and g++ for the target architecture (`i686` or `x86_64`)
-- NASM
-- OpenJDK
-- Apache Ant
-- CMake
-- Meson
-- Ninja
-- gettext utility programs
-- glib2 utility programs
-- Native gcc and binutils for your build platform
-- zip, gzip, bzip2, xz
-
-Then:
-
-    ./build.sh bdist
-
-## Building natively on Windows
-
-### One-time setup
-
-1.  Install a JDK.
-
-2.  Install Cygwin, accepting the default set of packages.  Make note of
-    the location of the installer EXE.
-
-3.  Launch a Cygwin shell and navigate to the openslide-winbuild directory.
-
-4.  Execute:
-
-        ./build.sh setup /path/to/cygwin/setup.exe
-
-### Building
-
-    ./build.sh bdist
-
-Note that cross-compiling is *much* faster than compiling natively.
-
-### Troubleshooting
-
-The build will fail if the path to the openslide-winbuild directory
-contains spaces.
-
-If the build randomly fails complaining that `fork()` failed due to a DLL
-address mismatch, follow the instructions [here][1].
-
-[1]: http://cygwin.wikia.com/wiki/Rebaseall
 
 ## Substitute Sources
 
@@ -71,11 +20,6 @@ subdirectory named after the package's shortname.  A list of shortnames
 can be obtained by running `build.sh` with no arguments.
 
 ## build.sh Subcommands
-
-#### `setup`
-
-Configure Cygwin environment.  Only useful on Windows.  The path to Cygwin's
-`setup.exe` must be specified as an argument.
 
 #### `sdist`
 
