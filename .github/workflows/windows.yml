@@ -188,3 +188,33 @@ jobs:
         with:
           name: ${{ needs.sdist.outputs.artifact }}
           path: artifacts
+
+  smoke:
+    name: Smoke test
+    needs: [sdist, bdist]
+    runs-on: windows-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.sdist.outputs.artifact }}
+      - name: Unpack artifacts
+        shell: bash
+        run: |
+          for bits in 32 64; do
+              unzip "${{ needs.sdist.outputs.artifact }}/openslide-win${bits}-${{ inputs.pkgver }}.zip"
+          done
+      - name: Smoke test
+        shell: bash
+        run: |
+          for bits in 32 64; do
+              echo "======== ${bits}-bit ========"
+              cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
+              OPENSLIDE_DEBUG=? ./openslide-show-properties.exe 2> conftest ||:
+              if ! grep -q "  synthetic  " conftest; then
+                  # OpenSlide 3.4.1
+                  echo "Smoke test not supported in this OpenSlide version"
+                  continue
+              fi
+              OPENSLIDE_DEBUG=synthetic ./openslide-show-properties.exe ""
+          done
