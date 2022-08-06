@@ -780,6 +780,31 @@ probe() {
     cxxflags="${cflags}"
     ldflags="-L${root}/lib -static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
 
+    # On 64-bit Windows, MinGW passes a frame pointer to _setjmp so longjmp
+    # can do a SEH unwind.  This seems to work when the caller is also built
+    # with MinGW, but sometimes crashes with STATUS_BAD_STACK when the
+    # caller is built with MSVC; it appears that this is a longstanding
+    # MinGW issue.  In 64-bit builds, override setjmp() to pass a NULL frame
+    # pointer to skip the SEH unwind.  Our uses of setjmp/longjmp are all in
+    # libpng/libjpeg error handling, which isn't expecting to do any cleanup
+    # in intermediate stack frames, so this should be fine.
+    # https://github.com/openslide/openslide-winbuild/issues/47
+    mkdir -p "${root}/include"
+    cat > "${root}/include/setjmp.h" <<EOF
+#ifndef OPENSLIDE_SETJMP_H
+#define OPENSLIDE_SETJMP_H
+
+/* gcc extension */
+#include_next <setjmp.h>
+
+#ifdef __x86_64__
+#undef setjmp
+#define setjmp(buf) _setjmp(buf, NULL)
+#endif
+
+#endif
+EOF
+
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
     for hdr in PE MZ
