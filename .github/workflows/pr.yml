@@ -41,3 +41,4 @@ jobs:
       openslide_winbuild_repo: ${{ github.repository }}
       openslide_winbuild_ref: ${{ github.ref }}
       pkgver: ${{ needs.setup.outputs.pkgver }}-git
+      werror: true
