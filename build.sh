@@ -581,12 +581,18 @@ build_one() {
         make install
         ;;
     openslidejava)
-        do_configure
-        # https://github.com/openslide/openslide-java/commit/bfa80947
-        sed -i s/1.6/1.8/ build.xml
-        make $parallel \
-                CFLAGS="${cflags} ${openslide_werror}"
-        make install
+        if [ -f meson.build ]; then
+            do_meson_setup build ${openslide_werror:+--werror}
+            meson compile -C build $parallel
+            meson install -C build
+        else
+            do_configure
+            # https://github.com/openslide/openslide-java/commit/bfa80947
+            sed -i s/1.6/1.8/ build.xml
+            make $parallel \
+                    CFLAGS="${cflags} ${openslide_werror}"
+            make install
+        fi
         pushd "${root}/lib/openslide-java" >/dev/null
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
