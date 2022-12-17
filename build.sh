@@ -64,7 +64,7 @@ xml_ver="2.10.3"
 sqlite_year="2022"
 sqlite_ver="3.40.0"
 openslide_ver="3.4.1"
-openslidejava_ver="0.12.2"
+openslidejava_ver="0.12.3"
 
 # Derived package version strings
 glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
@@ -134,7 +134,7 @@ xml_licenses="Copyright"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
-openslidejava_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
+openslidejava_licenses="COPYING.LESSER"
 
 # Build dependencies
 ssp_dependencies=""
@@ -581,18 +581,9 @@ build_one() {
         make install
         ;;
     openslidejava)
-        if [ -f meson.build ]; then
-            do_meson_setup build ${openslide_werror:+--werror}
-            meson compile -C build $parallel
-            meson install -C build
-        else
-            do_configure
-            # https://github.com/openslide/openslide-java/commit/bfa80947
-            sed -i s/1.6/1.8/ build.xml
-            make $parallel \
-                    CFLAGS="${cflags} ${openslide_werror}"
-            make install
-        fi
+        do_meson_setup build ${openslide_werror:+--werror}
+        meson compile -C build $parallel
+        meson install -C build
         pushd "${root}/lib/openslide-java" >/dev/null
         cp ${openslidejava_artifacts} "${root}/bin/"
         popd >/dev/null
@@ -688,14 +679,12 @@ bdist() {
         do
             if ! cp "${build}/$(expand ${package}_build)/${artifact}" \
                     "${licensedir}" 2>/dev/null; then
-                # OpenSlide and OpenSlide Java license files were renamed;
-                # support both until the next releases
-                case "${package}" in
-                openslide|openslidejava) ;;
-                *)
+                # OpenSlide license files were renamed; support both until
+                # the next release
+                if [ "${package}" != openslide ]; then
                     echo "Failed to copy ${artifact} from ${package}."
                     exit 1
-                esac
+                fi
             fi
         done
         name="$(expand ${package}_name)"
