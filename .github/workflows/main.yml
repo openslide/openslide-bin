@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Calculate parameters
         id: params
-        run: echo "::set-output name=pkgver::main-$(echo ${{ github.sha }} | cut -c-7)"
+        run: echo "pkgver=main-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
 
   stable:
     name: Stable

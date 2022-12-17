@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Calculate parameters
         id: params
-        run: echo "::set-output name=pkgver::${GITHUB_REF#refs/tags/v}"
+        run: echo "pkgver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
   stable:
     name: Stable
