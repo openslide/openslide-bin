@@ -112,8 +112,7 @@ jobs:
         run: tar cf overrides.tar override
       - name: Upload overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
-        # https://github.com/actions/upload-artifact/issues/233#issuecomment-991419457
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3
         with:
           name: build-overrides
           path: overrides.tar
@@ -129,16 +128,15 @@ jobs:
         id: prep
         run: |
           artifact="openslide-windows-${{ inputs.pkgver }}"
-          echo "::set-output name=artifact::$artifact"
+          echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "artifacts/$artifact"
           mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
           if [ -d override/openslide ]; then
               suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
-              echo "::set-output name=version_suffix::$suffix"
+              echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
           fi
       - name: Upload artifact
-        # https://github.com/actions/upload-artifact/issues/233#issuecomment-991419457
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.prep.outputs.artifact }}
           path: artifacts
@@ -183,8 +181,7 @@ jobs:
           mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
-        # https://github.com/actions/upload-artifact/issues/233#issuecomment-991419457
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ needs.sdist.outputs.artifact }}
           path: artifacts
