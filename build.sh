@@ -474,7 +474,8 @@ build_one() {
                 --with-jpeg-include-dir="${root}/include" \
                 --with-jpeg-lib-dir="${root}/lib" \
                 --disable-jbig \
-                --disable-lzma
+                --disable-lzma \
+                --disable-docs
         make $parallel
         make install
         ;;
