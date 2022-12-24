@@ -21,7 +21,7 @@
 
 set -eE
 
-packages="ssp pthread zlib png jpeg tiff openjpeg iconv intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+packages="ssp pthread zlib png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
 # Package display names.  Missing packages are not included in VERSIONS.txt.
 ssp_name="libssp"
@@ -31,7 +31,6 @@ png_name="libpng"
 jpeg_name="libjpeg-turbo"
 tiff_name="libtiff"
 openjpeg_name="OpenJPEG"
-iconv_name="win-iconv"
 intl_name="proxy-libintl"
 ffi_name="libffi"
 pcre_name="PCRE2"
@@ -52,7 +51,6 @@ png_ver="1.6.39"
 jpeg_ver="2.1.4"
 tiff_ver="4.5.0"
 openjpeg_ver="2.5.0"
-iconv_ver="0.0.8"
 intl_ver="0.4"
 ffi_ver="3.4.4"
 pcre_ver="10.42"
@@ -80,7 +78,6 @@ png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
 openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
-iconv_url="https://github.com/win-iconv/win-iconv/archive/v${iconv_ver}.tar.gz"
 intl_url="https://github.com/frida/proxy-libintl/archive/${intl_ver}.tar.gz"
 ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
 pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_ver}/pcre2-${pcre_ver}.tar.bz2"
@@ -103,7 +100,6 @@ png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
 openjpeg_build="openjpeg-${openjpeg_ver}"
-iconv_build="win-iconv-${iconv_ver}"
 intl_build="proxy-libintl-${intl_ver}"
 ffi_build="libffi-${ffi_ver}"
 pcre_build="pcre2-${pcre_ver}"
@@ -124,7 +120,6 @@ png_licenses="LICENSE"
 jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 tiff_licenses="LICENSE.md"
 openjpeg_licenses="LICENSE"
-iconv_licenses="readme.txt"
 intl_licenses="COPYING"
 ffi_licenses="LICENSE"
 pcre_licenses="LICENCE"
@@ -146,15 +141,14 @@ png_dependencies="zlib"
 jpeg_dependencies=""
 tiff_dependencies="zlib jpeg"
 openjpeg_dependencies="png tiff"
-iconv_dependencies=""
 intl_dependencies=""
 ffi_dependencies=""
 pcre_dependencies=""
-glib_dependencies="zlib iconv intl ffi pcre"
+glib_dependencies="zlib intl ffi pcre"
 gdkpixbuf_dependencies="glib"
 pixman_dependencies="pthread"
 cairo_dependencies="zlib png pixman"
-xml_dependencies="zlib iconv"
+xml_dependencies="zlib"
 sqlite_dependencies=""
 openslide_dependencies="ssp pthread png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
@@ -167,7 +161,6 @@ png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-6.dll"
 openjpeg_artifacts="libopenjp2.dll"
-iconv_artifacts="iconv.dll"
 intl_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-8.dll"
 pcre_artifacts="libpcre2-8-0.dll"
@@ -187,7 +180,6 @@ png_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="https://download.osgeo.org/libtiff/"
 openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
-iconv_upurl="https://github.com/win-iconv/win-iconv/tags"
 intl_upurl="https://github.com/frida/proxy-libintl/tags"
 ffi_upurl="https://github.com/libffi/libffi/tags"
 pcre_upurl="https://github.com/PCRE2Project/pcre2/tags"
@@ -207,7 +199,6 @@ png_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
 openjpeg_upregex="archive/refs/tags/v([0-9.]+)\.tar"
-iconv_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 intl_upregex="archive/refs/tags/([0-9.]+)\.tar"
 ffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 pcre_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
@@ -488,19 +479,6 @@ build_one() {
         make $parallel
         make install
         ;;
-    iconv)
-        # Don't strip DLL during build
-        sed -i 's/-Wl,-s //' Makefile
-        make \
-                CC="${build_host}-gcc" \
-                AR="${build_host}-ar" \
-                RANLIB="${build_host}-ranlib" \
-                DLLTOOL="${build_host}-dlltool" \
-                CFLAGS="${cppflags} ${cflags} ${ldflags}" \
-                SPECS_FLAGS="${ldflags} -static-libgcc"
-        make install \
-                prefix="${root}"
-        ;;
     intl)
         do_meson_setup build
         meson compile -C build $parallel
@@ -553,6 +531,7 @@ build_one() {
     xml)
         do_configure \
                 --with-zlib="${root}" \
+                --without-iconv \
                 --without-lzma \
                 --without-python
         make $parallel
