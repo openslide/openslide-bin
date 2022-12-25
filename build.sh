@@ -21,7 +21,10 @@
 
 set -eE
 
-packages="ssp pthread zlib png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+meson_packages="zlib"
+manual_packages_early="ssp pthread"
+manual_packages_late="png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
 ssp_name="libssp"
@@ -43,10 +46,9 @@ sqlite_name="SQLite"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
-# Package versions
+# Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-zlib_ver="1.2.13"
 png_ver="1.6.39"
 jpeg_ver="2.1.4"
 tiff_ver="4.5.0"
@@ -70,10 +72,9 @@ gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d"
 xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
-# Tarball URLs
+# Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
 png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
@@ -92,10 +93,9 @@ sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernu
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
-# Unpacked source trees
+# Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-zlib_build="zlib-${zlib_ver}"
 png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
@@ -133,22 +133,21 @@ sqlite_licenses="PUBLIC-DOMAIN.txt"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslidejava_licenses="COPYING.LESSER"
 
-# Build dependencies
+# Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-zlib_dependencies=""
-png_dependencies="zlib"
+png_dependencies=""
 jpeg_dependencies=""
-tiff_dependencies="zlib jpeg"
+tiff_dependencies="jpeg"
 openjpeg_dependencies="png tiff"
 intl_dependencies=""
 ffi_dependencies=""
 pcre_dependencies=""
-glib_dependencies="zlib intl ffi pcre"
+glib_dependencies="intl ffi pcre"
 gdkpixbuf_dependencies="glib"
 pixman_dependencies="pthread"
-cairo_dependencies="zlib png pixman"
-xml_dependencies="zlib"
+cairo_dependencies="png pixman"
+xml_dependencies=""
 sqlite_dependencies=""
 openslide_dependencies="ssp pthread png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
@@ -156,7 +155,7 @@ openslidejava_dependencies="openslide"
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
 pthread_artifacts="libwinpthread-1.dll"
-zlib_artifacts="zlib1.dll"
+zlib_artifacts="libz.dll"
 png_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-6.dll"
@@ -281,6 +280,12 @@ is_built() {
     return 0
 }
 
+is_meson() {
+    # Return true if the specified package is built as a Meson subproject
+    # $1 = package shortname
+    [ -n "$(expand $1_name)" ] && [ -z "$(expand $1_build)" ]
+}
+
 do_configure() {
     # Run configure with the appropriate parameters.
     # Additional parameters can be specified as arguments.
@@ -397,8 +402,20 @@ make_meson_list() {
     echo "$1" | sed -E -e "s/^ */['/" -e "s/ *$/']/" -e "s/ +/', '/g"
 }
 
+meson_wrap_key() {
+    # $1 = wrap basename
+    # $2 = file section
+    # $3 = file key
+    gawk -F ' *= *' \
+            -e 'BEGIN {want_section="'$2'"; want_key="'$3'"}' \
+            -e 'match($0, /^\[([^]]*)\]$/, out) {section=out[1]}' \
+            -e 'section == want_section && $1 == want_key {print $2}' \
+            "meson/subprojects/$1.wrap"
+}
+
 build_one() {
     # Build the specified package and its dependencies if not already built
+    # Meson packages are built elsewhere
     # $1  = package shortname
     local builddir
 
@@ -432,21 +449,6 @@ build_one() {
         do_configure
         make $parallel
         make install
-        ;;
-    zlib)
-        # Don't strip binaries during build
-        make -f win32/Makefile.gcc $parallel \
-                PREFIX="${build_host}-" \
-                CFLAGS="${cppflags} ${cflags}" \
-                LDFLAGS="${ldflags}" \
-                STRIP="true" \
-                all
-        make -f win32/Makefile.gcc \
-                SHARED_MODE=1 \
-                PREFIX="${build_host}-" \
-                BINARY_PATH="${root}/bin" \
-                INCLUDE_PATH="${root}/include" \
-                LIBRARY_PATH="${root}/lib" install
         ;;
     png)
         do_configure \
@@ -583,13 +585,31 @@ build() {
     done
 }
 
+build_meson() {
+    # Build Meson subpackages
+    local builddir
+
+    echo "Building Meson subpackages..."
+    builddir="${build}/meson"
+    if [ ! -f "${builddir}/compile_commands.json" ]; then
+        # If the builddir exists, setup didn't complete last time, and will
+        # fail again unless we delete the builddir.
+        rm -rf "${builddir}"
+    fi
+    if [ ! -d "$builddir" ]; then
+        do_meson_setup "$builddir" meson
+    fi
+    meson compile -C "$builddir" $parallel
+    meson install -C "$builddir" --only-changed --no-rebuild
+}
+
 sdist() {
     # Build source distribution
     local package path xzpath zipdir
     zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/tar"
-    for package in $packages
+    for package in $manual_packages
     do
         fetch "$package"
         path="$(tarpath ${package})"
@@ -609,7 +629,19 @@ sdist() {
             cp "$path" "${zipdir}/tar/"
         fi
     done
+    meson subprojects download --sourcedir meson
+    mkdir -p "${zipdir}/meson/subprojects/packagecache"
+    for package in $meson_packages
+    do
+        cp "meson/subprojects/$package.wrap" "${zipdir}/meson/subprojects/"
+        for path in $(meson_wrap_key $package wrap-file source_filename) \
+                $(meson_wrap_key $package wrap-file patch_filename); do
+            cp "meson/subprojects/packagecache/$path" \
+                    "${zipdir}/meson/subprojects/packagecache/"
+        done
+    done
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
+    cp meson/meson.build "${zipdir}/meson/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -617,7 +649,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name licensedir zipdir prev_ver_suffix
+    local package name ver srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
@@ -627,15 +659,22 @@ bdist() {
         echo "${ver_suffix}" > "${build_bits}/.suffix"
     fi
 
-    for package in $packages
-    do
-        build_one "$package"
-    done
+    build "$manual_packages_early"
+    build_meson
+    build "$manual_packages_late"
+
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    for package in $packages
+    for package in $meson_packages $manual_packages
     do
+        if is_meson "$package"; then
+            srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
+            ver="$(meson_wrap_key ${package} wrap-file wrapdb_version)"
+        else
+            srcdir="${build}/$(expand ${package}_build)"
+            ver="$(expand ${package}_ver)"
+        fi
         for artifact in $(expand ${package}_artifacts)
         do
             if [ "${artifact}" != "${artifact%.dll}" -o \
@@ -657,8 +696,7 @@ bdist() {
         mkdir -p "${licensedir}"
         for artifact in $(expand ${package}_licenses)
         do
-            if ! cp "${build}/$(expand ${package}_build)/${artifact}" \
-                    "${licensedir}" 2>/dev/null; then
+            if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
                 # OpenSlide license files were renamed; support both until
                 # the next release
                 if [ "${package}" != openslide ]; then
@@ -667,8 +705,8 @@ bdist() {
                 fi
             fi
         done
-        printf "%-30s %s\n" "$(expand ${package}_name)" \
-                "$(expand ${package}_ver)" >> "${zipdir}/VERSIONS.txt"
+        printf "%-30s %s\n" "$(expand ${package}_name)" "$ver" >> \
+                "${zipdir}/VERSIONS.txt"
     done
     mkdir -p "${zipdir}/lib"
     cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
@@ -686,7 +724,7 @@ bdist() {
 
 clean() {
     # Clean built files
-    local package artifact
+    local package artifact clean_meson
     if [ $# -gt 0 ] ; then
         for package in "$@"
         do
@@ -695,23 +733,36 @@ clean() {
             do
                 rm -f "${root}/bin/${artifact}"
             done
+            if is_meson "$package"; then
+                clean_meson=1
+            fi
         done
+        if [ -n "$clean_meson" ]; then
+            echo "Cleaning Meson..."
+            rm -rf "${build}/meson"
+            meson subprojects purge --sourcedir meson --confirm >/dev/null
+        fi
     else
         echo "Cleaning..."
         rm -rf 32 64 openslide-win*-*.zip
+        meson subprojects purge --sourcedir meson --confirm >/dev/null
     fi
 }
 
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in $packages
+    for package in $meson_packages $manual_packages
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
             continue
         fi
-        curver="$(expand ${package}_ver)"
+        if is_meson "$package"; then
+            curver="$(meson_wrap_key $package wrap-file wrapdb_version | cut -f1 -d-)"
+        else
+            curver="$(expand ${package}_ver)"
+        fi
         newver=$(${wget} -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
@@ -864,7 +915,7 @@ Usage: $0 [-p<pkgver>] sdist
        $0 updates
 
 Packages:
-$packages
+$meson_packages $manual_packages
 EOF
     exit 1
     ;;
