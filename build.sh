@@ -59,7 +59,7 @@ pcre_ver="10.42"
 glib_ver="2.74.3"
 gdkpixbuf_ver="2.42.10"
 pixman_ver="0.42.2"
-cairo_ver="1.16.0"
+cairo_ver="1.17.6"
 xml_ver="2.10.3"
 sqlite_year="2022"
 sqlite_ver="3.40.0"
@@ -87,7 +87,9 @@ pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_v
 glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
-cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
+#cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
+# development snapshot until Meson support stabilizes
+cairo_url="https://gitlab.freedesktop.org/cairo/cairo/-/archive/${cairo_ver}/cairo-${cairo_ver}.tar.gz"
 xml_url="https://download.gnome.org/sources/libxml2/${xml_basever}/libxml2-${xml_ver}.tar.xz"
 sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
@@ -545,14 +547,12 @@ build_one() {
         meson install -C build
         ;;
     cairo)
-        do_configure \
-                --enable-ft=no \
-                --enable-xlib=no
-        # Test requires freetype but is compiled unconditionally
-        # Fixed in cairo d331c69f65
-        >test/font-variations.c
-        make $parallel
-        make install
+        # We don't need DWrite and it adds a libstdc++ dependency
+        # https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/374
+        sed -i 's/\(d2d_dep = \).*/\1disabler()/' meson.build
+        do_meson_setup build
+        meson compile -C build $parallel
+        meson install -C build
         ;;
     xml)
         do_configure \
