@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2"
 manual_packages_early="ssp pthread"
-manual_packages_late="pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -36,7 +36,7 @@ libtiff_name="libtiff"
 libopenjp2_name="OpenJPEG"
 proxy_libintl_name="proxy-libintl"
 libffi_name="libffi"
-pcre_name="PCRE2"
+pcre2_name="PCRE2"
 glib_name="glib"
 gdkpixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-pcre_ver="10.42"
 glib_ver="2.74.4"
 gdkpixbuf_ver="2.42.10"
 pixman_ver="0.42.2"
@@ -69,7 +68,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_ver}/pcre2-${pcre_ver}.tar.bz2"
 glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
@@ -84,7 +82,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-pcre_build="pcre2-${pcre_ver}"
 glib_build="glib-${glib_ver}"
 gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
@@ -104,7 +101,7 @@ libtiff_licenses="LICENSE.md"
 libopenjp2_licenses="LICENSE"
 proxy_libintl_licenses="COPYING"
 libffi_licenses="LICENSE"
-pcre_licenses="LICENCE"
+pcre2_licenses="LICENCE"
 glib_licenses="COPYING"
 gdkpixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
@@ -118,8 +115,7 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-pcre_dependencies=""
-glib_dependencies="pcre"
+glib_dependencies=""
 gdkpixbuf_dependencies="glib"
 pixman_dependencies="pthread"
 cairo_dependencies="pixman"
@@ -138,7 +134,7 @@ libtiff_artifacts="libtiff4.dll"
 libopenjp2_artifacts="libopenjp2-2.dll"
 proxy_libintl_artifacts="libintl-8.dll"
 libffi_artifacts="libffi-8.dll"
-pcre_artifacts="libpcre2-8-0.dll"
+pcre2_artifacts="libpcre2-8-0.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
 gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
@@ -157,7 +153,7 @@ libtiff_upurl="https://download.osgeo.org/libtiff/"
 libopenjp2_upurl="https://github.com/uclouvain/openjpeg/tags"
 proxy_libintl_upurl="https://github.com/frida/proxy-libintl/tags"
 libffi_upurl="https://github.com/libffi/libffi/tags"
-pcre_upurl="https://github.com/PCRE2Project/pcre2/tags"
+pcre2_upurl="https://github.com/PCRE2Project/pcre2/tags"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
 gdkpixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
@@ -176,7 +172,7 @@ libtiff_upregex="tiff-([0-9.]+)\.tar"
 libopenjp2_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 proxy_libintl_upregex="archive/refs/tags/([0-9.]+)\.tar"
 libffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
-pcre_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
+pcre2_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
 glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 gdkpixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
@@ -398,11 +394,6 @@ build_one() {
         cp ".libs/${ssp_artifacts}" "${root}/bin"
         ;;
     pthread)
-        do_configure
-        make $parallel
-        make install
-        ;;
-    pcre)
         do_configure
         make $parallel
         make install

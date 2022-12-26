@@ -23,3 +23,10 @@ subproject(
     'tests=false',
   ],
 )
+subproject(
+  'pcre2',
+  default_options : [
+    'grep=false',
+    'test=false',
+  ],
+)
