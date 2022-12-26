@@ -15,3 +15,4 @@ subproject(
     'build_doc=disabled',
   ],
 )
+subproject('proxy-libintl')

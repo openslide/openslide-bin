@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl"
 manual_packages_early="ssp pthread"
-manual_packages_late="intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -34,7 +34,7 @@ libpng_name="libpng"
 libjpeg_turbo_name="libjpeg-turbo"
 libtiff_name="libtiff"
 libopenjp2_name="OpenJPEG"
-intl_name="proxy-libintl"
+proxy_libintl_name="proxy-libintl"
 ffi_name="libffi"
 pcre_name="PCRE2"
 glib_name="glib"
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-intl_ver="0.4"
 ffi_ver="3.4.4"
 pcre_ver="10.42"
 glib_ver="2.74.4"
@@ -71,7 +70,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-intl_url="https://github.com/frida/proxy-libintl/archive/${intl_ver}.tar.gz"
 ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
 pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_ver}/pcre2-${pcre_ver}.tar.bz2"
 glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
@@ -88,7 +86,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-intl_build="proxy-libintl-${intl_ver}"
 ffi_build="libffi-${ffi_ver}"
 pcre_build="pcre2-${pcre_ver}"
 glib_build="glib-${glib_ver}"
@@ -108,7 +105,7 @@ libpng_licenses="LICENSE"
 libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 libtiff_licenses="LICENSE.md"
 libopenjp2_licenses="LICENSE"
-intl_licenses="COPYING"
+proxy_libintl_licenses="COPYING"
 ffi_licenses="LICENSE"
 pcre_licenses="LICENCE"
 glib_licenses="COPYING"
@@ -124,10 +121,9 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-intl_dependencies=""
 ffi_dependencies=""
 pcre_dependencies=""
-glib_dependencies="intl ffi pcre"
+glib_dependencies="ffi pcre"
 gdkpixbuf_dependencies="glib"
 pixman_dependencies="pthread"
 cairo_dependencies="pixman"
@@ -144,7 +140,7 @@ libpng_artifacts="libpng16-16.dll"
 libjpeg_turbo_artifacts="libjpeg-8.2.2.dll"
 libtiff_artifacts="libtiff4.dll"
 libopenjp2_artifacts="libopenjp2-2.dll"
-intl_artifacts="libintl-8.dll"
+proxy_libintl_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-8.dll"
 pcre_artifacts="libpcre2-8-0.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
@@ -163,7 +159,7 @@ libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
 libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
 libtiff_upurl="https://download.osgeo.org/libtiff/"
 libopenjp2_upurl="https://github.com/uclouvain/openjpeg/tags"
-intl_upurl="https://github.com/frida/proxy-libintl/tags"
+proxy_libintl_upurl="https://github.com/frida/proxy-libintl/tags"
 ffi_upurl="https://github.com/libffi/libffi/tags"
 pcre_upurl="https://github.com/PCRE2Project/pcre2/tags"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
@@ -182,7 +178,7 @@ libpng_upregex="libpng-([0-9.]+)-README.txt"
 libjpeg_turbo_upregex="files/([0-9.]+)/"
 libtiff_upregex="tiff-([0-9.]+)\.tar"
 libopenjp2_upregex="archive/refs/tags/v([0-9.]+)\.tar"
-intl_upregex="archive/refs/tags/([0-9.]+)\.tar"
+proxy_libintl_upregex="archive/refs/tags/([0-9.]+)\.tar"
 ffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 pcre_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
 glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
@@ -409,11 +405,6 @@ build_one() {
         do_configure
         make $parallel
         make install
-        ;;
-    intl)
-        do_meson_setup build
-        meson compile -C build $parallel
-        meson install -C build
         ;;
     ffi)
         do_configure \
