@@ -2,6 +2,7 @@ project(
   'openslide-winbuild',
   'c',
   license : 'LGPL-2.1-only',
+  meson_version : '>=0.64',
 )
 
 subproject('zlib')
@@ -16,3 +17,9 @@ subproject(
   ],
 )
 subproject('proxy-libintl')
+subproject(
+  'libffi',
+  default_options : [
+    'tests=false',
+  ],
+)
