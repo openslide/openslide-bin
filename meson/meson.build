@@ -7,3 +7,4 @@ project(
 subproject('zlib')
 subproject('libpng')
 subproject('libjpeg-turbo')
+subproject('libtiff')
