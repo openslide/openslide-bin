@@ -21,16 +21,16 @@
 
 set -eE
 
-meson_packages="zlib"
+meson_packages="zlib libpng"
 manual_packages_early="ssp pthread"
-manual_packages_late="png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
 ssp_name="libssp"
 pthread_name="winpthreads"
 zlib_name="zlib"
-png_name="libpng"
+libpng_name="libpng"
 jpeg_name="libjpeg-turbo"
 tiff_name="libtiff"
 openjpeg_name="OpenJPEG"
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-png_ver="1.6.39"
 jpeg_ver="2.1.4"
 tiff_ver="4.5.0"
 openjpeg_ver="2.5.0"
@@ -75,7 +74,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
 jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
 tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
 openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
@@ -96,7 +94,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-png_build="libpng-${png_ver}"
 jpeg_build="libjpeg-turbo-${jpeg_ver}"
 tiff_build="tiff-${tiff_ver}"
 openjpeg_build="openjpeg-${openjpeg_ver}"
@@ -116,7 +113,7 @@ openslidejava_build="openslide-java-${openslidejava_ver}"
 ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
 pthread_licenses="COPYING"
 zlib_licenses="README"
-png_licenses="LICENSE"
+libpng_licenses="LICENSE"
 jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 tiff_licenses="LICENSE.md"
 openjpeg_licenses="LICENSE"
@@ -136,27 +133,26 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-png_dependencies=""
 jpeg_dependencies=""
 tiff_dependencies="jpeg"
-openjpeg_dependencies="png tiff"
+openjpeg_dependencies="tiff"
 intl_dependencies=""
 ffi_dependencies=""
 pcre_dependencies=""
 glib_dependencies="intl ffi pcre"
 gdkpixbuf_dependencies="glib"
 pixman_dependencies="pthread"
-cairo_dependencies="png pixman"
+cairo_dependencies="pixman"
 xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp pthread jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
 pthread_artifacts="libwinpthread-1.dll"
 zlib_artifacts="libz.dll"
-png_artifacts="libpng16-16.dll"
+libpng_artifacts="libpng16-16.dll"
 jpeg_artifacts="libjpeg-62.dll"
 tiff_artifacts="libtiff-6.dll"
 openjpeg_artifacts="libopenjp2.dll"
@@ -175,7 +171,7 @@ openslidejava_artifacts="openslide-jni.dll openslide.jar"
 # Update-checking URLs
 ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
 zlib_upurl="https://zlib.net/"
-png_upurl="http://www.libpng.org/pub/png/libpng.html"
+libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
 jpeg_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
 tiff_upurl="https://download.osgeo.org/libtiff/"
 openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
@@ -194,7 +190,7 @@ openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 # Update-checking regexes
 ssp_upregex="gcc-([0-9.]+)/"
 zlib_upregex="source code, version ([0-9.]+)"
-png_upregex="libpng-([0-9.]+)-README.txt"
+libpng_upregex="libpng-([0-9.]+)-README.txt"
 jpeg_upregex="files/([0-9.]+)/"
 tiff_upregex="tiff-([0-9.]+)\.tar"
 openjpeg_upregex="archive/refs/tags/v([0-9.]+)\.tar"
@@ -447,12 +443,6 @@ build_one() {
         ;;
     pthread)
         do_configure
-        make $parallel
-        make install
-        ;;
-    png)
-        do_configure \
-                --enable-intel-sse
         make $parallel
         make install
         ;;

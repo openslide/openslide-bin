@@ -5,3 +5,4 @@ project(
 )
 
 subproject('zlib')
+subproject('libpng')
