@@ -303,40 +303,6 @@ do_configure() {
             "$@"
 }
 
-do_cmake() {
-    # Run cmake with the appropriate parameters.
-    # Additional parameters can be specified as arguments.
-    #
-    # Use only our pkg-config library directory, even on cross builds
-    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    #
-    # Certain cmake variables cannot be specified on the command-line.
-    # http://public.kitware.com/Bug/view.php?id=9980
-    cat > toolchain.cmake <<EOF
-SET(CMAKE_SYSTEM_NAME Windows)
-SET(CMAKE_SYSTEM_PROCESSOR ${cmake_system_processor})
-SET(CMAKE_C_COMPILER ${build_host}-gcc)
-SET(CMAKE_CXX_COMPILER ${build_host}-g++)
-SET(CMAKE_RC_COMPILER ${build_host}-windres)
-EOF
-    PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
-            PKG_CONFIG_PATH= \
-            cmake -G "Unix Makefiles" \
-            -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" \
-            -DCMAKE_INSTALL_PREFIX="${root}" \
-            -DCMAKE_FIND_ROOT_PATH="${root}" \
-            -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-            -DCMAKE_C_FLAGS="${cppflags} ${cflags}" \
-            -DCMAKE_CXX_FLAGS="${cppflags} ${cxxflags}" \
-            -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
-            "$@" \
-            .
-}
-
 do_meson_setup() {
     # Run meson setup with the appropriate parameters.
     # $1 = path to build directory
@@ -734,12 +700,10 @@ probe() {
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
-        cmake_system_processor=AMD64
         meson_cpu_family=x86_64
         meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
-        cmake_system_processor=x86
         meson_cpu_family=x86
         meson_cpu=i686
         arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
