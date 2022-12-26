@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2"
 manual_packages_early="ssp pthread"
-manual_packages_late="openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -33,7 +33,7 @@ zlib_name="zlib"
 libpng_name="libpng"
 libjpeg_turbo_name="libjpeg-turbo"
 libtiff_name="libtiff"
-openjpeg_name="OpenJPEG"
+libopenjp2_name="OpenJPEG"
 intl_name="proxy-libintl"
 ffi_name="libffi"
 pcre_name="PCRE2"
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-openjpeg_ver="2.5.0"
 intl_ver="0.4"
 ffi_ver="3.4.4"
 pcre_ver="10.42"
@@ -72,7 +71,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
 intl_url="https://github.com/frida/proxy-libintl/archive/${intl_ver}.tar.gz"
 ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
 pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_ver}/pcre2-${pcre_ver}.tar.bz2"
@@ -90,7 +88,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-openjpeg_build="openjpeg-${openjpeg_ver}"
 intl_build="proxy-libintl-${intl_ver}"
 ffi_build="libffi-${ffi_ver}"
 pcre_build="pcre2-${pcre_ver}"
@@ -110,7 +107,7 @@ zlib_licenses="README"
 libpng_licenses="LICENSE"
 libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
 libtiff_licenses="LICENSE.md"
-openjpeg_licenses="LICENSE"
+libopenjp2_licenses="LICENSE"
 intl_licenses="COPYING"
 ffi_licenses="LICENSE"
 pcre_licenses="LICENCE"
@@ -127,7 +124,6 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-openjpeg_dependencies=""
 intl_dependencies=""
 ffi_dependencies=""
 pcre_dependencies=""
@@ -137,7 +133,7 @@ pixman_dependencies="pthread"
 cairo_dependencies="pixman"
 xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread openjpeg glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp pthread glib gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -147,7 +143,7 @@ zlib_artifacts="libz.dll"
 libpng_artifacts="libpng16-16.dll"
 libjpeg_turbo_artifacts="libjpeg-8.2.2.dll"
 libtiff_artifacts="libtiff4.dll"
-openjpeg_artifacts="libopenjp2.dll"
+libopenjp2_artifacts="libopenjp2-2.dll"
 intl_artifacts="libintl-8.dll"
 ffi_artifacts="libffi-8.dll"
 pcre_artifacts="libpcre2-8-0.dll"
@@ -166,7 +162,7 @@ zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
 libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
 libtiff_upurl="https://download.osgeo.org/libtiff/"
-openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
+libopenjp2_upurl="https://github.com/uclouvain/openjpeg/tags"
 intl_upurl="https://github.com/frida/proxy-libintl/tags"
 ffi_upurl="https://github.com/libffi/libffi/tags"
 pcre_upurl="https://github.com/PCRE2Project/pcre2/tags"
@@ -185,7 +181,7 @@ zlib_upregex="source code, version ([0-9.]+)"
 libpng_upregex="libpng-([0-9.]+)-README.txt"
 libjpeg_turbo_upregex="files/([0-9.]+)/"
 libtiff_upregex="tiff-([0-9.]+)\.tar"
-openjpeg_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+libopenjp2_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 intl_upregex="archive/refs/tags/([0-9.]+)\.tar"
 ffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 pcre_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
@@ -435,15 +431,6 @@ build_one() {
         ;;
     pthread)
         do_configure
-        make $parallel
-        make install
-        ;;
-    openjpeg)
-        do_cmake \
-                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
-                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
-                -DBUILD_PKGCONFIG_FILES=ON \
-                -DBUILD_DOC=OFF
         make $parallel
         make install
         ;;
