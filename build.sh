@@ -350,13 +350,15 @@ EOF
 
 do_meson_setup() {
     # Run meson setup with the appropriate parameters.
+    # $1 = path to build directory
     # Additional parameters can be specified as arguments.
     #
     # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
     #
     # Use only our pkg-config library directory, even on cross builds
     # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    cat > cross.ini <<EOF
+    mkdir -p "$1"
+    cat > "$1/cross.ini" <<EOF
 [built-in options]
 prefix = '${root}'
 c_args = $(make_meson_list "${cppflags} ${cflags}")
@@ -386,7 +388,7 @@ cpu = '${meson_cpu}'
 EOF
     meson setup \
             --buildtype plain \
-            --cross-file cross.ini \
+            --cross-file "$1/cross.ini" \
             --wrap-mode nofallback \
             "$@"
 }
