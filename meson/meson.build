@@ -36,3 +36,14 @@ subproject(
     'nls=disabled',
   ],
 )
+subproject(
+  'gdk-pixbuf',
+  default_options : [
+    'png=disabled',
+    'tiff=disabled',
+    'jpeg=disabled',
+    'man=false',
+    'builtin_loaders=bmp',
+    'installed_tests=false',
+  ],
+)

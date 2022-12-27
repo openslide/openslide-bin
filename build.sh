@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf"
 manual_packages_early="ssp pthread"
-manual_packages_late="gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -38,7 +38,7 @@ proxy_libintl_name="proxy-libintl"
 libffi_name="libffi"
 pcre2_name="PCRE2"
 glib_name="glib"
-gdkpixbuf_name="gdk-pixbuf"
+gdk_pixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
 xml_name="libxml2"
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-gdkpixbuf_ver="2.42.10"
 pixman_ver="0.42.2"
 cairo_ver="1.17.6"
 xml_ver="2.10.3"
@@ -59,14 +58,12 @@ openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
 # Derived package version strings
-gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 #cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 # development snapshot until Meson support stabilizes
@@ -79,7 +76,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
@@ -99,7 +95,7 @@ proxy_libintl_licenses="COPYING"
 libffi_licenses="LICENSE"
 pcre2_licenses="LICENCE"
 glib_licenses="COPYING"
-gdkpixbuf_licenses="COPYING"
+gdk_pixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 xml_licenses="Copyright"
@@ -111,12 +107,11 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-gdkpixbuf_dependencies=""
 pixman_dependencies="pthread"
 cairo_dependencies="pixman"
 xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp pthread cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -131,7 +126,7 @@ proxy_libintl_artifacts="libintl-8.dll"
 libffi_artifacts="libffi-8.dll"
 pcre2_artifacts="libpcre2-8-0.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
-gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
+gdk_pixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 xml_artifacts="libxml2-2.dll"
@@ -150,7 +145,7 @@ proxy_libintl_upurl="https://github.com/frida/proxy-libintl/tags"
 libffi_upurl="https://github.com/libffi/libffi/tags"
 pcre2_upurl="https://github.com/PCRE2Project/pcre2/tags"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
-gdkpixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
+gdk_pixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
 xml_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
@@ -169,7 +164,7 @@ proxy_libintl_upregex="archive/refs/tags/([0-9.]+)\.tar"
 libffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 pcre2_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
 glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
-gdkpixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
+gdk_pixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
 xml_upregex="archive/v([0-9.]+)/"
@@ -392,17 +387,6 @@ build_one() {
         do_configure
         make $parallel
         make install
-        ;;
-    gdkpixbuf)
-        do_meson_setup build \
-                -Dpng=disabled \
-                -Dtiff=disabled \
-                -Djpeg=disabled \
-                -Dman=false \
-                -Dbuiltin_loaders="['bmp']" \
-                -Dinstalled_tests=false
-        meson compile -C build $parallel
-        meson install -C build
         ;;
     pixman)
         do_meson_setup build \
