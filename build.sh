@@ -23,7 +23,7 @@ set -eE
 
 packages="ssp pthread zlib png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 
-# Package display names.  Missing packages are not included in VERSIONS.txt.
+# Package display names
 ssp_name="libssp"
 pthread_name="winpthreads"
 zlib_name="zlib"
@@ -665,11 +665,8 @@ bdist() {
                 fi
             fi
         done
-        name="$(expand ${package}_name)"
-        if [ -n "$name" ] ; then
-            printf "%-30s %s\n" "$name" "$(expand ${package}_ver)" >> \
-                    "${zipdir}/VERSIONS.txt"
-        fi
+        printf "%-30s %s\n" "$(expand ${package}_name)" \
+                "$(expand ${package}_ver)" >> "${zipdir}/VERSIONS.txt"
     done
     mkdir -p "${zipdir}/lib"
     cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
