@@ -496,7 +496,8 @@ build_one() {
         make install
         ;;
     glib)
-        do_meson_setup build
+        do_meson_setup build \
+                -Dnls=disabled
         meson compile -C build $parallel
         meson install -C build
         ;;
@@ -513,7 +514,8 @@ build_one() {
         ;;
     pixman)
         do_meson_setup build \
-                -Dopenmp=disabled
+                -Dopenmp=disabled \
+                -Dtests=disabled
         # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
         sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
                 pixman/pixman-mmx.c
@@ -524,7 +526,8 @@ build_one() {
         # We don't need DWrite and it adds a libstdc++ dependency
         # https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/374
         sed -i 's/\(d2d_dep = \).*/\1disabler()/' meson.build
-        do_meson_setup build
+        do_meson_setup build \
+                -Dtests=disabled
         meson compile -C build $parallel
         meson install -C build
         ;;
