@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 sqlite3"
 manual_packages_early="ssp pthread"
-manual_packages_late="sqlite openslide openslidejava"
+manual_packages_late="openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -42,32 +42,25 @@ gdk_pixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
 libxml2_name="libxml2"
-sqlite_name="SQLite"
+sqlite3_name="SQLite"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-sqlite_year="2022"
-sqlite_ver="3.40.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
-
-# Derived package version strings
-sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
@@ -87,7 +80,7 @@ gdk_pixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 libxml2_licenses="Copyright"
-sqlite_licenses="PUBLIC-DOMAIN.txt"
+sqlite3_licenses="PUBLIC-DOMAIN.txt"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslidejava_licenses="COPYING.LESSER"
@@ -95,8 +88,7 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-sqlite_dependencies=""
-openslide_dependencies="ssp pthread sqlite"
+openslide_dependencies="ssp pthread"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -115,7 +107,7 @@ gdk_pixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 libxml2_artifacts="libxml2.dll"
-sqlite_artifacts="libsqlite3-0.dll"
+sqlite3_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
@@ -134,7 +126,7 @@ gdk_pixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
 libxml2_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
-sqlite_upurl="https://sqlite.org/changes.html"
+sqlite3_upurl="https://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
@@ -153,7 +145,7 @@ gdk_pixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
 libxml2_upregex="archive/v([0-9.]+)/"
-sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
+sqlite3_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
 openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
@@ -373,13 +365,6 @@ build_one() {
         make $parallel
         make install
         ;;
-    sqlite)
-        do_configure
-        make $parallel
-        make install
-        # Extract public-domain dedication from the top of sqlite3.h
-        awk '/\*{8}/ {exit} /^\*{2}/ {print}' sqlite3.h > PUBLIC-DOMAIN.txt
-        ;;
     openslide)
         local ver_suffix_arg
         if [ -n "${ver_suffix}" ] ; then
@@ -538,6 +523,11 @@ bdist() {
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
         mkdir -p "${licensedir}"
+        if [ "$package" = sqlite3 ]; then
+            # Extract public-domain dedication from the top of sqlite3.h
+            awk '/\*{8}/ {exit} /^\*{2}/ {print}' "${srcdir}/sqlite3.h" > \
+                    "${srcdir}/PUBLIC-DOMAIN.txt"
+        fi
         for artifact in $(expand ${package}_licenses)
         do
             if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then

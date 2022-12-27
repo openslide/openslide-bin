@@ -67,3 +67,4 @@ subproject(
     'iconv=disabled',
   ],
 )
+subproject('sqlite3')
