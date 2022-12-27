@@ -85,12 +85,6 @@ sqlite3_licenses="PUBLIC-DOMAIN.txt"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslidejava_licenses="COPYING.LESSER"
 
-# Build dependencies (omit Meson packages)
-ssp_dependencies=""
-pthread_dependencies=""
-openslide_dependencies="ssp pthread"
-openslidejava_dependencies="openslide"
-
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
 pthread_artifacts="libwinpthread-1.dll"
@@ -329,7 +323,7 @@ meson_wrap_version() {
 }
 
 build_one() {
-    # Build the specified package and its dependencies if not already built
+    # Build the specified package if not already built
     # Meson packages are built elsewhere
     # $1  = package shortname
     local builddir
@@ -337,8 +331,6 @@ build_one() {
     if is_built "$1" ; then
         return
     fi
-
-    build $(expand ${1}_dependencies)
 
     unpack "$1"
 
@@ -389,8 +381,7 @@ build_one() {
 }
 
 build() {
-    # Build the specified list of packages and their dependencies if not
-    # already built
+    # Build the specified list of packages, in order, if not already built
     # $*  = package shortnames
     local package
     for package in $*
