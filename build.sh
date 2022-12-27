@@ -363,6 +363,16 @@ meson_wrap_key() {
             "meson/subprojects/$(echo $1 | tr _ -).wrap"
 }
 
+meson_wrap_version() {
+    # $1 = package shortname
+    local ver
+    ver="$(meson_wrap_key $1 wrap-file wrapdb_version)"
+    if [ -z "$ver" ]; then
+        ver="$(meson_wrap_key $1 wrap-file directory | awk -F - '{print $NF}')"
+    fi
+    echo "$ver"
+}
+
 build_one() {
     # Build the specified package and its dependencies if not already built
     # Meson packages are built elsewhere
@@ -587,7 +597,7 @@ bdist() {
     do
         if is_meson "$package"; then
             srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
-            ver="$(meson_wrap_key ${package} wrap-file wrapdb_version)"
+            ver="$(meson_wrap_version ${package})"
         else
             srcdir="${build}/$(expand ${package}_build)"
             ver="$(expand ${package}_ver)"
@@ -676,7 +686,7 @@ updates() {
             continue
         fi
         if is_meson "$package"; then
-            curver="$(meson_wrap_key $package wrap-file wrapdb_version | cut -f1 -d-)"
+            curver="$(meson_wrap_version $package | cut -f1 -d-)"
         else
             curver="$(expand ${package}_ver)"
         fi
