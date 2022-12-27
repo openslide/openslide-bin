@@ -1,0 +1,22 @@
+commit 12989abfb2174dd014191ee5cdc5c9d127d9c1ac
+Author: Nirbheek Chauhan <nirbheek@centricular.com>
+Date:   Fri Dec 30 16:53:10 2022 +0530
+
+    meson: Fix pcre static flag usage with a subproject
+
+diff --git a/meson.build b/meson.build
+index f6a07643b7ff..1a15b43657ed 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2056,7 +2056,10 @@ endif
+ # Try again with the fallback
+ if not pcre2.found()
+   pcre2 = dependency('libpcre2-8', version: pcre2_req, allow_fallback: true)
+-  use_pcre2_static_flag = true
++  assert(pcre2.type_name() == 'internal')
++  # static flags are automatically enabled by the subproject if it's built
++  # with default_library=static
++  use_pcre2_static_flag = false
+ elif host_system == 'windows'
+   pcre2_static = cc.links('''#define PCRE2_STATIC
+                              #define PCRE2_CODE_UNIT_WIDTH 8

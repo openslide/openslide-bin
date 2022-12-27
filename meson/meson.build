@@ -30,3 +30,9 @@ subproject(
     'test=false',
   ],
 )
+subproject(
+  'glib',
+  default_options : [
+    'nls=disabled',
+  ],
+)

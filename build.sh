@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib"
 manual_packages_early="ssp pthread"
-manual_packages_late="glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-glib_ver="2.74.4"
 gdkpixbuf_ver="2.42.10"
 pixman_ver="0.42.2"
 cairo_ver="1.17.6"
@@ -60,7 +59,6 @@ openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
 # Derived package version strings
-glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
@@ -68,7 +66,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
 gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
 pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 #cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
@@ -82,7 +79,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-glib_build="glib-${glib_ver}"
 gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
 pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
@@ -115,13 +111,12 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-glib_dependencies=""
-gdkpixbuf_dependencies="glib"
+gdkpixbuf_dependencies=""
 pixman_dependencies="pthread"
 cairo_dependencies="pixman"
 xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread glib gdkpixbuf cairo xml sqlite"
+openslide_dependencies="ssp pthread gdkpixbuf cairo xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -398,12 +393,6 @@ build_one() {
         make $parallel
         make install
         ;;
-    glib)
-        do_meson_setup build \
-                -Dnls=disabled
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
     gdkpixbuf)
         do_meson_setup build \
                 -Dpng=disabled \
@@ -644,11 +633,13 @@ clean() {
         if [ -n "$clean_meson" ]; then
             echo "Cleaning Meson..."
             rm -rf "${build}/meson"
+            grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
             meson subprojects purge --sourcedir meson --confirm >/dev/null
         fi
     else
         echo "Cleaning..."
         rm -rf 32 64 openslide-win*-*.zip
+        grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     fi
 }

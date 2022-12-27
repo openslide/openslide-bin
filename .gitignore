@@ -8,3 +8,6 @@ openslide-win*
 /meson/subprojects/*
 !/meson/subprojects/*.wrap
 !/meson/subprojects/packagefiles
+
+# ignore promoted wraps
+meson/subprojects/gvdb.wrap
