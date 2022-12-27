@@ -47,3 +47,10 @@ subproject(
     'installed_tests=false',
   ],
 )
+subproject(
+  'pixman',
+  default_options : [
+    'openmp=disabled',
+    'tests=disabled',
+  ],
+)

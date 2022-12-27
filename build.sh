@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman"
 manual_packages_early="ssp pthread"
-manual_packages_late="pixman cairo xml sqlite openslide openslidejava"
+manual_packages_late="cairo xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-pixman_ver="0.42.2"
 cairo_ver="1.17.6"
 xml_ver="2.10.3"
 sqlite_year="2022"
@@ -64,7 +63,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
 #cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
 # development snapshot until Meson support stabilizes
 cairo_url="https://gitlab.freedesktop.org/cairo/cairo/-/archive/${cairo_ver}/cairo-${cairo_ver}.tar.gz"
@@ -76,7 +74,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-pixman_build="pixman-${pixman_ver}"
 cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
 sqlite_build="sqlite-autoconf-${sqlite_vernum}"
@@ -107,8 +104,7 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-pixman_dependencies="pthread"
-cairo_dependencies="pixman"
+cairo_dependencies=""
 xml_dependencies=""
 sqlite_dependencies=""
 openslide_dependencies="ssp pthread cairo xml sqlite"
@@ -387,16 +383,6 @@ build_one() {
         do_configure
         make $parallel
         make install
-        ;;
-    pixman)
-        do_meson_setup build \
-                -Dopenmp=disabled \
-                -Dtests=disabled
-        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
-        sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
-                pixman/pixman-mmx.c
-        meson compile -C build $parallel
-        meson install -C build
         ;;
     cairo)
         # We don't need DWrite and it adds a libstdc++ dependency
