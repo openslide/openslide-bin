@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo"
 manual_packages_early="ssp pthread"
-manual_packages_late="cairo xml sqlite openslide openslidejava"
+manual_packages_late="xml sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -49,7 +49,6 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-cairo_ver="1.17.6"
 xml_ver="2.10.3"
 sqlite_year="2022"
 sqlite_ver="3.40.0"
@@ -63,9 +62,6 @@ sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-#cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
-# development snapshot until Meson support stabilizes
-cairo_url="https://gitlab.freedesktop.org/cairo/cairo/-/archive/${cairo_ver}/cairo-${cairo_ver}.tar.gz"
 xml_url="https://download.gnome.org/sources/libxml2/${xml_basever}/libxml2-${xml_ver}.tar.xz"
 sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
@@ -74,7 +70,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-cairo_build="cairo-${cairo_ver}"
 xml_build="libxml2-${xml_ver}"
 sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
@@ -104,10 +99,9 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-cairo_dependencies=""
 xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread cairo xml sqlite"
+openslide_dependencies="ssp pthread xml sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -383,15 +377,6 @@ build_one() {
         do_configure
         make $parallel
         make install
-        ;;
-    cairo)
-        # We don't need DWrite and it adds a libstdc++ dependency
-        # https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/374
-        sed -i 's/\(d2d_dep = \).*/\1disabler()/' meson.build
-        do_meson_setup build \
-                -Dtests=disabled
-        meson compile -C build $parallel
-        meson install -C build
         ;;
     xml)
         do_configure \

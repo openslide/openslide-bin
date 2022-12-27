@@ -54,3 +54,10 @@ subproject(
     'tests=disabled',
   ],
 )
+subproject(
+  'cairo',
+  default_options : [
+    'dwrite=disabled',
+    'tests=disabled',
+  ],
+)
