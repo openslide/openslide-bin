@@ -538,6 +538,11 @@ sdist() {
             cp "meson/subprojects/packagecache/$path" \
                     "${zipdir}/meson/subprojects/packagecache/"
         done
+        for path in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
+            mkdir -p "${zipdir}/meson/subprojects/packagefiles"
+            cp "meson/subprojects/packagefiles/$path" \
+                    "${zipdir}/meson/subprojects/packagefiles/"
+        done
     done
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
     cp meson/meson.build "${zipdir}/meson/"
