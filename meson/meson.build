@@ -16,6 +16,7 @@ subproject(
     'build_doc=disabled',
   ],
 )
+subproject('sqlite3')
 subproject('proxy-libintl')
 subproject(
   'libffi',
@@ -67,4 +68,3 @@ subproject(
     'iconv=disabled',
   ],
 )
-subproject('sqlite3')
