@@ -61,3 +61,9 @@ subproject(
     'tests=disabled',
   ],
 )
+subproject(
+  'libxml2',
+  default_options : [
+    'iconv=disabled',
+  ],
+)

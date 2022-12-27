@@ -21,9 +21,9 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
 manual_packages_early="ssp pthread"
-manual_packages_late="xml sqlite openslide openslidejava"
+manual_packages_late="sqlite openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
 # Package display names
@@ -41,7 +41,7 @@ glib_name="glib"
 gdk_pixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
-xml_name="libxml2"
+libxml2_name="libxml2"
 sqlite_name="SQLite"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
@@ -49,20 +49,17 @@ openslidejava_name="OpenSlide Java"
 # Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-xml_ver="2.10.3"
 sqlite_year="2022"
 sqlite_ver="3.40.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
 # Derived package version strings
-xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
 sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
 
 # Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-xml_url="https://download.gnome.org/sources/libxml2/${xml_basever}/libxml2-${xml_ver}.tar.xz"
 sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
@@ -70,7 +67,6 @@ openslidejava_url="https://github.com/openslide/openslide-java/releases/download
 # Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-xml_build="libxml2-${xml_ver}"
 sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
@@ -90,7 +86,7 @@ glib_licenses="COPYING"
 gdk_pixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
-xml_licenses="Copyright"
+libxml2_licenses="Copyright"
 sqlite_licenses="PUBLIC-DOMAIN.txt"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
@@ -99,9 +95,8 @@ openslidejava_licenses="COPYING.LESSER"
 # Build dependencies (omit Meson packages)
 ssp_dependencies=""
 pthread_dependencies=""
-xml_dependencies=""
 sqlite_dependencies=""
-openslide_dependencies="ssp pthread xml sqlite"
+openslide_dependencies="ssp pthread sqlite"
 openslidejava_dependencies="openslide"
 
 # Build artifacts
@@ -119,7 +114,7 @@ glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libg
 gdk_pixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
-xml_artifacts="libxml2-2.dll"
+libxml2_artifacts="libxml2.dll"
 sqlite_artifacts="libsqlite3-0.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
@@ -138,7 +133,7 @@ glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
 gdk_pixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
-xml_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
+libxml2_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
 sqlite_upurl="https://sqlite.org/changes.html"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
@@ -157,7 +152,7 @@ glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 gdk_pixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
-xml_upregex="archive/v([0-9.]+)/"
+libxml2_upregex="archive/v([0-9.]+)/"
 sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
 openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
@@ -375,15 +370,6 @@ build_one() {
         ;;
     pthread)
         do_configure
-        make $parallel
-        make install
-        ;;
-    xml)
-        do_configure \
-                --with-zlib="${root}" \
-                --without-iconv \
-                --without-lzma \
-                --without-python
         make $parallel
         make install
         ;;
