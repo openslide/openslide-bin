@@ -803,7 +803,8 @@ probe() {
     # in intermediate stack frames, so this should be fine.
     # https://github.com/openslide/openslide-winbuild/issues/47
     mkdir -p "${root}/include"
-    cat > "${root}/include/setjmp.h" <<EOF
+    if [ ! -e "${root}/include/setjmp.h" ]; then
+        cat > "${root}/include/setjmp.h" <<EOF
 #ifndef OPENSLIDE_SETJMP_H
 #define OPENSLIDE_SETJMP_H
 
@@ -817,6 +818,7 @@ probe() {
 
 #endif
 EOF
+    fi
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
