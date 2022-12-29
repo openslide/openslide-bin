@@ -103,10 +103,6 @@ jobs:
           ./configure
           make -j4
           make distclean
-      - name: Autoreconf OpenSlide Java
-        if: inputs.openslide_java_repo != ''
-        working-directory: override/openslidejava
-        run: autoreconf -i
       - name: Collect overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar cf overrides.tar override
