@@ -103,10 +103,6 @@ jobs:
           ./configure
           make -j4
           make distclean
-      - name: Autoreconf OpenSlide Java
-        if: inputs.openslide_java_repo != ''
-        working-directory: override/openslidejava
-        run: autoreconf -i
       - name: Collect overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar cf overrides.tar override
@@ -150,11 +146,16 @@ jobs:
       matrix:
         bits: [32, 64]
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v3
+      - name: Download source zip
+        uses: actions/download-artifact@v3
         with:
-          repository: ${{ inputs.openslide_winbuild_repo }}
-          ref: ${{ inputs.openslide_winbuild_ref }}
+          name: ${{ needs.sdist.outputs.artifact }}
+      - name: Unpack source zip
+        run: |
+          (cd "${{ needs.sdist.outputs.artifact }}" &&
+              unzip "openslide-winbuild-${{ inputs.pkgver }}.zip")
+          mv "${{ needs.sdist.outputs.artifact }}/openslide-winbuild-${{ inputs.pkgver }}"/* .
+          rm -r "${{ needs.sdist.outputs.artifact }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         uses: actions/download-artifact@v3
@@ -163,11 +164,6 @@ jobs:
       - name: Unpack overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar xf overrides.tar
-      - name: Cache sources
-        uses: actions/cache@v3
-        with:
-          key: winbuild-tar
-          path: tar
       - name: Build binary zip
         run: |
           suffix="${{ needs.sdist.outputs.version_suffix }}"
