@@ -322,6 +322,49 @@ meson_wrap_version() {
     echo "$ver"
 }
 
+meson_override_lock() {
+    # Always run this in a subshell!  Lock releases when shell exits.
+    # If there are no overrides we can skip the serialization.
+    if [ -d override ]; then
+        exec 90<>override/.lock
+        if ! flock -n 90; then
+            echo "Couldn't acquire override lock"
+            return 1
+        fi
+    fi
+}
+
+meson_override_init() {
+    # Override lock must be held
+    local package meson_name
+    meson_override_remove
+    for package in $meson_packages; do
+        if [ -d "override/${package}" ]; then
+            echo "Overriding $package..."
+            meson_name=$(echo "$package" | tr _ -)
+            ln -s "../../override/${package}" \
+                    "meson/subprojects/${meson_name}"
+            mv "meson/subprojects/${meson_name}.wrap" \
+                    "meson/subprojects/${meson_name}.wrap.overridden"
+        fi
+    done
+}
+
+meson_override_remove() {
+    # Override lock must be held
+    local package meson_name
+    for package in $meson_packages; do
+        meson_name=$(echo "$package" | tr _ -)
+        if [ -L "meson/subprojects/${meson_name}" ]; then
+            rm "meson/subprojects/${meson_name}"
+        fi
+        if [ -e "meson/subprojects/${meson_name}.wrap.overridden" ]; then
+            mv "meson/subprojects/${meson_name}.wrap.overridden" \
+                    "meson/subprojects/${meson_name}.wrap"
+        fi
+    done
+}
+
 build_one() {
     # Build the specified package if not already built
     # Meson packages are built elsewhere
@@ -479,9 +522,14 @@ bdist() {
         echo "${ver_suffix}" > "${build_bits}/.suffix"
     fi
 
-    build "$manual_packages_early"
-    build_meson
-    build "$manual_packages_late"
+    (
+        meson_override_lock
+        meson_override_init
+        build "$manual_packages_early"
+        build_meson
+        build "$manual_packages_late"
+        meson_override_remove
+    )
 
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
@@ -718,6 +766,13 @@ shift $(( $OPTIND - 1 ))
 
 # Probe build environment
 probe
+
+# Clean up any prior Meson overrides, since various subcommands want to
+# read wrap files
+(
+    meson_override_lock
+    meson_override_remove
+)
 
 # Process command-line arguments
 case "$1" in
