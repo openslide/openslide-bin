@@ -475,10 +475,18 @@ build() {
 
 build_meson() {
     # Build Meson subpackages
-    local builddir
+    local builddir destdir
 
     echo "Building Meson subpackages..."
     builddir="${build}/meson"
+    destdir="$(pwd)/${build_bits}/meson-dest"
+    # When building multiple interdependent subpackages, we need to make sure
+    # the subpackages aren't accessible in the rootdir on subsequent builds,
+    # or else subsequent builds may use a different detection path (system
+    # vs. fallback) than the initial build.  Do this by installing into a
+    # different directory and creating a symlink farm into the rootdir, then
+    # deleting the symlinks before the next build.
+    find "${root}" -lname "${destdir}/*" -delete
     if [ ! -f "${builddir}/compile_commands.json" ]; then
         # If the builddir exists, setup didn't complete last time, and will
         # fail again unless we delete the builddir.
@@ -488,7 +496,9 @@ build_meson() {
         do_meson_setup "$builddir" meson
     fi
     meson compile -C "$builddir" $parallel
-    meson install -C "$builddir" --only-changed --no-rebuild
+    meson install -C "$builddir" \
+            --only-changed --no-rebuild --destdir "$destdir"
+    cp -sr "${destdir}${root}/"* "$root"
 }
 
 sdist() {
