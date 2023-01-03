@@ -117,7 +117,9 @@ jobs:
         uses: actions/cache@v3
         with:
           key: winbuild-tar
-          path: tar
+          path: |
+            meson/subprojects/packagecache
+            tar
       - name: Build source zip
         run: ./build.sh -p "${{ inputs.pkgver }}" sdist
       - name: Prep artifact

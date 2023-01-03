@@ -21,94 +21,46 @@
 
 set -eE
 
-packages="ssp pthread zlib png jpeg tiff openjpeg intl ffi pcre glib gdkpixbuf pixman cairo xml sqlite openslide openslidejava"
+meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
+manual_packages_early="ssp pthread"
+manual_packages_late="openslide openslidejava"
+manual_packages="$manual_packages_early $manual_packages_late"
 
-# Package display names.  Missing packages are not included in VERSIONS.txt.
+# Package display names
 ssp_name="libssp"
 pthread_name="winpthreads"
 zlib_name="zlib"
-png_name="libpng"
-jpeg_name="libjpeg-turbo"
-tiff_name="libtiff"
-openjpeg_name="OpenJPEG"
-intl_name="proxy-libintl"
-ffi_name="libffi"
-pcre_name="PCRE2"
+libpng_name="libpng"
+libjpeg_turbo_name="libjpeg-turbo"
+libtiff_name="libtiff"
+libopenjp2_name="OpenJPEG"
+sqlite3_name="SQLite"
+proxy_libintl_name="proxy-libintl"
+libffi_name="libffi"
+pcre2_name="PCRE2"
 glib_name="glib"
-gdkpixbuf_name="gdk-pixbuf"
+gdk_pixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
-xml_name="libxml2"
-sqlite_name="SQLite"
+libxml2_name="libxml2"
 openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
-# Package versions
+# Package versions (omit Meson packages)
 ssp_ver="12.2.0"
 pthread_ver="10.0.0"
-zlib_ver="1.2.13"
-png_ver="1.6.39"
-jpeg_ver="2.1.4"
-tiff_ver="4.5.0"
-openjpeg_ver="2.5.0"
-intl_ver="0.4"
-ffi_ver="3.4.4"
-pcre_ver="10.42"
-glib_ver="2.74.4"
-gdkpixbuf_ver="2.42.10"
-pixman_ver="0.42.2"
-cairo_ver="1.17.6"
-xml_ver="2.10.3"
-sqlite_year="2022"
-sqlite_ver="3.40.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
-# Derived package version strings
-glib_basever="$(echo ${glib_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
-gdkpixbuf_basever="$(echo ${gdkpixbuf_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
-xml_basever="$(echo ${xml_ver} | awk 'BEGIN {FS="."} {printf("%d.%d", $1, $2)}')"
-sqlite_vernum="$(echo ${sqlite_ver} | awk 'BEGIN {FS="."} {printf("%d%02d%02d%02d\n", $1, $2, $3, $4)}')"
-
-# Tarball URLs
+# Tarball URLs (omit Meson packages)
 ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
-zlib_url="https://zlib.net/zlib-${zlib_ver}.tar.xz"
-png_url="https://prdownloads.sourceforge.net/libpng/libpng-${png_ver}.tar.xz"
-jpeg_url="https://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz"
-tiff_url="https://download.osgeo.org/libtiff/tiff-${tiff_ver}.tar.xz"
-openjpeg_url="https://github.com/uclouvain/openjpeg/archive/v${openjpeg_ver}.tar.gz"
-intl_url="https://github.com/frida/proxy-libintl/archive/${intl_ver}.tar.gz"
-ffi_url="https://github.com/libffi/libffi/releases/download/v${ffi_ver}/libffi-${ffi_ver}.tar.gz"
-pcre_url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_ver}/pcre2-${pcre_ver}.tar.bz2"
-glib_url="https://download.gnome.org/sources/glib/${glib_basever}/glib-${glib_ver}.tar.xz"
-gdkpixbuf_url="https://download.gnome.org/sources/gdk-pixbuf/${gdkpixbuf_basever}/gdk-pixbuf-${gdkpixbuf_ver}.tar.xz"
-pixman_url="https://cairographics.org/releases/pixman-${pixman_ver}.tar.gz"
-#cairo_url="https://cairographics.org/releases/cairo-${cairo_ver}.tar.xz"
-# development snapshot until Meson support stabilizes
-cairo_url="https://gitlab.freedesktop.org/cairo/cairo/-/archive/${cairo_ver}/cairo-${cairo_ver}.tar.gz"
-xml_url="https://download.gnome.org/sources/libxml2/${xml_basever}/libxml2-${xml_ver}.tar.xz"
-sqlite_url="https://www.sqlite.org/${sqlite_year}/sqlite-autoconf-${sqlite_vernum}.tar.gz"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
-# Unpacked source trees
+# Unpacked source trees (omit Meson packages)
 ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
-zlib_build="zlib-${zlib_ver}"
-png_build="libpng-${png_ver}"
-jpeg_build="libjpeg-turbo-${jpeg_ver}"
-tiff_build="tiff-${tiff_ver}"
-openjpeg_build="openjpeg-${openjpeg_ver}"
-intl_build="proxy-libintl-${intl_ver}"
-ffi_build="libffi-${ffi_ver}"
-pcre_build="pcre2-${pcre_ver}"
-glib_build="glib-${glib_ver}"
-gdkpixbuf_build="gdk-pixbuf-${gdkpixbuf_ver}"
-pixman_build="pixman-${pixman_ver}"
-cairo_build="cairo-${cairo_ver}"
-xml_build="libxml2-${xml_ver}"
-sqlite_build="sqlite-autoconf-${sqlite_vernum}"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
@@ -116,98 +68,78 @@ openslidejava_build="openslide-java-${openslidejava_ver}"
 ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
 pthread_licenses="COPYING"
 zlib_licenses="README"
-png_licenses="LICENSE"
-jpeg_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
-tiff_licenses="LICENSE.md"
-openjpeg_licenses="LICENSE"
-intl_licenses="COPYING"
-ffi_licenses="LICENSE"
-pcre_licenses="LICENCE"
+libpng_licenses="LICENSE"
+libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
+libtiff_licenses="LICENSE.md"
+libopenjp2_licenses="LICENSE"
+sqlite3_licenses="PUBLIC-DOMAIN.txt"
+proxy_libintl_licenses="COPYING"
+libffi_licenses="LICENSE"
+pcre2_licenses="LICENCE"
 glib_licenses="COPYING"
-gdkpixbuf_licenses="COPYING"
+gdk_pixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
-xml_licenses="Copyright"
-sqlite_licenses="PUBLIC-DOMAIN.txt"
+libxml2_licenses="Copyright"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslidejava_licenses="COPYING.LESSER"
 
-# Build dependencies
-ssp_dependencies=""
-pthread_dependencies=""
-zlib_dependencies=""
-png_dependencies="zlib"
-jpeg_dependencies=""
-tiff_dependencies="zlib jpeg"
-openjpeg_dependencies="png tiff"
-intl_dependencies=""
-ffi_dependencies=""
-pcre_dependencies=""
-glib_dependencies="zlib intl ffi pcre"
-gdkpixbuf_dependencies="glib"
-pixman_dependencies="pthread"
-cairo_dependencies="zlib png pixman"
-xml_dependencies="zlib"
-sqlite_dependencies=""
-openslide_dependencies="ssp pthread png jpeg tiff openjpeg glib gdkpixbuf cairo xml sqlite"
-openslidejava_dependencies="openslide"
-
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
 pthread_artifacts="libwinpthread-1.dll"
-zlib_artifacts="zlib1.dll"
-png_artifacts="libpng16-16.dll"
-jpeg_artifacts="libjpeg-62.dll"
-tiff_artifacts="libtiff-6.dll"
-openjpeg_artifacts="libopenjp2.dll"
-intl_artifacts="libintl-8.dll"
-ffi_artifacts="libffi-8.dll"
-pcre_artifacts="libpcre2-8-0.dll"
+zlib_artifacts="libz.dll"
+libpng_artifacts="libpng16-16.dll"
+libjpeg_turbo_artifacts="libjpeg-8.2.2.dll"
+libtiff_artifacts="libtiff4.dll"
+libopenjp2_artifacts="libopenjp2-2.dll"
+sqlite3_artifacts="libsqlite3-0.dll"
+proxy_libintl_artifacts="libintl-8.dll"
+libffi_artifacts="libffi-8.dll"
+pcre2_artifacts="libpcre2-8-0.dll"
 glib_artifacts="libglib-2.0-0.dll libgthread-2.0-0.dll libgobject-2.0-0.dll libgio-2.0-0.dll libgmodule-2.0-0.dll"
-gdkpixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
+gdk_pixbuf_artifacts="libgdk_pixbuf-2.0-0.dll"
 pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
-xml_artifacts="libxml2-2.dll"
-sqlite_artifacts="libsqlite3-0.dll"
+libxml2_artifacts="libxml2.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
 openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
 ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
 zlib_upurl="https://zlib.net/"
-png_upurl="http://www.libpng.org/pub/png/libpng.html"
-jpeg_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
-tiff_upurl="https://download.osgeo.org/libtiff/"
-openjpeg_upurl="https://github.com/uclouvain/openjpeg/tags"
-intl_upurl="https://github.com/frida/proxy-libintl/tags"
-ffi_upurl="https://github.com/libffi/libffi/tags"
-pcre_upurl="https://github.com/PCRE2Project/pcre2/tags"
+libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
+libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
+libtiff_upurl="https://download.osgeo.org/libtiff/"
+libopenjp2_upurl="https://github.com/uclouvain/openjpeg/tags"
+sqlite3_upurl="https://sqlite.org/changes.html"
+proxy_libintl_upurl="https://github.com/frida/proxy-libintl/tags"
+libffi_upurl="https://github.com/libffi/libffi/tags"
+pcre2_upurl="https://github.com/PCRE2Project/pcre2/tags"
 glib_upurl="https://gitlab.gnome.org/GNOME/glib/tags"
-gdkpixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
+gdk_pixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
-xml_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
-sqlite_upurl="https://sqlite.org/changes.html"
+libxml2_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
 ssp_upregex="gcc-([0-9.]+)/"
 zlib_upregex="source code, version ([0-9.]+)"
-png_upregex="libpng-([0-9.]+)-README.txt"
-jpeg_upregex="files/([0-9.]+)/"
-tiff_upregex="tiff-([0-9.]+)\.tar"
-openjpeg_upregex="archive/refs/tags/v([0-9.]+)\.tar"
-intl_upregex="archive/refs/tags/([0-9.]+)\.tar"
-ffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
-pcre_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
+libpng_upregex="libpng-([0-9.]+)-README.txt"
+libjpeg_turbo_upregex="files/([0-9.]+)/"
+libtiff_upregex="tiff-([0-9.]+)\.tar"
+libopenjp2_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+sqlite3_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
+proxy_libintl_upregex="archive/refs/tags/([0-9.]+)\.tar"
+libffi_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+pcre2_upregex="archive/refs/tags/pcre2-([0-9.]+)\.tar"
 glib_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
-gdkpixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
+gdk_pixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
-xml_upregex="archive/v([0-9.]+)/"
-sqlite_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
+libxml2_upregex="archive/v([0-9.]+)/"
 openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslidejava_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
@@ -281,6 +213,12 @@ is_built() {
     return 0
 }
 
+is_meson() {
+    # Return true if the specified package is built as a Meson subproject
+    # $1 = package shortname
+    [ -n "$(expand $1_name)" ] && [ -z "$(expand $1_build)" ]
+}
+
 do_configure() {
     # Run configure with the appropriate parameters.
     # Additional parameters can be specified as arguments.
@@ -314,49 +252,17 @@ do_configure() {
             "$@"
 }
 
-do_cmake() {
-    # Run cmake with the appropriate parameters.
-    # Additional parameters can be specified as arguments.
-    #
-    # Use only our pkg-config library directory, even on cross builds
-    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    #
-    # Certain cmake variables cannot be specified on the command-line.
-    # http://public.kitware.com/Bug/view.php?id=9980
-    cat > toolchain.cmake <<EOF
-SET(CMAKE_SYSTEM_NAME Windows)
-SET(CMAKE_SYSTEM_PROCESSOR ${cmake_system_processor})
-SET(CMAKE_C_COMPILER ${build_host}-gcc)
-SET(CMAKE_CXX_COMPILER ${build_host}-g++)
-SET(CMAKE_RC_COMPILER ${build_host}-windres)
-EOF
-    PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
-            PKG_CONFIG_PATH= \
-            cmake -G "Unix Makefiles" \
-            -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" \
-            -DCMAKE_INSTALL_PREFIX="${root}" \
-            -DCMAKE_FIND_ROOT_PATH="${root}" \
-            -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-            -DCMAKE_C_FLAGS="${cppflags} ${cflags}" \
-            -DCMAKE_CXX_FLAGS="${cppflags} ${cxxflags}" \
-            -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
-            -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
-            "$@" \
-            .
-}
-
 do_meson_setup() {
     # Run meson setup with the appropriate parameters.
+    # $1 = path to build directory
     # Additional parameters can be specified as arguments.
     #
     # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
     #
     # Use only our pkg-config library directory, even on cross builds
     # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    cat > cross.ini <<EOF
+    mkdir -p "$1"
+    cat > "$1/cross.ini" <<EOF
 [built-in options]
 prefix = '${root}'
 c_args = $(make_meson_list "${cppflags} ${cflags}")
@@ -386,7 +292,7 @@ cpu = '${meson_cpu}'
 EOF
     meson setup \
             --buildtype plain \
-            --cross-file cross.ini \
+            --cross-file "$1/cross.ini" \
             --wrap-mode nofallback \
             "$@"
 }
@@ -395,16 +301,79 @@ make_meson_list() {
     echo "$1" | sed -E -e "s/^ */['/" -e "s/ *$/']/" -e "s/ +/', '/g"
 }
 
+meson_wrap_key() {
+    # $1 = package shortname
+    # $2 = file section
+    # $3 = file key
+    gawk -F ' *= *' \
+            -e 'BEGIN {want_section="'$2'"; want_key="'$3'"}' \
+            -e 'match($0, /^\[([^]]*)\]$/, out) {section=out[1]}' \
+            -e 'section == want_section && $1 == want_key {print $2}' \
+            "meson/subprojects/$(echo $1 | tr _ -).wrap"
+}
+
+meson_wrap_version() {
+    # $1 = package shortname
+    local ver
+    ver="$(meson_wrap_key $1 wrap-file wrapdb_version)"
+    if [ -z "$ver" ]; then
+        ver="$(meson_wrap_key $1 wrap-file directory | awk -F - '{print $NF}')"
+    fi
+    echo "$ver"
+}
+
+meson_override_lock() {
+    # Always run this in a subshell!  Lock releases when shell exits.
+    # If there are no overrides we can skip the serialization.
+    if [ -d override ]; then
+        exec 90<>override/.lock
+        if ! flock -n 90; then
+            echo "Couldn't acquire override lock"
+            return 1
+        fi
+    fi
+}
+
+meson_override_init() {
+    # Override lock must be held
+    local package meson_name
+    meson_override_remove
+    for package in $meson_packages; do
+        if [ -d "override/${package}" ]; then
+            echo "Overriding $package..."
+            meson_name=$(echo "$package" | tr _ -)
+            ln -s "../../override/${package}" \
+                    "meson/subprojects/${meson_name}"
+            mv "meson/subprojects/${meson_name}.wrap" \
+                    "meson/subprojects/${meson_name}.wrap.overridden"
+        fi
+    done
+}
+
+meson_override_remove() {
+    # Override lock must be held
+    local package meson_name
+    for package in $meson_packages; do
+        meson_name=$(echo "$package" | tr _ -)
+        if [ -L "meson/subprojects/${meson_name}" ]; then
+            rm "meson/subprojects/${meson_name}"
+        fi
+        if [ -e "meson/subprojects/${meson_name}.wrap.overridden" ]; then
+            mv "meson/subprojects/${meson_name}.wrap.overridden" \
+                    "meson/subprojects/${meson_name}.wrap"
+        fi
+    done
+}
+
 build_one() {
-    # Build the specified package and its dependencies if not already built
+    # Build the specified package if not already built
+    # Meson packages are built elsewhere
     # $1  = package shortname
     local builddir
 
     if is_built "$1" ; then
         return
     fi
-
-    build $(expand ${1}_dependencies)
 
     unpack "$1"
 
@@ -431,122 +400,6 @@ build_one() {
         make $parallel
         make install
         ;;
-    zlib)
-        # Don't strip binaries during build
-        make -f win32/Makefile.gcc $parallel \
-                PREFIX="${build_host}-" \
-                CFLAGS="${cppflags} ${cflags}" \
-                LDFLAGS="${ldflags}" \
-                STRIP="true" \
-                all
-        make -f win32/Makefile.gcc \
-                SHARED_MODE=1 \
-                PREFIX="${build_host}-" \
-                BINARY_PATH="${root}/bin" \
-                INCLUDE_PATH="${root}/include" \
-                LIBRARY_PATH="${root}/lib" install
-        ;;
-    png)
-        do_configure \
-                --enable-intel-sse
-        make $parallel
-        make install
-        ;;
-    jpeg)
-        do_cmake \
-                -DWITH_TURBOJPEG=0
-        make $parallel
-        make install
-        ;;
-    tiff)
-        do_configure \
-                --with-zlib-include-dir="${root}/include" \
-                --with-zlib-lib-dir="${root}/lib" \
-                --with-jpeg-include-dir="${root}/include" \
-                --with-jpeg-lib-dir="${root}/lib" \
-                --disable-jbig \
-                --disable-lzma \
-                --disable-docs
-        make $parallel
-        make install
-        ;;
-    openjpeg)
-        do_cmake \
-                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS=TRUE \
-                -DCMAKE_DISABLE_FIND_PACKAGE_LCMS2=TRUE \
-                -DBUILD_PKGCONFIG_FILES=ON \
-                -DBUILD_DOC=OFF
-        make $parallel
-        make install
-        ;;
-    intl)
-        do_meson_setup build
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
-    ffi)
-        do_configure \
-                --disable-builddir
-        make $parallel
-        make install
-        ;;
-    pcre)
-        do_configure
-        make $parallel
-        make install
-        ;;
-    glib)
-        do_meson_setup build \
-                -Dnls=disabled
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
-    gdkpixbuf)
-        do_meson_setup build \
-                -Dpng=disabled \
-                -Dtiff=disabled \
-                -Djpeg=disabled \
-                -Dman=false \
-                -Dbuiltin_loaders="['bmp']" \
-                -Dinstalled_tests=false
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
-    pixman)
-        do_meson_setup build \
-                -Dopenmp=disabled \
-                -Dtests=disabled
-        # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/60
-        sed -i 's/defined(__SUNPRO_C) || defined(_MSC_VER)/defined(__SSE2__) || \0/' \
-                pixman/pixman-mmx.c
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
-    cairo)
-        # We don't need DWrite and it adds a libstdc++ dependency
-        # https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/374
-        sed -i 's/\(d2d_dep = \).*/\1disabler()/' meson.build
-        do_meson_setup build \
-                -Dtests=disabled
-        meson compile -C build $parallel
-        meson install -C build
-        ;;
-    xml)
-        do_configure \
-                --with-zlib="${root}" \
-                --without-iconv \
-                --without-lzma \
-                --without-python
-        make $parallel
-        make install
-        ;;
-    sqlite)
-        do_configure
-        make $parallel
-        make install
-        # Extract public-domain dedication from the top of sqlite3.h
-        awk '/\*{8}/ {exit} /^\*{2}/ {print}' sqlite3.h > PUBLIC-DOMAIN.txt
-        ;;
     openslide)
         local ver_suffix_arg
         if [ -n "${ver_suffix}" ] ; then
@@ -571,8 +424,7 @@ build_one() {
 }
 
 build() {
-    # Build the specified list of packages and their dependencies if not
-    # already built
+    # Build the specified list of packages, in order, if not already built
     # $*  = package shortnames
     local package
     for package in $*
@@ -581,13 +433,41 @@ build() {
     done
 }
 
+build_meson() {
+    # Build Meson subpackages
+    local builddir destdir
+
+    echo "Building Meson subpackages..."
+    builddir="${build}/meson"
+    destdir="$(pwd)/${build_bits}/meson-dest"
+    # When building multiple interdependent subpackages, we need to make sure
+    # the subpackages aren't accessible in the rootdir on subsequent builds,
+    # or else subsequent builds may use a different detection path (system
+    # vs. fallback) than the initial build.  Do this by installing into a
+    # different directory and creating a symlink farm into the rootdir, then
+    # deleting the symlinks before the next build.
+    find "${root}" -lname "${destdir}/*" -delete
+    if [ ! -f "${builddir}/compile_commands.json" ]; then
+        # If the builddir exists, setup didn't complete last time, and will
+        # fail again unless we delete the builddir.
+        rm -rf "${builddir}"
+    fi
+    if [ ! -d "$builddir" ]; then
+        do_meson_setup "$builddir" meson
+    fi
+    meson compile -C "$builddir" $parallel
+    meson install -C "$builddir" \
+            --only-changed --no-rebuild --destdir "$destdir"
+    cp -sr "${destdir}${root}/"* "$root"
+}
+
 sdist() {
     # Build source distribution
     local package path xzpath zipdir
     zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/tar"
-    for package in $packages
+    for package in $manual_packages
     do
         fetch "$package"
         path="$(tarpath ${package})"
@@ -607,7 +487,24 @@ sdist() {
             cp "$path" "${zipdir}/tar/"
         fi
     done
+    meson subprojects download --sourcedir meson
+    mkdir -p "${zipdir}/meson/subprojects/packagecache"
+    for package in $meson_packages
+    do
+        cp "meson/subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/meson/subprojects/"
+        for path in $(meson_wrap_key $package wrap-file source_filename) \
+                $(meson_wrap_key $package wrap-file patch_filename); do
+            cp "meson/subprojects/packagecache/$path" \
+                    "${zipdir}/meson/subprojects/packagecache/"
+        done
+        for path in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
+            mkdir -p "${zipdir}/meson/subprojects/packagefiles"
+            cp "meson/subprojects/packagefiles/$path" \
+                    "${zipdir}/meson/subprojects/packagefiles/"
+        done
+    done
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
+    cp meson/meson.build "${zipdir}/meson/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -615,7 +512,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name licensedir zipdir prev_ver_suffix
+    local package name ver srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
@@ -625,15 +522,27 @@ bdist() {
         echo "${ver_suffix}" > "${build_bits}/.suffix"
     fi
 
-    for package in $packages
-    do
-        build_one "$package"
-    done
+    (
+        meson_override_lock
+        meson_override_init
+        build "$manual_packages_early"
+        build_meson
+        build "$manual_packages_late"
+        meson_override_remove
+    )
+
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    for package in $packages
+    for package in $meson_packages $manual_packages
     do
+        if is_meson "$package"; then
+            srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
+            ver="$(meson_wrap_version ${package})"
+        else
+            srcdir="${build}/$(expand ${package}_build)"
+            ver="$(expand ${package}_ver)"
+        fi
         for artifact in $(expand ${package}_artifacts)
         do
             if [ "${artifact}" != "${artifact%.dll}" -o \
@@ -653,10 +562,14 @@ bdist() {
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
         mkdir -p "${licensedir}"
+        if [ "$package" = sqlite3 ]; then
+            # Extract public-domain dedication from the top of sqlite3.h
+            awk '/\*{8}/ {exit} /^\*{2}/ {print}' "${srcdir}/sqlite3.h" > \
+                    "${srcdir}/PUBLIC-DOMAIN.txt"
+        fi
         for artifact in $(expand ${package}_licenses)
         do
-            if ! cp "${build}/$(expand ${package}_build)/${artifact}" \
-                    "${licensedir}" 2>/dev/null; then
+            if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
                 # OpenSlide license files were renamed; support both until
                 # the next release
                 if [ "${package}" != openslide ]; then
@@ -665,11 +578,8 @@ bdist() {
                 fi
             fi
         done
-        name="$(expand ${package}_name)"
-        if [ -n "$name" ] ; then
-            printf "%-30s %s\n" "$name" "$(expand ${package}_ver)" >> \
-                    "${zipdir}/VERSIONS.txt"
-        fi
+        printf "%-30s %s\n" "$(expand ${package}_name)" "$ver" >> \
+                "${zipdir}/VERSIONS.txt"
     done
     mkdir -p "${zipdir}/lib"
     cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
@@ -687,7 +597,7 @@ bdist() {
 
 clean() {
     # Clean built files
-    local package artifact
+    local package artifact clean_meson
     if [ $# -gt 0 ] ; then
         for package in "$@"
         do
@@ -696,23 +606,38 @@ clean() {
             do
                 rm -f "${root}/bin/${artifact}"
             done
+            if is_meson "$package"; then
+                clean_meson=1
+            fi
         done
+        if [ -n "$clean_meson" ]; then
+            echo "Cleaning Meson..."
+            rm -rf "${build}/meson"
+            grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
+            meson subprojects purge --sourcedir meson --confirm >/dev/null
+        fi
     else
         echo "Cleaning..."
         rm -rf 32 64 openslide-win*-*.zip
+        grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
+        meson subprojects purge --sourcedir meson --confirm >/dev/null
     fi
 }
 
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in $packages
+    for package in $meson_packages $manual_packages
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
             continue
         fi
-        curver="$(expand ${package}_ver)"
+        if is_meson "$package"; then
+            curver="$(meson_wrap_version $package | cut -f1 -d-)"
+        else
+            curver="$(expand ${package}_ver)"
+        fi
         newver=$(${wget} -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
@@ -733,12 +658,10 @@ probe() {
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
-        cmake_system_processor=AMD64
         meson_cpu_family=x86_64
         meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
-        cmake_system_processor=x86
         meson_cpu_family=x86
         meson_cpu=i686
         arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
@@ -763,7 +686,8 @@ probe() {
     # in intermediate stack frames, so this should be fine.
     # https://github.com/openslide/openslide-winbuild/issues/47
     mkdir -p "${root}/include"
-    cat > "${root}/include/setjmp.h" <<EOF
+    if [ ! -e "${root}/include/setjmp.h" ]; then
+        cat > "${root}/include/setjmp.h" <<EOF
 #ifndef OPENSLIDE_SETJMP_H
 #define OPENSLIDE_SETJMP_H
 
@@ -777,6 +701,7 @@ probe() {
 
 #endif
 EOF
+    fi
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
@@ -842,6 +767,13 @@ shift $(( $OPTIND - 1 ))
 # Probe build environment
 probe
 
+# Clean up any prior Meson overrides, since various subcommands want to
+# read wrap files
+(
+    meson_override_lock
+    meson_override_remove
+)
+
 # Process command-line arguments
 case "$1" in
 sdist)
@@ -865,7 +797,7 @@ Usage: $0 [-p<pkgver>] sdist
        $0 updates
 
 Packages:
-$packages
+$meson_packages $manual_packages
 EOF
     exit 1
     ;;
