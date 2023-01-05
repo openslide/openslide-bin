@@ -73,3 +73,12 @@ subproject(
     'iconv=disabled',
   ],
 )
+subproject(
+  'openslide',
+  default_options : [
+    # We don't run tests, but we still check that they build
+    'doc=disabled',
+    'version_suffix=' + get_option('version_suffix'),
+  ],
+)
+subproject('openslide-java')

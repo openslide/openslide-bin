@@ -1,0 +1,7 @@
+# not from wrapdb
+
+[wrap-file]
+directory = openslide-java-0.12.3
+source_url = https://github.com/openslide/openslide-java/releases/download/v0.12.3/openslide-java-0.12.3.tar.xz
+source_filename = openslide-java-0.12.3.tar.xz
+source_hash = 0fb4ef9aac3cc5f60e685ddd8886ba75d195f8f7bc61c8bd26e0eaa919f0c90e

@@ -1,0 +1,10 @@
+# not from wrapdb
+
+[wrap-file]
+directory = openslide-3.4.1
+source_url = https://github.com/openslide/openslide/releases/download/v3.4.1/openslide-3.4.1.tar.xz
+source_filename = openslide-3.4.1.tar.xz
+source_hash = 9938034dba7f48fadc90a2cdf8cfe94c5613b04098d1348a5ff19da95b990564
+
+# backport of Meson config from Git main
+diff_files = openslide-meson.patch

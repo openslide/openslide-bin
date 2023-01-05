@@ -3,7 +3,7 @@
 # A script for building OpenSlide and its dependencies for Windows
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
-# Copyright (c) 2022      Benjamin Gilbert
+# Copyright (c) 2022-2023 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -21,8 +21,8 @@
 
 set -eE
 
-meson_packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
-manual_packages="openslide openslidejava"
+meson_packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 openslide openslide_java"
+manual_packages=""
 
 # Package display names
 ssp_name="libssp"
@@ -42,19 +42,13 @@ pixman_name="pixman"
 cairo_name="cairo"
 libxml2_name="libxml2"
 openslide_name="OpenSlide"
-openslidejava_name="OpenSlide Java"
+openslide_java_name="OpenSlide Java"
 
 # Package versions (omit Meson packages)
-openslide_ver="3.4.1"
-openslidejava_ver="0.12.3"
 
 # Tarball URLs (omit Meson packages)
-openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
-openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees (omit Meson packages)
-openslide_build="openslide-${openslide_ver}"
-openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
 ssp_licenses="COPYING3 COPYING.RUNTIME"
@@ -75,7 +69,7 @@ cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 libxml2_licenses="Copyright"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
-openslidejava_licenses="COPYING.LESSER"
+openslide_java_licenses="COPYING.LESSER"
 
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
@@ -95,7 +89,7 @@ pixman_artifacts="libpixman-1-0.dll"
 cairo_artifacts="libcairo-2.dll"
 libxml2_artifacts="libxml2.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
-openslidejava_artifacts="openslide-jni.dll openslide.jar"
+openslide_java_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
 ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
@@ -115,7 +109,7 @@ pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
 libxml2_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
 openslide_upurl="https://github.com/openslide/openslide/tags"
-openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
+openslide_java_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
 ssp_upregex="gcc-([0-9.]+)/"
@@ -136,7 +130,7 @@ cairo_upregex="\"cairo-([0-9.]+)\.tar"
 libxml2_upregex="archive/v([0-9.]+)/"
 openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
-openslidejava_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
+openslide_java_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"
 
 # wget standard options
 wget="wget -q"
@@ -375,35 +369,6 @@ build_one() {
     builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
-    openslide)
-        if [ -f meson.build ]; then
-            # We don't run tests, but we still check that they build
-            do_meson_setup build \
-                    -Ddoc=disabled \
-                    ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
-                    ${openslide_werror:+--werror}
-            meson compile -C build $parallel
-            meson install -C build
-        else
-            local ver_suffix_arg
-            if [ -n "${ver_suffix}" ] ; then
-                ver_suffix_arg="--with-version-suffix=${ver_suffix}"
-            fi
-            do_configure \
-                    "${ver_suffix_arg}"
-            make $parallel \
-                    CFLAGS="${cflags} ${openslide_werror}"
-            make install
-        fi
-        ;;
-    openslidejava)
-        do_meson_setup build ${openslide_werror:+--werror}
-        meson compile -C build $parallel
-        meson install -C build
-        pushd "${root}/lib/openslide-java" >/dev/null
-        cp ${openslidejava_artifacts} "${root}/bin/"
-        popd >/dev/null
-        ;;
     esac
     popd >/dev/null
 }
@@ -438,7 +403,10 @@ build_meson() {
         rm -rf "${builddir}"
     fi
     if [ ! -d "$builddir" ]; then
-        do_meson_setup "$builddir" meson
+        do_meson_setup "$builddir" meson \
+                ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
+                ${openslide_werror:+-Dopenslide:werror=true} \
+                ${openslide_werror:+-Dopenslide-java:werror=true}
     fi
     meson compile -C "$builddir" $parallel
     meson install -C "$builddir" \
@@ -447,6 +415,10 @@ build_meson() {
     # linkage that comes with the compiler, but want to supply our own DLL
     # so we can provide complete corresponding source.
     rm "${destdir}${root}/lib/libssp.dll.a"
+    # Move OpenSlide Java artifacts to the right place
+    pushd "${destdir}${root}/lib/openslide-java" >/dev/null
+    cp ${openslide_java_artifacts} "${destdir}${root}/bin/"
+    popd >/dev/null
     cp -sr "${destdir}${root}/"* "$root"
 }
 
@@ -493,7 +465,7 @@ sdist() {
         done
     done
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
-    cp meson/meson.build "${zipdir}/meson/"
+    cp meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -515,7 +487,6 @@ bdist() {
         meson_override_lock
         meson_override_init
         build_meson
-        build "$manual_packages"
         meson_override_remove
     )
 
@@ -752,7 +723,7 @@ do
         ver_suffix="${OPTARG}"
         ;;
     w)
-        openslide_werror="-Werror"
+        openslide_werror=1
         ;;
     esac
 done
