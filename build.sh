@@ -376,15 +376,25 @@ build_one() {
     pushd "$builddir" >/dev/null
     case "$1" in
     openslide)
-        local ver_suffix_arg
-        if [ -n "${ver_suffix}" ] ; then
-            ver_suffix_arg="--with-version-suffix=${ver_suffix}"
+        if [ -f meson.build ]; then
+            # We don't run tests, but we still check that they build
+            do_meson_setup build \
+                    -Ddoc=disabled \
+                    ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
+                    ${openslide_werror:+--werror}
+            meson compile -C build $parallel
+            meson install -C build
+        else
+            local ver_suffix_arg
+            if [ -n "${ver_suffix}" ] ; then
+                ver_suffix_arg="--with-version-suffix=${ver_suffix}"
+            fi
+            do_configure \
+                    "${ver_suffix_arg}"
+            make $parallel \
+                    CFLAGS="${cflags} ${openslide_werror}"
+            make install
         fi
-        do_configure \
-                "${ver_suffix_arg}"
-        make $parallel \
-                CFLAGS="${cflags} ${openslide_werror}"
-        make install
         ;;
     openslidejava)
         do_meson_setup build ${openslide_werror:+--werror}
