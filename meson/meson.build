@@ -5,6 +5,10 @@ project(
   meson_version : '>=0.64',
 )
 
+# On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need to ship
+# libssp.  After recent MinGW runtime changes land, this should no longer be
+# necessary.
+subproject('ssp')
 subproject('zlib')
 subproject('libpng')
 subproject('libjpeg-turbo')

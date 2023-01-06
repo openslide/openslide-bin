@@ -21,8 +21,8 @@
 
 set -eE
 
-meson_packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
-manual_packages_early="ssp pthread"
+meson_packages="ssp zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
+manual_packages_early="pthread"
 manual_packages_late="openslide openslidejava"
 manual_packages="$manual_packages_early $manual_packages_late"
 
@@ -47,25 +47,22 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions (omit Meson packages)
-ssp_ver="12.2.0"
 pthread_ver="10.0.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
 # Tarball URLs (omit Meson packages)
-ssp_url="https://mirrors.concertpass.com/gcc/releases/gcc-${ssp_ver}/gcc-${ssp_ver}.tar.xz"
 pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees (omit Meson packages)
-ssp_build="gcc-${ssp_ver}/libssp"
 pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
-ssp_licenses="../COPYING3 ../COPYING.RUNTIME"
+ssp_licenses="COPYING3 COPYING.RUNTIME"
 pthread_licenses="COPYING"
 zlib_licenses="README"
 libpng_licenses="LICENSE"
@@ -381,20 +378,6 @@ build_one() {
     builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
-    ssp)
-        # On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need
-        # to ship libssp.
-        # https://bugzilla.redhat.com/show_bug.cgi?id=2002656
-        do_configure \
-                --disable-multilib \
-                --with-target-subdir=.
-        make $parallel
-        # Copy the DLL but not the import library.  We want everything to
-        # use the linkage that comes with the compiler, but want to supply
-        # our own DLL so we can provide complete corresponding source.
-        mkdir -p "${root}/bin"
-        cp ".libs/${ssp_artifacts}" "${root}/bin"
-        ;;
     pthread)
         do_configure
         make $parallel
@@ -458,6 +441,10 @@ build_meson() {
     meson compile -C "$builddir" $parallel
     meson install -C "$builddir" \
             --only-changed --no-rebuild --destdir "$destdir"
+    # Remove the libssp import library.  We want everything to use the
+    # linkage that comes with the compiler, but want to supply our own DLL
+    # so we can provide complete corresponding source.
+    rm "${destdir}${root}/lib/libssp.dll.a"
     cp -sr "${destdir}${root}/"* "$root"
 }
 

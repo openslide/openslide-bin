@@ -1,0 +1,10 @@
+# not from wrapdb
+
+[wrap-file]
+directory = gcc-12.2.0
+source_url = https://mirrors.concertpass.com/gcc/releases/gcc-12.2.0/gcc-12.2.0.tar.xz
+source_filename = gcc-12.2.0.tar.xz
+source_hash = e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff
+
+# custom Meson port
+diff_files = libssp-meson.patch
