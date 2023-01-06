@@ -22,7 +22,6 @@
 set -eE
 
 meson_packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 openslide openslide_java"
-manual_packages=""
 
 # Package display names
 ssp_name="libssp"
@@ -43,12 +42,6 @@ cairo_name="cairo"
 libxml2_name="libxml2"
 openslide_name="OpenSlide"
 openslide_java_name="OpenSlide Java"
-
-# Package versions (omit Meson packages)
-
-# Tarball URLs (omit Meson packages)
-
-# Unpacked source trees (omit Meson packages)
 
 # Locations of license files within the source tree
 ssp_licenses="COPYING3 COPYING.RUNTIME"
@@ -140,104 +133,6 @@ expand() {
     # Print the contents of the named variable
     # $1  = the name of the variable to expand
     echo "${!1}"
-}
-
-tarpath() {
-    # Print the tarball path for the specified package
-    # $1  = the name of the program
-    local path xzpath
-    path="tar/$(basename $(expand ${1}_url))"
-    xzpath="${path/%.gz/.xz}"
-    xzpath="${xzpath/%.bz2/.xz}"
-    # Prefer tarball recompressed with xz, if available
-    if [ -e "$xzpath" ] ; then
-        echo "$xzpath"
-    else
-        echo "$path"
-    fi
-}
-
-fetch() {
-    # Fetch the specified package
-    # $1  = package shortname
-    local url
-    url="$(expand ${1}_url)"
-    mkdir -p tar
-    if [ ! -e "$(tarpath $1)" ] ; then
-        echo "Fetching ${1}..."
-        ${wget} -P tar "$url"
-    fi
-}
-
-unpack() {
-    # Remove the package build directory and re-unpack it
-    # $1  = package shortname
-    local path
-    fetch "${1}"
-    mkdir -p "${build}"
-    path="${build}/$(expand ${1}_build)"
-    if [ -e "override/${1}" ] ; then
-        echo "Unpacking ${1} from override directory..."
-        rm -rf "${path}"
-        # Preserve timestamps to avoid spurious rebuilds of distributed files
-        cp -pr "override/${1}" "${path}"
-    else
-        echo "Unpacking ${1}..."
-        rm -rf "${path}"
-        tar xf "$(tarpath $1)" -C "${build}"
-    fi
-}
-
-is_built() {
-    # Return true if the specified package is already built
-    # $1  = package shortname
-    local file
-    for file in $(expand ${1}_artifacts)
-    do
-        if [ ! -e "${root}/bin/${file}" ] ; then
-            return 1
-        fi
-    done
-    return 0
-}
-
-is_meson() {
-    # Return true if the specified package is built as a Meson subproject
-    # $1 = package shortname
-    [ -n "$(expand $1_name)" ] && [ -z "$(expand $1_build)" ]
-}
-
-do_configure() {
-    # Run configure with the appropriate parameters.
-    # Additional parameters can be specified as arguments.
-    #
-    # openSUSE sets $CONFIG_SITE to a script which changes libdir to
-    # "${exec_prefix}/lib64" when building for 64-bit hosts
-    # https://lists.andrew.cmu.edu/pipermail/openslide-users/2016-July/001263.html
-    #
-    # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
-    #
-    # Use only our pkg-config library directory, even on cross builds
-    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    #
-    # -static-libgcc is in ${ldflags} but libtool filters it out, so we
-    # also pass it in CC
-    ./configure \
-            --host=${build_host} \
-            --build=x86_64-pc-linux-gnu \
-            --prefix="$root" \
-            --disable-static \
-            --disable-dependency-tracking \
-            CONFIG_SITE= \
-            PKG_CONFIG=pkg-config \
-            PKG_CONFIG_LIBDIR="${root}/lib/pkgconfig" \
-            PKG_CONFIG_PATH= \
-            CC="${build_host}-gcc -static-libgcc" \
-            CPPFLAGS="${cppflags}" \
-            CFLAGS="${cflags}" \
-            CXXFLAGS="${cxxflags}" \
-            LDFLAGS="${ldflags}" \
-            "$@"
 }
 
 do_meson_setup() {
@@ -353,41 +248,9 @@ meson_override_remove() {
     done
 }
 
-build_one() {
-    # Build the specified package if not already built
-    # Meson packages are built elsewhere
-    # $1  = package shortname
-    local builddir
-
-    if is_built "$1" ; then
-        return
-    fi
-
-    unpack "$1"
-
-    echo "Building ${1}..."
-    builddir="${build}/$(expand ${1}_build)"
-    pushd "$builddir" >/dev/null
-    case "$1" in
-    esac
-    popd >/dev/null
-}
-
-build() {
-    # Build the specified list of packages, in order, if not already built
-    # $*  = package shortnames
-    local package
-    for package in $*
-    do
-        build_one "$package"
-    done
-}
-
 build_meson() {
-    # Build Meson subpackages
     local builddir destdir
 
-    echo "Building Meson subpackages..."
     builddir="${build}/meson"
     destdir="$(pwd)/${build_bits}/meson-dest"
     # When building multiple interdependent subpackages, we need to make sure
@@ -424,43 +287,22 @@ build_meson() {
 
 sdist() {
     # Build source distribution
-    local package path xzpath zipdir
+    local package file zipdir
     zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
-    mkdir -p "${zipdir}/tar"
-    for package in $manual_packages
-    do
-        fetch "$package"
-        path="$(tarpath ${package})"
-        xzpath="${path/%.gz/.xz}"
-        xzpath="${xzpath/%.bz2/.xz}"
-        if [ "${path%.gz}" != "$path" ] ; then
-            # Tarball is compressed with gzip.
-            # Recompress with xz to save space.
-            echo "Recompressing ${package} from gzip..."
-            gunzip -c "$path" | xz -9c > "${zipdir}/tar/$(basename ${xzpath})"
-        elif [ "${path%.bz2}" != "$path" ] ; then
-            # Tarball is compressed with bzip2.
-            # Recompress with xz to save space.
-            echo "Recompressing ${package} from bzip2..."
-            bunzip2 -c "$path" | xz -9c > "${zipdir}/tar/$(basename ${xzpath})"
-        else
-            cp "$path" "${zipdir}/tar/"
-        fi
-    done
     meson subprojects download --sourcedir meson
     mkdir -p "${zipdir}/meson/subprojects/packagecache"
     for package in $meson_packages
     do
         cp "meson/subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/meson/subprojects/"
-        for path in $(meson_wrap_key $package wrap-file source_filename) \
+        for file in $(meson_wrap_key $package wrap-file source_filename) \
                 $(meson_wrap_key $package wrap-file patch_filename); do
-            cp "meson/subprojects/packagecache/$path" \
+            cp "meson/subprojects/packagecache/$file" \
                     "${zipdir}/meson/subprojects/packagecache/"
         done
-        for path in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
+        for file in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
             mkdir -p "${zipdir}/meson/subprojects/packagefiles"
-            cp "meson/subprojects/packagefiles/$path" \
+            cp "meson/subprojects/packagefiles/$file" \
                     "${zipdir}/meson/subprojects/packagefiles/"
         done
     done
@@ -473,7 +315,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name ver srcdir licensedir zipdir prev_ver_suffix
+    local package name srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
@@ -493,18 +335,12 @@ bdist() {
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    for package in $meson_packages $manual_packages
+    for package in $meson_packages
     do
-        if is_meson "$package"; then
-            if [ -d "override/${package}" ] ;then
-                srcdir="override/${package}"
-            else
-                srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
-            fi
-            ver="$(meson_wrap_version ${package})"
+        if [ -d "override/${package}" ] ;then
+            srcdir="override/${package}"
         else
-            srcdir="${build}/$(expand ${package}_build)"
-            ver="$(expand ${package}_ver)"
+            srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
         fi
         for artifact in $(expand ${package}_artifacts)
         do
@@ -552,8 +388,8 @@ bdist() {
                 cp "${srcdir}/README.txt" "${zipdir}/"
             fi
         fi
-        printf "%-30s %s\n" "$(expand ${package}_name)" "$ver" >> \
-                "${zipdir}/VERSIONS.txt"
+        printf "%-30s %s\n" "$(expand ${package}_name)" \
+                "$(meson_wrap_version ${package})" >> "${zipdir}/VERSIONS.txt"
     done
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
@@ -562,25 +398,17 @@ bdist() {
 
 clean() {
     # Clean built files
-    local package artifact clean_meson
+    local package
     if [ $# -gt 0 ] ; then
         for package in "$@"
         do
             echo "Cleaning ${package}..."
-            for artifact in $(expand ${package}_artifacts)
-            do
-                rm -f "${root}/bin/${artifact}"
-            done
-            if is_meson "$package"; then
-                clean_meson=1
-            fi
+            # We don't have a way to remove individual build artifacts
+            # right now, so this is just a lighter-weight clean
         done
-        if [ -n "$clean_meson" ]; then
-            echo "Cleaning Meson..."
-            rm -rf "${build}/meson"
-            grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
-            meson subprojects purge --sourcedir meson --confirm >/dev/null
-        fi
+        rm -rf "${build}/meson"
+        grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
+        meson subprojects purge --sourcedir meson --confirm >/dev/null
     else
         echo "Cleaning..."
         rm -rf 32 64 openslide-win*-*.zip
@@ -592,17 +420,13 @@ clean() {
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in $meson_packages $manual_packages
+    for package in $meson_packages
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
             continue
         fi
-        if is_meson "$package"; then
-            curver="$(meson_wrap_version $package | cut -f1 -d-)"
-        else
-            curver="$(expand ${package}_ver)"
-        fi
+        curver="$(meson_wrap_version $package | cut -f1 -d-)"
         newver=$(${wget} -O- "$url" | \
                 sed -nr "s%.*$(expand ${package}_upregex).*%\\1%p" | \
                 sort -uV | \
@@ -762,7 +586,7 @@ Usage: $0 [-p<pkgver>] sdist
        $0 updates
 
 Packages:
-$meson_packages $manual_packages
+$meson_packages
 EOF
     exit 1
     ;;

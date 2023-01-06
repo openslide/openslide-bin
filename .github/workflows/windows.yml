@@ -149,7 +149,7 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh -j4 -m${{ matrix.bits }} ${suffix:+-s$suffix} \
+          ./build.sh -m${{ matrix.bits }} ${suffix:+-s$suffix} \
               -p "${{ inputs.pkgver }}" $werror bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
           mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
