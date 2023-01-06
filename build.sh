@@ -99,6 +99,7 @@ openslidejava_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
 ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
+winpthreads_upurl="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/"
 zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
 libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
@@ -118,6 +119,7 @@ openslidejava_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
 ssp_upregex="gcc-([0-9.]+)/"
+winpthreads_upregex="mingw-w64-v([0-9.]+)\.zip"
 zlib_upregex="source code, version ([0-9.]+)"
 libpng_upregex="libpng-([0-9.]+)-README.txt"
 libjpeg_turbo_upregex="files/([0-9.]+)/"
