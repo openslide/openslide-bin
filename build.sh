@@ -21,7 +21,7 @@
 
 set -eE
 
-meson_packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 openslide openslide_java"
+packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 openslide openslide_java"
 
 # Package display names
 ssp_name="libssp"
@@ -205,7 +205,7 @@ meson_wrap_version() {
     echo "$ver"
 }
 
-meson_override_lock() {
+override_lock() {
     # Always run this in a subshell!  Lock releases when shell exits.
     # If there are no overrides we can skip the serialization.
     if [ -d override ]; then
@@ -217,11 +217,11 @@ meson_override_lock() {
     fi
 }
 
-meson_override_init() {
+override_init() {
     # Override lock must be held
     local package meson_name
-    meson_override_remove
-    for package in $meson_packages; do
+    override_remove
+    for package in $packages; do
         if [ -d "override/${package}" ]; then
             echo "Overriding $package..."
             meson_name=$(echo "$package" | tr _ -)
@@ -233,10 +233,10 @@ meson_override_init() {
     done
 }
 
-meson_override_remove() {
+override_remove() {
     # Override lock must be held
     local package meson_name
-    for package in $meson_packages; do
+    for package in $packages; do
         meson_name=$(echo "$package" | tr _ -)
         if [ -L "meson/subprojects/${meson_name}" ]; then
             rm "meson/subprojects/${meson_name}"
@@ -248,10 +248,9 @@ meson_override_remove() {
     done
 }
 
-build_meson() {
-    local builddir destdir
+build() {
+    local destdir
 
-    builddir="${build}/meson"
     destdir="$(pwd)/${build_bits}/meson-dest"
     # When building multiple interdependent subpackages, we need to make sure
     # the subpackages aren't accessible in the rootdir on subsequent builds,
@@ -260,19 +259,19 @@ build_meson() {
     # different directory and creating a symlink farm into the rootdir, then
     # deleting the symlinks before the next build.
     find "${root}" -lname "${destdir}/*" -delete
-    if [ ! -f "${builddir}/compile_commands.json" ]; then
-        # If the builddir exists, setup didn't complete last time, and will
-        # fail again unless we delete the builddir.
-        rm -rf "${builddir}"
+    if [ ! -f "${build}/compile_commands.json" ]; then
+        # If the build directory exists, setup didn't complete last time,
+        # and will fail again unless we delete the directory.
+        rm -rf "${build}"
     fi
-    if [ ! -d "$builddir" ]; then
-        do_meson_setup "$builddir" meson \
+    if [ ! -d "$build" ]; then
+        do_meson_setup "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
                 ${openslide_werror:+-Dopenslide:werror=true} \
                 ${openslide_werror:+-Dopenslide-java:werror=true}
     fi
-    meson compile -C "$builddir" $parallel
-    meson install -C "$builddir" \
+    meson compile -C "$build" $parallel
+    meson install -C "$build" \
             --only-changed --no-rebuild --destdir "$destdir"
     # Remove the libssp import library.  We want everything to use the
     # linkage that comes with the compiler, but want to supply our own DLL
@@ -292,7 +291,7 @@ sdist() {
     rm -rf "${zipdir}"
     meson subprojects download --sourcedir meson
     mkdir -p "${zipdir}/meson/subprojects/packagecache"
-    for package in $meson_packages
+    for package in $packages
     do
         cp "meson/subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/meson/subprojects/"
         for file in $(meson_wrap_key $package wrap-file source_filename) \
@@ -326,16 +325,16 @@ bdist() {
     fi
 
     (
-        meson_override_lock
-        meson_override_init
-        build_meson
-        meson_override_remove
+        override_lock
+        override_init
+        build
+        override_remove
     )
 
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    for package in $meson_packages
+    for package in $packages
     do
         if [ -d "override/${package}" ] ;then
             srcdir="override/${package}"
@@ -406,7 +405,7 @@ clean() {
             # We don't have a way to remove individual build artifacts
             # right now, so this is just a lighter-weight clean
         done
-        rm -rf "${build}/meson"
+        rm -rf "${build}"
         grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     else
@@ -420,7 +419,7 @@ clean() {
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in $meson_packages
+    for package in $packages
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
@@ -559,8 +558,8 @@ probe
 # Clean up any prior Meson overrides, since various subcommands want to
 # read wrap files
 (
-    meson_override_lock
-    meson_override_remove
+    override_lock
+    override_remove
 )
 
 # Process command-line arguments
@@ -586,7 +585,7 @@ Usage: $0 [-p<pkgver>] sdist
        $0 updates
 
 Packages:
-$meson_packages
+$packages
 EOF
     exit 1
     ;;
