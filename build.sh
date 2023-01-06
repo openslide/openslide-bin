@@ -21,14 +21,12 @@
 
 set -eE
 
-meson_packages="ssp zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
-manual_packages_early="pthread"
-manual_packages_late="openslide openslidejava"
-manual_packages="$manual_packages_early $manual_packages_late"
+meson_packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2"
+manual_packages="openslide openslidejava"
 
 # Package display names
 ssp_name="libssp"
-pthread_name="winpthreads"
+winpthreads_name="winpthreads"
 zlib_name="zlib"
 libpng_name="libpng"
 libjpeg_turbo_name="libjpeg-turbo"
@@ -47,23 +45,20 @@ openslide_name="OpenSlide"
 openslidejava_name="OpenSlide Java"
 
 # Package versions (omit Meson packages)
-pthread_ver="10.0.0"
 openslide_ver="3.4.1"
 openslidejava_ver="0.12.3"
 
 # Tarball URLs (omit Meson packages)
-pthread_url="https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v${pthread_ver}.tar.bz2"
 openslide_url="https://github.com/openslide/openslide/releases/download/v${openslide_ver}/openslide-${openslide_ver}.tar.xz"
 openslidejava_url="https://github.com/openslide/openslide-java/releases/download/v${openslidejava_ver}/openslide-java-${openslidejava_ver}.tar.xz"
 
 # Unpacked source trees (omit Meson packages)
-pthread_build="mingw-w64-v${pthread_ver}/mingw-w64-libraries/winpthreads"
 openslide_build="openslide-${openslide_ver}"
 openslidejava_build="openslide-java-${openslidejava_ver}"
 
 # Locations of license files within the source tree
 ssp_licenses="COPYING3 COPYING.RUNTIME"
-pthread_licenses="COPYING"
+winpthreads_licenses="mingw-w64-libraries/winpthreads/COPYING"
 zlib_licenses="README"
 libpng_licenses="LICENSE"
 libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
@@ -84,7 +79,7 @@ openslidejava_licenses="COPYING.LESSER"
 
 # Build artifacts
 ssp_artifacts="libssp-0.dll"
-pthread_artifacts="libwinpthread-1.dll"
+winpthreads_artifacts="libwinpthread-1.dll"
 zlib_artifacts="libz.dll"
 libpng_artifacts="libpng16-16.dll"
 libjpeg_turbo_artifacts="libjpeg-8.2.2.dll"
@@ -314,7 +309,7 @@ meson_wrap_version() {
     local ver
     ver="$(meson_wrap_key $1 wrap-file wrapdb_version)"
     if [ -z "$ver" ]; then
-        ver="$(meson_wrap_key $1 wrap-file directory | awk -F - '{print $NF}')"
+        ver="$(meson_wrap_key $1 wrap-file directory | awk -F - '{print $NF}' | sed 's/^v//')"
     fi
     echo "$ver"
 }
@@ -378,11 +373,6 @@ build_one() {
     builddir="${build}/$(expand ${1}_build)"
     pushd "$builddir" >/dev/null
     case "$1" in
-    pthread)
-        do_configure
-        make $parallel
-        make install
-        ;;
     openslide)
         local ver_suffix_arg
         if [ -n "${ver_suffix}" ] ; then
@@ -512,9 +502,8 @@ bdist() {
     (
         meson_override_lock
         meson_override_init
-        build "$manual_packages_early"
         build_meson
-        build "$manual_packages_late"
+        build "$manual_packages"
         meson_override_remove
     )
 

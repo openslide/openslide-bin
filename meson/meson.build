@@ -9,6 +9,7 @@ project(
 # libssp.  After recent MinGW runtime changes land, this should no longer be
 # necessary.
 subproject('ssp')
+subproject('winpthreads')
 subproject('zlib')
 subproject('libpng')
 subproject('libjpeg-turbo')
