@@ -135,55 +135,6 @@ expand() {
     echo "${!1}"
 }
 
-do_meson_setup() {
-    # Run meson setup with the appropriate parameters.
-    # $1 = path to build directory
-    # Additional parameters can be specified as arguments.
-    #
-    # Fedora's ${build_host}-pkg-config clobbers search paths; avoid it
-    #
-    # Use only our pkg-config library directory, even on cross builds
-    # https://bugzilla.redhat.com/show_bug.cgi?id=688171
-    mkdir -p "$1"
-    cat > "$1/cross.ini" <<EOF
-[built-in options]
-prefix = '/'
-c_args = $(make_meson_list "${cppflags} ${cflags}")
-c_link_args = $(make_meson_list "${ldflags}")
-cpp_args = $(make_meson_list "${cppflags} ${cxxflags}")
-cpp_link_args = $(make_meson_list "${ldflags}")
-pkg_config_path = ''
-
-[properties]
-pkg_config_libdir = '/lib/pkgconfig'
-
-[binaries]
-ar = '${build_host}-ar'
-c = '${build_host}-gcc'
-cpp = '${build_host}-g++'
-ld = '${build_host}-ld'
-objcopy = '${build_host}-objcopy'
-pkgconfig = 'pkg-config'
-strip = '${build_host}-strip'
-windres = '${build_host}-windres'
-
-[host_machine]
-system = 'windows'
-endian = 'little'
-cpu_family = '${meson_cpu_family}'
-cpu = '${meson_cpu}'
-EOF
-    meson setup \
-            --buildtype plain \
-            --cross-file "$1/cross.ini" \
-            --wrap-mode nofallback \
-            "$@"
-}
-
-make_meson_list() {
-    echo "$1" | sed -E -e "s/^ */['/" -e "s/ *$/']/" -e "s/ +/', '/g"
-}
-
 meson_wrap_key() {
     # $1 = package shortname
     # $2 = file section
@@ -255,7 +206,11 @@ build() {
         rm -rf "${build}"
     fi
     if [ ! -d "$build" ]; then
-        do_meson_setup "$build" meson \
+        meson setup \
+                --buildtype plain \
+                --cross-file "meson/cross-win${build_bits}.ini" \
+                --wrap-mode nofallback \
+                "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
                 ${openslide_werror:+-Dopenslide:werror=true} \
                 ${openslide_werror:+-Dopenslide-java:werror=true}
@@ -297,7 +252,8 @@ sdist() {
     done
     mkdir -p "${zipdir}/meson/include"
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
-    cp meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
+    cp meson/cross-win32.ini meson/cross-win64.ini \
+            meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
@@ -430,30 +386,18 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
-    local arch_cflags
-
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
-        meson_cpu_family=x86_64
-        meson_cpu=x86_64
     else
         build_host=i686-w64-mingw32
-        meson_cpu_family=x86
-        meson_cpu=i686
-        arch_cflags="-msse2 -mfpmath=sse -mstackrealign"
     fi
     if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
         exit 1
     fi
-
-    cppflags=""
-    cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
-    cxxflags="${cflags}"
-    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
