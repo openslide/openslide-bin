@@ -5,6 +5,11 @@ project(
   meson_version : '>=0.64',
 )
 
+add_global_arguments(
+  '-I' + meson.current_source_dir() / 'include',
+  language: ['c', 'cpp']
+)
+
 # On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need to ship
 # libssp.  After recent MinGW runtime changes land, this should no longer be
 # necessary.

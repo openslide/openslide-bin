@@ -305,8 +305,10 @@ sdist() {
                     "${zipdir}/meson/subprojects/packagefiles/"
         done
     done
+    mkdir -p "${zipdir}/meson/include"
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
     cp meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
+    cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -463,33 +465,6 @@ probe() {
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
     ldflags="-L${root}/lib -static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
-
-    # On 64-bit Windows, MinGW passes a frame pointer to _setjmp so longjmp
-    # can do a SEH unwind.  This seems to work when the caller is also built
-    # with MinGW, but sometimes crashes with STATUS_BAD_STACK when the
-    # caller is built with MSVC; it appears that this is a longstanding
-    # MinGW issue.  In 64-bit builds, override setjmp() to pass a NULL frame
-    # pointer to skip the SEH unwind.  Our uses of setjmp/longjmp are all in
-    # libpng/libjpeg error handling, which isn't expecting to do any cleanup
-    # in intermediate stack frames, so this should be fine.
-    # https://github.com/openslide/openslide-winbuild/issues/47
-    mkdir -p "${root}/include"
-    if [ ! -e "${root}/include/setjmp.h" ]; then
-        cat > "${root}/include/setjmp.h" <<EOF
-#ifndef OPENSLIDE_SETJMP_H
-#define OPENSLIDE_SETJMP_H
-
-/* gcc extension */
-#include_next <setjmp.h>
-
-#ifdef __x86_64__
-#undef setjmp
-#define setjmp(buf) _setjmp(buf, NULL)
-#endif
-
-#endif
-EOF
-    fi
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
