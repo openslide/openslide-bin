@@ -147,7 +147,7 @@ do_meson_setup() {
     mkdir -p "$1"
     cat > "$1/cross.ini" <<EOF
 [built-in options]
-prefix = '${root}'
+prefix = '/'
 c_args = $(make_meson_list "${cppflags} ${cflags}")
 c_link_args = $(make_meson_list "${ldflags}")
 cpp_args = $(make_meson_list "${cppflags} ${cxxflags}")
@@ -155,7 +155,7 @@ cpp_link_args = $(make_meson_list "${ldflags}")
 pkg_config_path = ''
 
 [properties]
-pkg_config_libdir = '${root}/lib/pkgconfig'
+pkg_config_libdir = '/lib/pkgconfig'
 
 [binaries]
 ar = '${build_host}-ar'
@@ -249,16 +249,6 @@ override_remove() {
 }
 
 build() {
-    local destdir
-
-    destdir="$(pwd)/${build_bits}/meson-dest"
-    # When building multiple interdependent subpackages, we need to make sure
-    # the subpackages aren't accessible in the rootdir on subsequent builds,
-    # or else subsequent builds may use a different detection path (system
-    # vs. fallback) than the initial build.  Do this by installing into a
-    # different directory and creating a symlink farm into the rootdir, then
-    # deleting the symlinks before the next build.
-    find "${root}" -lname "${destdir}/*" -delete
     if [ ! -f "${build}/compile_commands.json" ]; then
         # If the build directory exists, setup didn't complete last time,
         # and will fail again unless we delete the directory.
@@ -271,17 +261,17 @@ build() {
                 ${openslide_werror:+-Dopenslide-java:werror=true}
     fi
     meson compile -C "$build" $parallel
+    # When building multiple interdependent subpackages, we need to make sure
+    # the subpackages aren't accessible in the rootdir on subsequent builds,
+    # or else subsequent builds may use a different detection path (system
+    # vs. fallback) than the initial build.  Do this by setting prefix to "/"
+    # and then using --destdir to install into the real rootdir.
     meson install -C "$build" \
-            --only-changed --no-rebuild --destdir "$destdir"
-    # Remove the libssp import library.  We want everything to use the
-    # linkage that comes with the compiler, but want to supply our own DLL
-    # so we can provide complete corresponding source.
-    rm "${destdir}${root}/lib/libssp.dll.a"
+            --only-changed --no-rebuild --destdir "${root}"
     # Move OpenSlide Java artifacts to the right place
-    pushd "${destdir}${root}/lib/openslide-java" >/dev/null
-    cp ${openslide_java_artifacts} "${destdir}${root}/bin/"
+    pushd "${root}/lib/openslide-java" >/dev/null
+    cp ${openslide_java_artifacts} "${root}/bin/"
     popd >/dev/null
-    cp -sr "${destdir}${root}/"* "$root"
 }
 
 sdist() {
@@ -444,7 +434,6 @@ probe() {
 
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
-    mkdir -p "${root}"
 
     if [ "$build_bits" = "64" ] ; then
         build_host=x86_64-w64-mingw32
@@ -461,10 +450,10 @@ probe() {
         exit 1
     fi
 
-    cppflags="-I${root}/include"
+    cppflags=""
     cflags="-O2 -g -mms-bitfields -fexceptions -ftree-vectorize ${arch_cflags}"
     cxxflags="${cflags}"
-    ldflags="-L${root}/lib -static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
+    ldflags="-static-libgcc -Wl,--enable-auto-image-base -Wl,--dynamicbase -Wl,--nxcompat -lssp"
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
