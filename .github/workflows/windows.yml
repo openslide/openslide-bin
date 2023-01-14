@@ -98,11 +98,13 @@ jobs:
         if: inputs.openslide_repo != ''
         working-directory: override/openslide
         run: |
-          autoreconf -i
-          # Generate openslide-tables.c
-          ./configure
-          make -j4
-          make distclean
+          if [ -e configure.ac ]; then
+              autoreconf -i
+              # Generate openslide-tables.c
+              ./configure
+              make -j4
+              make distclean
+          fi
       - name: Collect overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar cf overrides.tar override
