@@ -525,7 +525,11 @@ bdist() {
     for package in $meson_packages $manual_packages
     do
         if is_meson "$package"; then
-            srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
+            if [ -d "override/${package}" ] ;then
+                srcdir="override/${package}"
+            else
+                srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
+            fi
             ver="$(meson_wrap_version ${package})"
         else
             srcdir="${build}/$(expand ${package}_build)"
