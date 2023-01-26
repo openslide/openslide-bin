@@ -570,18 +570,20 @@ bdist() {
                 fi
             fi
         done
+        if [ "$package" = openslide ]; then
+            mkdir -p "${zipdir}/lib"
+            cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
+            mkdir -p "${zipdir}/include"
+            cp -r "${root}/include/openslide" "${zipdir}/include/"
+            if [ -f "${srcdir}/README.md" ]; then
+                cp "${srcdir}/README.md" "${zipdir}/"
+            else
+                cp "${srcdir}/README.txt" "${zipdir}/"
+            fi
+        fi
         printf "%-30s %s\n" "$(expand ${package}_name)" "$ver" >> \
                 "${zipdir}/VERSIONS.txt"
     done
-    mkdir -p "${zipdir}/lib"
-    cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
-    mkdir -p "${zipdir}/include"
-    cp -r "${root}/include/openslide" "${zipdir}/include/"
-    if [ -f "${build}/${openslide_build}/README.md" ]; then
-        cp "${build}/${openslide_build}/README.md" "${zipdir}/"
-    else
-        cp "${build}/${openslide_build}/README.txt" "${zipdir}/"
-    fi
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
