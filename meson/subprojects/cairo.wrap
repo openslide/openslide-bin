@@ -1,12 +1,9 @@
 # not from wrapdb, pending https://github.com/mesonbuild/wrapdb/pull/366
 
 [wrap-file]
-directory = cairo-1.17.6
+directory = cairo-1.17.8
 # Development snapshot until Meson support stabilizes
-#source_url = https://cairographics.org/releases/cairo-1.17.6.tar.xz
-source_url = https://gitlab.freedesktop.org/cairo/cairo/-/archive/1.17.6/cairo-1.17.6.tar.gz
-source_filename = cairo-1.17.6.tar.gz
-source_hash = a2227afc15e616657341c42af9830c937c3a6bfa63661074eabef13600e8936f
-
-# https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/374
-diff_files = cairo-dwrite.patch
+#source_url = https://cairographics.org/releases/cairo-1.17.8.tar.xz
+source_url = https://gitlab.freedesktop.org/cairo/cairo/-/archive/1.17.8/cairo-1.17.8.tar.gz
+source_filename = cairo-1.17.8.tar.gz
+source_hash = b4ed6d33037171d4c6594345b42d81796f335a6995fdf5638db0d306c17a0d3e
