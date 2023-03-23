@@ -1,0 +1,5 @@
+option(
+  'version_suffix',
+  type : 'string',
+  description : 'Suffix to append to the OpenSlide version string',
+)

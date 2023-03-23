@@ -63,21 +63,6 @@ jobs:
           repository: ${{ inputs.openslide_winbuild_repo }}
           ref: ${{ inputs.openslide_winbuild_ref }}
 
-      - name: Install build dependencies
-        if: inputs.openslide_repo != ''
-        run: |
-          dnf install -y gcc make autoconf automake libtool pkg-config \
-              zlib-devel \
-              libpng-devel \
-              libjpeg-turbo-devel \
-              libtiff-devel \
-              openjpeg2-devel \
-              gdk-pixbuf2-devel \
-              libxml2-devel \
-              sqlite-devel \
-              cairo-devel \
-              glib2-devel \
-              doxygen
       - name: Check out OpenSlide
         if: inputs.openslide_repo != ''
         uses: actions/checkout@v3
@@ -92,19 +77,8 @@ jobs:
         with:
           repository: ${{ inputs.openslide_java_repo }}
           ref: ${{ inputs.openslide_java_ref }}
-          path: override/openslidejava
+          path: override/openslide_java
           persist-credentials: false
-      - name: Autoreconf OpenSlide
-        if: inputs.openslide_repo != ''
-        working-directory: override/openslide
-        run: |
-          if [ -e configure.ac ]; then
-              autoreconf -i
-              # Generate openslide-tables.c
-              ./configure
-              make -j4
-              make distclean
-          fi
       - name: Collect overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar cf overrides.tar override
@@ -175,7 +149,7 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh -j4 -m${{ matrix.bits }} ${suffix:+-s$suffix} \
+          ./build.sh -m${{ matrix.bits }} ${suffix:+-s$suffix} \
               -p "${{ inputs.pkgver }}" $werror bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
           mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
