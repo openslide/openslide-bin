@@ -3,6 +3,9 @@ project(
   'c',
   license : 'LGPL-2.1-only',
   meson_version : '>=0.64',
+  default_options : [
+    'default_library=static',
+  ],
 )
 
 add_global_arguments(
@@ -13,8 +16,18 @@ add_global_arguments(
 # On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need to ship
 # libssp.  After recent MinGW runtime changes land, this should no longer be
 # necessary.
-subproject('ssp')
-subproject('winpthreads')
+subproject(
+  'ssp',
+  default_options : [
+    'default_library=shared',
+  ],
+)
+subproject(
+  'winpthreads',
+  default_options : [
+    'default_library=shared',
+  ],
+)
 subproject('zlib')
 subproject('libpng')
 subproject('libjpeg-turbo')
@@ -82,6 +95,7 @@ subproject(
   'openslide',
   default_options : [
     # We don't run tests, but we still check that they build
+    'default_library=shared',
     'doc=disabled',
     'version_suffix=' + get_option('version_suffix'),
   ],
