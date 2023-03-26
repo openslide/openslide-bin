@@ -21,7 +21,7 @@
 
 set -eE
 
-packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 openslide openslide_java"
+packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
 # Package display names
 ssp_name="libssp"
@@ -40,6 +40,8 @@ gdk_pixbuf_name="gdk-pixbuf"
 pixman_name="pixman"
 cairo_name="cairo"
 libxml2_name="libxml2"
+uthash_name="uthash"
+libdicom_name="libdicom"
 openslide_name="OpenSlide"
 openslide_java_name="OpenSlide Java"
 
@@ -60,6 +62,8 @@ gdk_pixbuf_licenses="COPYING"
 pixman_licenses="COPYING"
 cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 libxml2_licenses="Copyright"
+uthash_licenses="LICENSE"
+libdicom_licenses="LICENSE"
 # Remove workaround in bdist() when updating these
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslide_java_licenses="COPYING.LESSER"
@@ -87,6 +91,8 @@ gdk_pixbuf_upurl="https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags"
 pixman_upurl="https://cairographics.org/releases/"
 cairo_upurl="https://cairographics.org/releases/"
 libxml2_upurl="https://gitlab.gnome.org/GNOME/libxml2/tags"
+uthash_upurl="https://github.com/troydhanson/uthash/tags"
+libdicom_upurl="https://github.com/ImagingDataCommons/libdicom/tags"
 openslide_upurl="https://github.com/openslide/openslide/tags"
 openslide_java_upurl="https://github.com/openslide/openslide-java/tags"
 
@@ -107,6 +113,8 @@ gdk_pixbuf_upregex="archive/([0-9]+\.[0-9]*[02468]\.[0-9]+)/"
 pixman_upregex="pixman-([0-9.]+)\.tar"
 cairo_upregex="\"cairo-([0-9.]+)\.tar"
 libxml2_upregex="archive/v([0-9.]+)/"
+uthash_upregex="archive/refs/tags/v([0-9.]+)\.tar"
+libdicom_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 openslide_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 # Exclude old v1.0.0 tag
 openslide_java_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v([0-9.]+)\.tar"

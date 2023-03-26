@@ -1,0 +1,12 @@
+# not from wrapdb
+
+[wrap-git]
+# NOTE: temporary fork for now
+# https://github.com/openslide/openslide-winbuild/issues/82
+url = https://github.com/jcupitt/libdicom.git
+revision = main
+depth = 1
+
+# this is needed by meson_wrap_key() to get the directory we clone to
+[wrap-file]
+directory = libdicom
