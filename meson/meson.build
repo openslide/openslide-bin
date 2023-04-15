@@ -91,13 +91,6 @@ subproject(
     'iconv=disabled',
   ],
 )
-subproject('uthash')
-subproject(
-  'libdicom',
-  default_options : [
-    'tests=false',
-  ],
-)
 subproject(
   'openslide',
   default_options : [
