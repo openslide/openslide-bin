@@ -22,12 +22,16 @@ subproject(
     'default_library=shared',
   ],
 )
-subproject(
-  'winpthreads',
-  default_options : [
-    'default_library=shared',
-  ],
-)
+if host_machine.system() == 'windows'
+  subproject(
+    'winpthreads',
+    default_options : [
+      'default_library=shared',
+    ],
+  )
+else
+  thread_dep = dependency('threads')
+endif
 subproject('zlib')
 subproject('libpng')
 subproject('libjpeg-turbo')
@@ -52,6 +56,7 @@ subproject(
   default_options : [
     'grep=false',
     'test=false',
+    'jit_sealloc=disabled',# arm64 mac
   ],
 )
 subproject(
@@ -60,6 +65,13 @@ subproject(
     'nls=disabled',
   ],
 )
+subproject(
+  'libxml2',
+  default_options : [
+    'iconv=disabled',
+  ],
+)
+# subproject('shared-mime-info')
 subproject(
   'gdk-pixbuf',
   default_options : [
@@ -83,12 +95,6 @@ subproject(
   default_options : [
     'dwrite=disabled',
     'tests=disabled',
-  ],
-)
-subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled',
   ],
 )
 subproject('uthash')

@@ -1,6 +1,6 @@
 # Reusable workflow for building on Windows
 
-name: Windows
+name: Build
 
 on:
   workflow_call:
@@ -40,10 +40,21 @@ on:
         required: false
         type: boolean
         default: false
+      os:
+        description: Operating system to build for
+        required: false
+        type: string
+        default: win
+      bits:
+        description: Microarchitecture to build for
+        required: false
+        type: number
+        default: 64
     outputs:
       artifact:
         description: The name of the output artifact
         value: ${{ jobs.sdist.outputs.artifact }}
+
 
 permissions:
   contents: read
@@ -52,7 +63,7 @@ jobs:
   sdist:
     name: Build source zip
     runs-on: ubuntu-latest
-    container: ghcr.io/openslide/winbuild-builder:latest
+    container: ghcr.io/${{github.repository_owner}}/winbuild-builder:latest
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
@@ -97,11 +108,11 @@ jobs:
             meson/subprojects/packagecache
             tar
       - name: Build source zip
-        run: ./build.sh -p "${{ inputs.pkgver }}" sdist
+        run: ./build.sh -p "${{ inputs.pkgver }}" -o "${{inputs.os}}" sdist
       - name: Prep artifact
         id: prep
         run: |
-          artifact="openslide-windows-${{ inputs.pkgver }}"
+          artifact="openslide-${{inputs.os}}${{inputs.bits}}-${{ inputs.pkgver }}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "artifacts/$artifact"
           mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
@@ -119,10 +130,7 @@ jobs:
     name: Build
     needs: sdist
     runs-on: ubuntu-latest
-    container: ghcr.io/openslide/winbuild-builder:latest
-    strategy:
-      matrix:
-        bits: [32, 64]
+    container: ghcr.io/${{github.repository_owner}}/winbuild-builder:latest
     steps:
       - name: Download source zip
         uses: actions/download-artifact@v3
@@ -149,10 +157,10 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh -m${{ matrix.bits }} ${suffix:+-s$suffix} \
-              -p "${{ inputs.pkgver }}" $werror bdist
+          ./build.sh -m${{ inputs.bits }} ${suffix:+-s$suffix} \
+              -p "${{ inputs.pkgver }}" $werror -o "${{inputs.os}}" bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
+          mv "openslide-${{inputs.os}}${{ inputs.bits }}-${{ inputs.pkgver }}.zip" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -163,6 +171,7 @@ jobs:
   smoke:
     name: Smoke test
     needs: [sdist, bdist]
+    if: inputs.os == 'win'
     runs-on: windows-latest
     steps:
       - name: Download artifacts
@@ -172,20 +181,16 @@ jobs:
       - name: Unpack artifacts
         shell: bash
         run: |
-          for bits in 32 64; do
-              unzip "${{ needs.sdist.outputs.artifact }}/openslide-win${bits}-${{ inputs.pkgver }}.zip"
-          done
+          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{inputs.os}}${{inputs.bits}}-${{ inputs.pkgver }}.zip"
       - name: Smoke test
         shell: bash
         run: |
-          for bits in 32 64; do
-              echo "======== ${bits}-bit ========"
-              cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
-              OPENSLIDE_DEBUG=? ./openslide-show-properties.exe 2> conftest ||:
-              if ! grep -q "  synthetic  " conftest; then
-                  # OpenSlide 3.4.1
-                  echo "Smoke test not supported in this OpenSlide version"
-                  continue
-              fi
-              OPENSLIDE_DEBUG=synthetic ./openslide-show-properties.exe ""
-          done
+          echo "======== ${{inputs.bits}}-bit ========"
+          cd "${GITHUB_WORKSPACE}/openslide-${{inputs.os}}${{inputs.bits}}-${{ inputs.pkgver }}/bin"
+          OPENSLIDE_DEBUG=? ./openslide-show-properties.exe 2> conftest ||:
+          if ! grep -q "  synthetic  " conftest; then
+              # OpenSlide 3.4.1
+              echo "Smoke test not supported in this OpenSlide version"
+              exit 0
+          fi
+          OPENSLIDE_DEBUG=synthetic ./openslide-show-properties.exe ""

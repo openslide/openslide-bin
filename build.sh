@@ -68,12 +68,6 @@ libdicom_licenses="LICENSE"
 openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslide_java_licenses="COPYING.LESSER"
 
-# Build artifacts
-ssp_artifacts="libssp-0.dll"
-winpthreads_artifacts="libwinpthread-1.dll"
-openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
-openslide_java_artifacts="openslide-jni.dll openslide.jar"
-
 # Update-checking URLs
 ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
 winpthreads_upurl="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/"
@@ -202,7 +196,7 @@ build() {
     if [ ! -d "$build" ]; then
         meson setup \
                 --buildtype plain \
-                --cross-file "meson/cross-win${build_bits}.ini" \
+                --cross-file "meson/cross-${os}${build_bits}.ini" \
                 --wrap-mode nofallback \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
@@ -220,6 +214,7 @@ build() {
     # Move OpenSlide Java artifacts to the right place
     pushd "${root}/lib/openslide-java" >/dev/null
     cp ${openslide_java_artifacts} "${root}/bin/"
+    # exit 1
     popd >/dev/null
 }
 
@@ -246,7 +241,7 @@ sdist() {
     done
     mkdir -p "${zipdir}/meson/include"
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
-    cp meson/cross-win32.ini meson/cross-win64.ini \
+    cp meson/cross-* \
             meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"
@@ -259,23 +254,24 @@ bdist() {
     local package name srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
-    prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
+    prev_ver_suffix="$(cat ${os}/${build_bits}/.suffix 2>/dev/null ||:)"
     if [ "${ver_suffix}" != "${prev_ver_suffix}" ] ; then
         clean openslide
-        mkdir -p "${build_bits}"
-        echo "${ver_suffix}" > "${build_bits}/.suffix"
+        mkdir -p "${os}/${build_bits}"
+        echo "${ver_suffix}" > "${os}/${build_bits}/.suffix"
     fi
 
     (
         override_lock
         override_init
+        get_artifacts
         build
         override_remove
     )
 
-    zipdir="openslide-win${build_bits}-${pkgver}"
+    zipdir="openslide-${os}${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
-    mkdir -p "${zipdir}/bin"
+    mkdir -p "${zipdir}/bin" "${zipdir}/lib"
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -283,6 +279,7 @@ bdist() {
         else
             srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
         fi
+        get_artifacts
         for artifact in $(expand ${package}_artifacts)
         do
             if [ "${artifact}" != "${artifact%.dll}" -o \
@@ -297,7 +294,11 @@ bdist() {
                         "${root}/bin/${artifact}" \
                         "${zipdir}/bin/${artifact}"
             else
-                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+                if [ -f "${root}/bin/${artifact}" ] ; then
+                    cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+                else
+                    cp "${root}/lib/${artifact}" "${zipdir}/lib/"
+                fi
             fi
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
@@ -312,7 +313,10 @@ bdist() {
             if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
                 # OpenSlide license files were renamed; support both until
                 # the next release
-                if [ "${package}" != openslide ]; then
+                if [[ "${os}" != "win" && "${package}" = "winpthreads" ]]; then
+                    # do nothing, we don't need winpthreads
+                    echo "winpthreads not on windows"
+                elif [ "${package}" != openslide ]; then
                     echo "Failed to copy ${artifact} from ${package}."
                     exit 1
                 fi
@@ -320,7 +324,11 @@ bdist() {
         done
         if [ "$package" = openslide ]; then
             mkdir -p "${zipdir}/lib"
-            cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
+            if [ "$os" = "win" ]; then
+                cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
+            else
+                cp "${root}/lib/libopenslide.so" "${zipdir}/lib/"
+            fi
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
             if [ -f "${srcdir}/README.md" ]; then
@@ -352,7 +360,7 @@ clean() {
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     else
         echo "Cleaning..."
-        rm -rf 32 64 openslide-win*-*.zip
+        rm -rf openslide-*.zip
         grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     fi
@@ -380,17 +388,19 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
-    build="${build_bits}/build"
-    root="$(pwd)/${build_bits}/root"
+    build="${os}/${build_bits}/build"
+    root="$(pwd)/${os}/${build_bits}/root"
 
-    if [ "$build_bits" = "64" ] ; then
-        build_host=x86_64-w64-mingw32
-    else
-        build_host=i686-w64-mingw32
-    fi
-    if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
-        echo "Couldn't find suitable compiler."
-        exit 1
+    if [ "$os" = "win" ] ; then
+        if [ "$build_bits" = "64" ] ; then
+            build_host=x86_64-w64-mingw32
+        else
+            build_host=i686-w64-mingw32
+        fi
+        if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
+            echo "Couldn't find suitable compiler."
+            exit 1
+        fi
     fi
 
     # Ensure Wine is not run via binfmt_misc, since some packages
@@ -414,17 +424,32 @@ fail_handler() {
     exit 1
 }
 
+get_artifacts() {
+    if [ "$os" = "win" ]; then
+        ssp_artifacts="libssp-0.dll"
+        winpthreads_artifacts="libwinpthread-1.dll"
+        openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
+        openslide_java_artifacts="openslide-jni.dll openslide.jar"
+    elif [ "$os" = "linux" ]; then
+        ssp_artifacts="libssp.so"
+        winpthreads_artifacts=""
+        openslide_artifacts="libopenslide.so.0 openslide-quickhash1sum openslide-show-properties openslide-write-png"
+        openslide_java_artifacts="libopenslide-jni.so openslide.jar"
+    fi
+}
+
 
 # Set up error handling
 trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-build_bits=32
+build_bits=64
 pkgver="$(date +%Y%m%d)-local"
+os="win"
 ver_suffix=""
 openslide_werror=""
-while getopts "j:m:p:s:w" opt
+while getopts "j:m:o:p:s:w" opt
 do
     case "$opt" in
     j)
@@ -440,6 +465,8 @@ do
             exit 1
             ;;
         esac
+        ;;
+    o)  os="${OPTARG}"
         ;;
     p)
         pkgver="${OPTARG}"
