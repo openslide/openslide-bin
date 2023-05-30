@@ -21,7 +21,7 @@ permissions:
 concurrency: container-${{ github.event.number }}
 
 env:
-  CONTAINER_IMAGE: ghcr.io/${{ github.repository_owner }}/winbuild-builder:latest
+  CONTAINER_IMAGE: ghcr.io/openslide/winbuild-builder:latest
 
 jobs:
   container:
@@ -31,7 +31,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
         with:
-          repository: ${{ github.repository_owner }}/openslide-winbuild
+          repository: openslide/openslide-winbuild
       - name: Build container
         run: |
           podman build -t $CONTAINER_IMAGE -f Dockerfile.builder .

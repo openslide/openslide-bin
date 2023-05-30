@@ -1,7 +1,9 @@
-diff -urN a/meson.build b/meson.build
---- a/meson.build	1969-12-31 19:00:00.000000000 -0500
-+++ b/meson.build	2023-01-13 19:30:51.096309972 -0500
-@@ -0,0 +1,134 @@
+diff --git a/meson.build b/meson.build
+new file mode 100644
+index 0000000..06f631d
+--- /dev/null
++++ b/meson.build
+@@ -0,0 +1,137 @@
 +project(
 +  'openslide', 'c',
 +  version : '3.4.1',
@@ -12,7 +14,7 @@ diff -urN a/meson.build b/meson.build
 +    'warning_level=2',
 +  ],
 +  # limited by Ubuntu 20.04
-+  meson_version : '>=0.53',
++  meson_version : '>=0.55',
 +)
 +# Shared library version.  Follow SemVer rules, except that major 0 isn't
 +# special.
@@ -70,7 +72,7 @@ diff -urN a/meson.build b/meson.build
 +if host_machine.system() == 'windows'
 +  message('Using "N" flag for close-on-exec (Windows)')
 +  conf.set_quoted('FOPEN_CLOEXEC_FLAG', 'N')
-+else
++elif meson.can_run_host_binaries()
 +  code = '''
 +  #include <stdio.h>
 +  #include <unistd.h>
@@ -99,6 +101,9 @@ diff -urN a/meson.build b/meson.build
 +    message('Using no close-on-exec flag (unknown or cross compile)')
 +    conf.set_quoted('FOPEN_CLOEXEC_FLAG', '')
 +  endif
++else
++  message('Using no close-on-exec flag (unknown or cross compile)')
++  conf.set_quoted('FOPEN_CLOEXEC_FLAG', '')
 +endif
 +
 +# Math library, host and build
@@ -136,9 +141,11 @@ diff -urN a/meson.build b/meson.build
 +# Subdirs
 +subdir('src')
 +subdir('tools')
-diff -urN a/meson_options.txt b/meson_options.txt
---- a/meson_options.txt	1969-12-31 19:00:00.000000000 -0500
-+++ b/meson_options.txt	2023-01-13 19:21:04.223639354 -0500
+diff --git a/meson_options.txt b/meson_options.txt
+new file mode 100644
+index 0000000..14904c6
+--- /dev/null
++++ b/meson_options.txt
 @@ -0,0 +1,12 @@
 +option(
 +  'version_suffix',
@@ -152,9 +159,11 @@ diff -urN a/meson_options.txt b/meson_options.txt
 +  yield : true,
 +  description : 'Unused',
 +)
-diff -urN a/src/meson.build b/src/meson.build
---- a/src/meson.build	1969-12-31 19:00:00.000000000 -0500
-+++ b/src/meson.build	2023-01-13 19:30:08.308187751 -0500
+diff --git a/src/meson.build b/src/meson.build
+new file mode 100644
+index 0000000..c917498
+--- /dev/null
++++ b/src/meson.build
 @@ -0,0 +1,109 @@
 +# generate openslide-tables.c
 +make_tables = executable(
@@ -265,9 +274,11 @@ diff -urN a/src/meson.build b/src/meson.build
 +if meson.version().version_compare('>=0.54')
 +  meson.override_dependency('openslide', openslide_dep)
 +endif
-diff -urN a/tools/meson.build b/tools/meson.build
---- a/tools/meson.build	1969-12-31 19:00:00.000000000 -0500
-+++ b/tools/meson.build	2023-01-13 19:32:26.852583499 -0500
+diff --git a/tools/meson.build b/tools/meson.build
+new file mode 100644
+index 0000000..42e724a
+--- /dev/null
++++ b/tools/meson.build
 @@ -0,0 +1,27 @@
 +tools_deps = [
 +  openslide_dep,

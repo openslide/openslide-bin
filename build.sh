@@ -21,8 +21,6 @@
 
 set -eE
 
-packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
-
 # Package display names
 ssp_name="libssp"
 winpthreads_name="winpthreads"
@@ -117,6 +115,35 @@ openslide_java_upregex="archive/refs/tags/v1\.0\.0\.tar.*|.*archive/refs/tags/v(
 wget="wget -q"
 
 
+get_artifacts() {
+    case "$os" in
+        win)
+            ssp_artifacts="libssp-0.dll"
+            winpthreads_artifacts="libwinpthread-1.dll"
+            openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
+            openslide_java_artifacts="openslide-jni.dll openslide.jar"    
+            ;;
+        linux)
+            openslide_artifacts="libopenslide.so libopenslide.so.0 openslide-quickhash1sum openslide-show-properties openslide-write-png"
+            openslide_java_artifacts="libopenslide-jni.so openslide.jar"
+            ;;
+        mac)
+            openslide_artifacts="libopenslide.dylib libopenslide.0.dylib openslide-quickhash1sum openslide-show-properties openslide-write-png"
+            openslide_java_artifacts="libopenslide-jni.jnilib openslide.jar"
+            ;;
+    esac
+}
+
+get_packages() {
+    case "$1" in
+        win)
+            echo "ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
+            ;;
+        *)
+            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
+    esac
+}
+
 expand() {
     # Print the contents of the named variable
     # $1  = the name of the variable to expand
@@ -194,14 +221,27 @@ build() {
         rm -rf "${build}"
     fi
     if [ ! -d "$build" ]; then
-        meson setup \
+        if "$native" ; then
+            echo "Running native build..."
+            meson setup \
                 --buildtype plain \
-                --cross-file "meson/cross-${os}${build_bits}.ini" \
+                --native-file "meson/native-${os}-${build_arch}.ini" \
                 --wrap-mode nofallback \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
                 ${openslide_werror:+-Dopenslide:werror=true} \
                 ${openslide_werror:+-Dopenslide-java:werror=true}
+        else
+            echo "Running cross build..."
+            meson setup \
+                --buildtype plain \
+                --cross-file "meson/cross-${os}-${build_arch}.ini" \
+                --wrap-mode nofallback \
+                "$build" meson \
+                ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
+                ${openslide_werror:+-Dopenslide:werror=true} \
+                ${openslide_werror:+-Dopenslide-java:werror=true}
+        fi
     fi
     meson compile -C "$build" $parallel
     # When building multiple interdependent subpackages, we need to make sure
@@ -209,22 +249,22 @@ build() {
     # or else subsequent builds may use a different detection path (system
     # vs. fallback) than the initial build.  Do this by setting prefix to "/"
     # and then using --destdir to install into the real rootdir.
-    meson install -C "$build" \
-            --only-changed --no-rebuild --destdir "${root}"
+    meson install -C "$build" --only-changed --no-rebuild --destdir "${root}"
+
     # Move OpenSlide Java artifacts to the right place
-    pushd "${root}/lib/openslide-java" >/dev/null
+    pushd "${root}/${lib}/openslide-java" >/dev/null
     cp ${openslide_java_artifacts} "${root}/bin/"
-    # exit 1
     popd >/dev/null
 }
 
 sdist() {
     # Build source distribution
     local package file zipdir
-    zipdir="openslide-winbuild-${pkgver}"
+    zipdir="openslide-build-${pkgver}"
     rm -rf "${zipdir}"
     meson subprojects download --sourcedir meson
     mkdir -p "${zipdir}/meson/subprojects/packagecache"
+    packages=$(get_packages win)
     for package in $packages
     do
         cp "meson/subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/meson/subprojects/"
@@ -241,12 +281,9 @@ sdist() {
     done
     mkdir -p "${zipdir}/meson/include"
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
-    cp meson/cross-* \
-            meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
+    cp meson/cross-* meson/native-* meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
-    rm -f "${zipdir}.zip"
-    zip -r "${zipdir}.zip" "${zipdir}"
-    rm -r "${zipdir}"
+    zip_dir "${zipdir}" "${os}"
 }
 
 bdist() {
@@ -254,32 +291,30 @@ bdist() {
     local package name srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
-    prev_ver_suffix="$(cat ${os}/${build_bits}/.suffix 2>/dev/null ||:)"
+    prev_ver_suffix="$(cat ${os}/${build_arch}/.suffix 2>/dev/null ||:)"
     if [ "${ver_suffix}" != "${prev_ver_suffix}" ] ; then
         clean openslide
-        mkdir -p "${os}/${build_bits}"
-        echo "${ver_suffix}" > "${os}/${build_bits}/.suffix"
+        mkdir -p "${os}/${build_arch}"
+        echo "${ver_suffix}" > "${os}/${build_arch}/.suffix"
     fi
 
     (
         override_lock
         override_init
-        get_artifacts
         build
         override_remove
     )
 
-    zipdir="openslide-${os}${build_bits}-${pkgver}"
+    zipdir="openslide-${os}${build_arch}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin" "${zipdir}/lib"
-    for package in $packages
+    for package in $(get_packages "${os}")
     do
         if [ -d "override/${package}" ] ;then
             srcdir="override/${package}"
         else
             srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
         fi
-        get_artifacts
         for artifact in $(expand ${package}_artifacts)
         do
             if [ "${artifact}" != "${artifact%.dll}" -o \
@@ -297,7 +332,7 @@ bdist() {
                 if [ -f "${root}/bin/${artifact}" ] ; then
                     cp "${root}/bin/${artifact}" "${zipdir}/bin/"
                 else
-                    cp "${root}/lib/${artifact}" "${zipdir}/lib/"
+                    cp "${root}/${lib}/${artifact}" "${zipdir}/lib/"
                 fi
             fi
         done
@@ -313,10 +348,7 @@ bdist() {
             if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
                 # OpenSlide license files were renamed; support both until
                 # the next release
-                if [[ "${os}" != "win" && "${package}" = "winpthreads" ]]; then
-                    # do nothing, we don't need winpthreads
-                    echo "winpthreads not on windows"
-                elif [ "${package}" != openslide ]; then
+                if [ "${package}" != openslide ]; then
                     echo "Failed to copy ${artifact} from ${package}."
                     exit 1
                 fi
@@ -326,8 +358,6 @@ bdist() {
             mkdir -p "${zipdir}/lib"
             if [ "$os" = "win" ]; then
                 cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
-            else
-                cp "${root}/lib/libopenslide.so" "${zipdir}/lib/"
             fi
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
@@ -340,9 +370,7 @@ bdist() {
         printf "%-30s %s\n" "$(expand ${package}_name)" \
                 "$(meson_wrap_version ${package})" >> "${zipdir}/VERSIONS.txt"
     done
-    rm -f "${zipdir}.zip"
-    zip -r "${zipdir}.zip" "${zipdir}"
-    rm -r "${zipdir}"
+    zip_dir "${zipdir}" "${os}"
 }
 
 clean() {
@@ -360,6 +388,7 @@ clean() {
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     else
         echo "Cleaning..."
+        rm -rf linux mac win
         rm -rf openslide-*.zip
         grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
         meson subprojects purge --sourcedir meson --confirm >/dev/null
@@ -369,7 +398,7 @@ clean() {
 updates() {
     # Report new releases of software packages
     local package url curver newver
-    for package in $packages
+    for package in $(get_packages "${os}")
     do
         url="$(expand ${package}_upurl)"
         if [ -z "$url" ] ; then
@@ -388,34 +417,49 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
-    build="${os}/${build_bits}/build"
-    root="$(pwd)/${os}/${build_bits}/root"
-
-    if [ "$os" = "win" ] ; then
-        if [ "$build_bits" = "64" ] ; then
-            build_host=x86_64-w64-mingw32
-        else
-            build_host=i686-w64-mingw32
-        fi
-        if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
-            echo "Couldn't find suitable compiler."
+    build="${os}/${build_arch}/build"
+    root="$(pwd)/${os}/${build_arch}/root"
+    get_artifacts
+    packages=$(get_packages "${os}")
+    lib="lib"
+    case $os in
+        linux)
+            if [ "${build_arch}" = i686 ]; then
+                echo "32-bit Linux is not supported."
+                exit 1
+            fi
+            if "$native" ; then
+                lib="lib64"
+            fi
+            ;;
+        mac)
+            ;;
+        macarm)
+            ;;
+        win)
+            build_host=${build_arch}-w64-mingw32
+            if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
+                echo "Couldn't find suitable compiler."
+                exit 1
+            fi
+            for hdr in PE MZ
+            do
+                echo $hdr > conftest
+                chmod +x conftest
+                if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
+                    rm conftest
+                    echo "Wine is enabled in binfmt_misc.  Please disable it."
+                    exit 1
+                fi
+                rm conftest
+            done
+            ;;
+        *)
+            echo "Unknown OS: $os"
             exit 1
-        fi
-    fi
+            ;;
+    esac
 
-    # Ensure Wine is not run via binfmt_misc, since some packages
-    # attempt to run programs after building them.
-    for hdr in PE MZ
-    do
-        echo $hdr > conftest
-        chmod +x conftest
-        if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
-            rm conftest
-            echo "Wine is enabled in binfmt_misc.  Please disable it."
-            exit 1
-        fi
-        rm conftest
-    done
 }
 
 fail_handler() {
@@ -424,18 +468,19 @@ fail_handler() {
     exit 1
 }
 
-get_artifacts() {
-    if [ "$os" = "win" ]; then
-        ssp_artifacts="libssp-0.dll"
-        winpthreads_artifacts="libwinpthread-1.dll"
-        openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe"
-        openslide_java_artifacts="openslide-jni.dll openslide.jar"
-    elif [ "$os" = "linux" ]; then
-        ssp_artifacts="libssp.so"
-        winpthreads_artifacts=""
-        openslide_artifacts="libopenslide.so.0 openslide-quickhash1sum openslide-show-properties openslide-write-png"
-        openslide_java_artifacts="libopenslide-jni.so openslide.jar"
-    fi
+zip_dir() {
+    zipdir = "$1"
+    os = "$2"
+    rm -f "${zipdir}.zip" "${zipdir}.tar.gz"
+    case "$os" in
+        win)
+            zip -r "${zipdir}.zip" "${zipdir}"
+            ;;
+        *)
+            tar -cvzf "${zipdir}.tar.gz" "${zipdir}"
+            ;;
+    esac
+    rm -rf "${zipdir}"
 }
 
 
@@ -444,12 +489,13 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-build_bits=64
+build_arch="i686"
 pkgver="$(date +%Y%m%d)-local"
 os="win"
 ver_suffix=""
 openslide_werror=""
-while getopts "j:m:o:p:s:w" opt
+native=false
+while getopts "a:j:m:no:p:s:w" opt
 do
     case "$opt" in
     j)
@@ -457,16 +503,20 @@ do
         ;;
     m)
         case ${OPTARG} in
-        32|64)
-            build_bits=${OPTARG}
+        "i686"|"x86_64"|"arm64")
+            build_arch=${OPTARG}
             ;;
         *)
-            echo "-m32 or -m64 only."
+            echo "-mi686, -mx86_64 or -marm64 only."
             exit 1
             ;;
         esac
         ;;
-    o)  os="${OPTARG}"
+    n)
+        native=true
+        ;;
+    o)
+        os="${OPTARG}"
         ;;
     p)
         pkgver="${OPTARG}"
@@ -480,6 +530,7 @@ do
     esac
 done
 shift $(( $OPTIND - 1 ))
+
 
 # Probe build environment
 probe
@@ -509,7 +560,7 @@ updates)
 *)
     cat <<EOF
 Usage: $0 [-p<pkgver>] sdist
-       $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
+       $0 [-o{win|linux|mac}] [-j<n>] [-n] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
        $0 [-m{32|64}] clean [package...]
        $0 updates
 

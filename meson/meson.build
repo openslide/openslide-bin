@@ -13,24 +13,22 @@ add_global_arguments(
   language: ['c', 'cpp']
 )
 
-# On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need to ship
-# libssp.  After recent MinGW runtime changes land, this should no longer be
-# necessary.
-subproject(
-  'ssp',
-  default_options : [
-    'default_library=shared',
-  ],
-)
 if host_machine.system() == 'windows'
+  # On Fedora the MinGW CRT is built with _FORTIFY_SOURCE so we need to ship
+  # libssp.  After recent MinGW runtime changes land, this should no longer be
+  # necessary.
+  subproject(
+    'ssp',
+    default_options : [
+      'default_library=shared',
+    ],
+  )
   subproject(
     'winpthreads',
     default_options : [
       'default_library=shared',
     ],
   )
-else
-  thread_dep = dependency('threads')
 endif
 subproject('zlib')
 subproject('libpng')
@@ -66,13 +64,6 @@ subproject(
   ],
 )
 subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled',
-  ],
-)
-# subproject('shared-mime-info')
-subproject(
   'gdk-pixbuf',
   default_options : [
     'png=disabled',
@@ -95,6 +86,12 @@ subproject(
   default_options : [
     'dwrite=disabled',
     'tests=disabled',
+  ],
+)
+subproject(
+  'libxml2',
+  default_options : [
+    'iconv=disabled',
   ],
 )
 subproject('uthash')

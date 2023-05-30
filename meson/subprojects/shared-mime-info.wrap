@@ -1,8 +1,0 @@
-[wrap-file]
-directory = shared-mime-info-2.2
-source_url = https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.2/shared-mime-info-2.2.tar.gz
-source_filename = shared-mime-info-2.2.tar.gz
-source_hash = bcf5d552318136cf7b3ae259975f414fbcdc9ebce000c87cf1f0901ff14e619f
-
-[provide]
-dependency_names = shared-mime-info

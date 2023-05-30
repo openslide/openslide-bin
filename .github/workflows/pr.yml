@@ -23,7 +23,7 @@ jobs:
   stable:
     name: Stable
     needs: setup
-    uses: ./.github/workflows/windows.yml
+    uses: ./.github/workflows/build.yml
     with:
       openslide_winbuild_repo: ${{ github.repository }}
       openslide_winbuild_ref: ${{ github.ref }}
@@ -32,7 +32,7 @@ jobs:
   git:
     name: Git
     needs: setup
-    uses: ./.github/workflows/windows.yml
+    uses: ./.github/workflows/build.yml
     with:
       openslide_repo: openslide/openslide
       openslide_ref: main
