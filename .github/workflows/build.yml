@@ -157,13 +157,13 @@ jobs:
               werror="-w"
           fi
           ./build.sh -m${{ matrix.arch }} ${suffix:+-s$suffix} \
-              -p "${{ inputs.pkgver }}" $werror -o "${{matrix.os}}" bdist
+              -p "${{ inputs.pkgver }}" $werror -m "${{ matrix.os }}${{ matrix.arch }}" bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
           EXT="tar.gz"
-          if [ "${{matrix.os}}" = "win" ]; then
+          if [ "${{ matrix.os }}" = "win" ]; then
               EXT="zip"
           fi
-          mv "openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.${EXT}" \
+          mv "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.${EXT}" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -220,9 +220,9 @@ jobs:
               werror="-w"
           fi
           ./build.sh -m${{ matrix.arch }} ${suffix:+-s$suffix} \
-              $werror -n -o "${{matrix.os}}" -p "${{ inputs.pkgver }}" bdist
+              $werror -n -m "${{ matrix.os }}${{ matrix.arch }}" -p "${{ inputs.pkgver }}" bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz" \
+          mv "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -258,17 +258,17 @@ jobs:
         shell: bash
         if: matrix.os == 'win'
         run: |
-          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{matrix.os}}${{matrix.arch}}-${{ inputs.pkgver }}.zip"
+          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.zip"
       - name: Unpack artifacts (other)
         if: matrix.os != 'win'
         shell: bash
         run: |
-          tar xf "${{ needs.sdist.outputs.artifact }}/openslide-${{matrix.os}}${{matrix.arch}}-${{ inputs.pkgver }}.tar.gz"
+          tar xf "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz"
       - name: Smoke test
         shell: bash
         run: |
           echo "======== ${{matrix.arch}} ========"
-          cd "${GITHUB_WORKSPACE}/openslide-${{matrix.os}}${{matrix.arch}}-${{ inputs.pkgver }}/bin"
+          cd "${GITHUB_WORKSPACE}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}/bin"
           if [ "${{ matrix.os }}" = "win" ]; then
             SHOW_PROPERTIES_EXE=./openslide-show-properties.exe
           else

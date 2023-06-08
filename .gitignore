@@ -14,3 +14,4 @@ openslide-win*
 
 # ignore promoted wraps
 meson/subprojects/gvdb.wrap
+*.tar.gz

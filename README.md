@@ -50,15 +50,12 @@ Parallel build with the specified parallelism.
 
 #### `-n`
 
-Perform native build instead of a cross build (default: cross).
+Perform native build instead of a cross build (default: cross). Mainly useful
+building mac binaries natively e.g. on a github action runner.
 
-#### `-m{i686|x86_64}`
+#### `-m{win-i686|win-x86_64|linux-x86_64|mac-x86_64}`
 
 Select architecture to target, currently i686 (x86 32-bit) or x86_64 (x86 64-bit) build (default: i686).
-
-#### `-o{win|linux}`
-
-Select Linux or Windows build. Note: Linux builds are only available with `-mx86_64`.
 
 #### `-p<pkgver>`
 

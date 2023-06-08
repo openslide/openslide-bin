@@ -124,7 +124,7 @@ get_artifacts() {
             openslide_java_artifacts="openslide-jni.dll openslide.jar"    
             ;;
         linux)
-            openslide_artifacts="libopenslide.so libopenslide.so.0 openslide-quickhash1sum openslide-show-properties openslide-write-png"
+            openslide_artifacts="libopenslide.so libopenslide.so.0 libopenslide.so.0.4.1 openslide-quickhash1sum openslide-show-properties openslide-write-png"
             openslide_java_artifacts="libopenslide-jni.so openslide.jar"
             ;;
         mac)
@@ -264,6 +264,7 @@ sdist() {
     rm -rf "${zipdir}"
     meson subprojects download --sourcedir meson
     mkdir -p "${zipdir}/meson/subprojects/packagecache"
+    # windows includes all packages so default to that for source build
     packages=$(get_packages win)
     for package in $packages
     do
@@ -283,7 +284,16 @@ sdist() {
     cp build.sh Dockerfile.builder README.md COPYING.LESSER "${zipdir}/"
     cp meson/cross-* meson/native-* meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
-    zip_dir "${zipdir}" "${os}"
+    rm -f "${zipdir}.zip"
+    case "$os" in
+        win)
+            zip -r "${zipdir}.zip" "${zipdir}"
+            ;;
+        *)
+            tar -cvzf "${zipdir}.tar.gz" "${zipdir}"
+            ;;
+    esac
+    rm -rf "${zipdir}"
 }
 
 bdist() {
@@ -305,7 +315,7 @@ bdist() {
         override_remove
     )
 
-    zipdir="openslide-${os}${build_arch}-${pkgver}"
+    zipdir="openslide-${os}-${build_arch}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin" "${zipdir}/lib"
     for package in $(get_packages "${os}")
@@ -330,9 +340,9 @@ bdist() {
                         "${zipdir}/bin/${artifact}"
             else
                 if [ -f "${root}/bin/${artifact}" ] ; then
-                    cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+                    cp -P "${root}/bin/${artifact}" "${zipdir}/bin/"
                 else
-                    cp "${root}/${lib}/${artifact}" "${zipdir}/lib/"
+                    cp -P "${root}/${lib}/${artifact}" "${zipdir}/lib/"
                 fi
             fi
         done
@@ -370,7 +380,16 @@ bdist() {
         printf "%-30s %s\n" "$(expand ${package}_name)" \
                 "$(meson_wrap_version ${package})" >> "${zipdir}/VERSIONS.txt"
     done
-    zip_dir "${zipdir}" "${os}"
+    rm -f "${zipdir}.zip" "${zipdir}.tar.gz"
+    case "$os" in
+        win)
+            zip -r "${zipdir}.zip" "${zipdir}"
+            ;;
+        *)
+            tar -cvzf "${zipdir}.tar.gz" "${zipdir}"
+            ;;
+    esac
+    rm -rf "${zipdir}"
 }
 
 clean() {
@@ -416,6 +435,8 @@ updates() {
 }
 
 probe() {
+    os="${target%%-*}"
+    build_arch="${target#*-}"
     # Probe the build environment and set up variables
     build="${os}/${build_arch}/build"
     root="$(pwd)/${os}/${build_arch}/root"
@@ -424,17 +445,9 @@ probe() {
     lib="lib"
     case $os in
         linux)
-            if [ "${build_arch}" = i686 ]; then
-                echo "32-bit Linux is not supported."
-                exit 1
-            fi
             if "$native" ; then
                 lib="lib64"
             fi
-            ;;
-        mac)
-            ;;
-        macarm)
             ;;
         win)
             build_host=${build_arch}-w64-mingw32
@@ -454,10 +467,6 @@ probe() {
                 rm conftest
             done
             ;;
-        *)
-            echo "Unknown OS: $os"
-            exit 1
-            ;;
     esac
 
 }
@@ -468,30 +477,14 @@ fail_handler() {
     exit 1
 }
 
-zip_dir() {
-    zipdir = "$1"
-    os = "$2"
-    rm -f "${zipdir}.zip" "${zipdir}.tar.gz"
-    case "$os" in
-        win)
-            zip -r "${zipdir}.zip" "${zipdir}"
-            ;;
-        *)
-            tar -cvzf "${zipdir}.tar.gz" "${zipdir}"
-            ;;
-    esac
-    rm -rf "${zipdir}"
-}
-
 
 # Set up error handling
 trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-build_arch="i686"
+target="win-i686"
 pkgver="$(date +%Y%m%d)-local"
-os="win"
 ver_suffix=""
 openslide_werror=""
 native=false
@@ -503,20 +496,17 @@ do
         ;;
     m)
         case ${OPTARG} in
-        "i686"|"x86_64"|"arm64")
-            build_arch=${OPTARG}
+        "win-i686"|"win-x86_64"|"mac-x86_64"|"linux-x86_64")
+            target=${OPTARG}
             ;;
         *)
-            echo "-mi686, -mx86_64 or -marm64 only."
+            echo "-mwin-i686, -mwin-x86_64, -mmac-x86_64 or -mlinux-x86_64 only."
             exit 1
             ;;
         esac
         ;;
     n)
         native=true
-        ;;
-    o)
-        os="${OPTARG}"
         ;;
     p)
         pkgver="${OPTARG}"
@@ -560,7 +550,7 @@ updates)
 *)
     cat <<EOF
 Usage: $0 [-p<pkgver>] sdist
-       $0 [-o{win|linux|mac}] [-j<n>] [-n] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
+       $0 [-o{win|linux|mac}] [-j<n>] [-n] [-m{win-i686|win-x86_64|mac-x86_64|linux-x86_64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
        $0 [-m{32|64}] clean [package...]
        $0 updates
 
