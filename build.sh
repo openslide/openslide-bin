@@ -285,14 +285,7 @@ sdist() {
     cp meson/cross-* meson/native-* meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"
-    case "$os" in
-        win)
-            zip -r "${zipdir}.zip" "${zipdir}"
-            ;;
-        *)
-            tar -cvzf "${zipdir}.tar.gz" "${zipdir}"
-            ;;
-    esac
+    zip -r "${zipdir}.zip" "${zipdir}"
     rm -rf "${zipdir}"
 }
 

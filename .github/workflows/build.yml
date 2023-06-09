@@ -258,17 +258,17 @@ jobs:
         shell: bash
         if: matrix.os == 'win'
         run: |
-          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.zip"
+          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.zip"
       - name: Unpack artifacts (other)
         if: matrix.os != 'win'
         shell: bash
         run: |
-          tar xf "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz"
+          tar xf "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz"
       - name: Smoke test
         shell: bash
         run: |
-          echo "======== ${{matrix.arch}} ========"
-          cd "${GITHUB_WORKSPACE}/openslide-${{ matrix.os }}${{ matrix.arch }}-${{ inputs.pkgver }}/bin"
+          echo "======== ${{ matrix.arch }} ========"
+          cd "${GITHUB_WORKSPACE}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}/bin"
           if [ "${{ matrix.os }}" = "win" ]; then
             SHOW_PROPERTIES_EXE=./openslide-show-properties.exe
           else
