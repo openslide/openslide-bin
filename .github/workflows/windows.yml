@@ -181,11 +181,17 @@ jobs:
           for bits in 32 64; do
               echo "======== ${bits}-bit ========"
               cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
-              OPENSLIDE_DEBUG=? ./openslide-show-properties.exe 2> conftest ||:
+              if [ -e slidetool.exe ]; then
+                  showprops="./slidetool.exe property list"
+              else
+                  # OpenSlide 3.4.1
+                  showprops="./openslide-show-properties.exe"
+              fi
+              OPENSLIDE_DEBUG=? $showprops 2> conftest ||:
               if ! grep -q "  synthetic  " conftest; then
                   # OpenSlide 3.4.1
                   echo "Smoke test not supported in this OpenSlide version"
                   continue
               fi
-              OPENSLIDE_DEBUG=synthetic ./openslide-show-properties.exe ""
+              OPENSLIDE_DEBUG=synthetic $showprops ""
           done
