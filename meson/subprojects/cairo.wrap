@@ -1,9 +1,10 @@
-# not from wrapdb, pending https://github.com/mesonbuild/wrapdb/pull/366
-
 [wrap-file]
 directory = cairo-1.17.8
-# Development snapshot until Meson support stabilizes
-#source_url = https://cairographics.org/releases/cairo-1.17.8.tar.xz
-source_url = https://gitlab.freedesktop.org/cairo/cairo/-/archive/1.17.8/cairo-1.17.8.tar.gz
-source_filename = cairo-1.17.8.tar.gz
-source_hash = b4ed6d33037171d4c6594345b42d81796f335a6995fdf5638db0d306c17a0d3e
+source_url = https://gitlab.freedesktop.org/cairo/cairo/-/archive/1.17.8/cairo-1.17.8.tar.bz2
+source_filename = cairo-1.17.8.tar.bz2
+source_hash = ead4724423eb969f98b456fe1e3ee1e1741fe1c8dfb1a41ca12afa81a6c1665f
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/cairo_1.17.8-1/cairo-1.17.8.tar.bz2
+wrapdb_version = 1.17.8-1
+
+[provide]
+dependency_names = cairo, cairo-gobject
