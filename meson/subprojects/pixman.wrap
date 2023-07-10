@@ -1,4 +1,4 @@
-# not from wrapdb
+# not from wrapdb until the next pixman release
 
 [wrap-file]
 directory = pixman-0.42.2
