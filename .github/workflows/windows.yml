@@ -182,7 +182,7 @@ jobs:
               echo "======== ${bits}-bit ========"
               cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
               if [ -e slidetool.exe ]; then
-                  showprops="./slidetool.exe property list"
+                  showprops="./slidetool.exe prop list"
               else
                   # OpenSlide 3.4.1
                   showprops="./openslide-show-properties.exe"
