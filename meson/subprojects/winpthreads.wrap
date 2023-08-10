@@ -1,10 +1,10 @@
 # not from wrapdb
 
 [wrap-file]
-directory = mingw-w64-v11.0.0
-source_url = https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v11.0.0.tar.bz2
-source_filename = mingw-w64-v11.0.0.tar.bz2
-source_hash = bd0ea1633bd830204cc23a696889335e9d4a32b8619439ee17f22188695fcc5f
+directory = mingw-w64-v11.0.1
+source_url = https://prdownloads.sourceforge.net/mingw-w64/mingw-w64-v11.0.1.tar.bz2
+source_filename = mingw-w64-v11.0.1.tar.bz2
+source_hash = 3f66bce069ee8bed7439a1a13da7cb91a5e67ea6170f21317ac7f5794625ee10
 
 # custom Meson port
 diff_files = winpthreads-meson.patch
