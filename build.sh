@@ -240,10 +240,6 @@ sdist() {
     local package file zipdir
     zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
-    # Ideally Meson would create CACHEDIR.TAG files in packagecache and in
-    # the unpacked subproject directories.  We can at least do the former.
-    # https://github.com/mesonbuild/meson/issues/12103
-    tag_cachedir meson/subprojects/packagecache
     meson subprojects download --sourcedir meson
     mkdir -p "${zipdir}/meson/subprojects/packagecache"
     for package in $packages
@@ -283,8 +279,6 @@ bdist() {
     fi
 
     tag_cachedir "${build_bits}"
-    # https://github.com/mesonbuild/meson/issues/12103
-    tag_cachedir meson/subprojects/packagecache
 
     (
         override_lock
