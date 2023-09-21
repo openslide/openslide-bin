@@ -277,7 +277,7 @@ log_version() {
 
 bdist() {
     # Build binary distribution
-    local package name srcdir licensedir zipdir prev_ver_suffix
+    local package name version srcdir licensedir zipdir prev_ver_suffix input
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
@@ -376,6 +376,18 @@ bdist() {
                     "$(meson_wrap_version ${package})"
         fi
     done
+    read -d "" input <<EOF ||:
+#include <_mingw_mac.h>
+#define s(v) #v
+#define ss(v) s(v)
+version=ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
+EOF
+    eval "$(${cc} -E - <<<${input})"
+    log_version "${zipdir}" "_MinGW-w64_" "_${version}_"
+    log_version "${zipdir}" "_GCC_" \
+            "_$(${cc} --version | sed -e 's/.*GCC) //' -e q)_"
+    log_version "${zipdir}" "_Binutils_" \
+            "_$(${ld} --version | sed -e 's/.*version //' -e q)_"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -429,6 +441,7 @@ probe() {
 
     cross_file="meson/cross-win${build_bits}.ini"
     cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
+    ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
     objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
     if ! type ${cc} >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
