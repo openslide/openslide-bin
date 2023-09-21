@@ -5,10 +5,10 @@ name: Container
 on:
   push:
     branches: [main]
-    paths: [Dockerfile.builder]
+    paths: [builder/*]
   pull_request:
     branches: [main]
-    paths: [Dockerfile.builder]
+    paths: [builder/*]
   workflow_dispatch:
   # openslide/builds invokes this from a scheduled build
   workflow_call:
@@ -34,7 +34,7 @@ jobs:
           repository: ${{ github.repository_owner }}/openslide-winbuild
       - name: Build container
         run: |
-          podman build -t $CONTAINER_IMAGE -f Dockerfile.builder .
+          podman build -t $CONTAINER_IMAGE builder
       - name: Push container
         if: github.event_name != 'pull_request'
         run: |

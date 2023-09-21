@@ -5,9 +5,9 @@ of its dependencies, using MinGW-w64.
 
 ## Building
 
-`Dockerfile.builder` defines a container with the dependencies needed to
-run the build script.  To pull the container image and use it to run a
-build:
+The `builder` directory defines a container image with the dependencies
+needed to run the build script.  To pull the container image and use it to
+run a build:
 
     docker run -ti --rm -v $PWD:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./build.sh bdist
