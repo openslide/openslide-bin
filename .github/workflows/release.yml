@@ -45,10 +45,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           unzip "${{ needs.stable.outputs.artifact }}/openslide-win32-${{ needs.setup.outputs.pkgver }}.zip"
-          grep OpenSlide "openslide-win32-${{ needs.setup.outputs.pkgver }}/VERSIONS.txt" |
-              sed -E 's/ +/ /g' |
-              gh release create --latest --notes-file - --verify-tag \
-                  --repo "${{ github.repository }}" \
-                  --title "Windows build ${{ needs.setup.outputs.pkgver }}" \
-                  "${{ github.ref_name }}" \
-                  "${{ needs.stable.outputs.artifact }}/"*
+          gh release create --latest --verify-tag \
+              --repo "${{ github.repository }}" \
+              --title "Windows build ${{ needs.setup.outputs.pkgver }}" \
+              --notes-file "openslide-win32-${{ needs.setup.outputs.pkgver }}/VERSIONS.md" \
+              "${{ github.ref_name }}" \
+              "${{ needs.stable.outputs.artifact }}/"*

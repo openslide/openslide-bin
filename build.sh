@@ -261,6 +261,13 @@ sdist() {
     rm -r "${zipdir}"
 }
 
+log_version() {
+    # $1 = zipdir
+    # $2 = package
+    # $3 = version
+    printf "| %-20s | %-53s |\n" "$2" "$3" >> "$1/VERSIONS.md"
+}
+
 bdist() {
     # Build binary distribution
     local package name srcdir licensedir zipdir prev_ver_suffix
@@ -285,6 +292,17 @@ bdist() {
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
+    log_version "${zipdir}" "Software" "Version"
+    log_version "${zipdir}" "--------" "-------"
+    for package in $packages
+    do
+        case "${package}" in
+        openslide|openslide_java)
+            log_version "${zipdir}" "**$(expand ${package}_name)**" \
+                    "**$(meson_wrap_version ${package})**"
+            ;;
+        esac
+    done
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -346,9 +364,10 @@ bdist() {
                 # If slidetool is present, drop the redundant legacy programs
                 rm "${zipdir}/bin/openslide-"*".exe"*
             fi
+        elif [ "$package" != openslide_java ]; then
+            log_version "${zipdir}" "$(expand ${package}_name)" \
+                    "$(meson_wrap_version ${package})"
         fi
-        printf "%-30s %s\n" "$(expand ${package}_name)" \
-                "$(meson_wrap_version ${package})" >> "${zipdir}/VERSIONS.txt"
     done
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
