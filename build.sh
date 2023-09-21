@@ -21,10 +21,9 @@
 
 set -eE
 
-packages="ssp winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
+packages="winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
 # Package display names
-ssp_name="libssp"
 winpthreads_name="winpthreads"
 zlib_name="zlib"
 libpng_name="libpng"
@@ -46,7 +45,6 @@ openslide_name="OpenSlide"
 openslide_java_name="OpenSlide Java"
 
 # Locations of license files within the source tree
-ssp_licenses="COPYING3 COPYING.RUNTIME"
 winpthreads_licenses="mingw-w64-libraries/winpthreads/COPYING"
 zlib_licenses="README"
 libpng_licenses="LICENSE"
@@ -69,13 +67,11 @@ openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslide_java_licenses="COPYING.LESSER"
 
 # Build artifacts
-ssp_artifacts="libssp-0.dll"
 winpthreads_artifacts="libwinpthread-1.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe slidetool.exe"
 openslide_java_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
-ssp_upurl="https://mirrors.concertpass.com/gcc/releases/"
 winpthreads_upurl="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/"
 zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
@@ -97,7 +93,6 @@ openslide_upurl="https://github.com/openslide/openslide/tags"
 openslide_java_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
-ssp_upregex="gcc-([0-9.]+)/"
 winpthreads_upregex="mingw-w64-v([0-9.]+)\.zip"
 zlib_upregex="source code, version ([0-9.]+)"
 libpng_upregex="libpng-([0-9.]+)-README.txt"
