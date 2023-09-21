@@ -124,15 +124,22 @@ expand() {
     echo "${!1}"
 }
 
-meson_wrap_key() {
-    # $1 = package shortname
+meson_config_key() {
+    # $1 = keyfile
     # $2 = file section
     # $3 = file key
     gawk -F ' *= *' \
             -e 'BEGIN {want_section="'$2'"; want_key="'$3'"}' \
             -e 'match($0, /^\[([^]]*)\]$/, out) {section=out[1]}' \
             -e 'section == want_section && $1 == want_key {print $2}' \
-            "meson/subprojects/$(echo $1 | tr _ -).wrap"
+            "$1"
+}
+
+meson_wrap_key() {
+    # $1 = package shortname
+    # $2 = file section
+    # $3 = file key
+    meson_config_key "meson/subprojects/$(echo $1 | tr _ -).wrap" "$2" "$3"
 }
 
 meson_wrap_version() {
@@ -209,7 +216,7 @@ build() {
     if [ ! -d "$build" ]; then
         meson setup \
                 --buildtype plain \
-                --cross-file "meson/cross-win${build_bits}.ini" \
+                --cross-file "${cross_file}" \
                 --wrap-mode nofallback \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
@@ -320,11 +327,11 @@ bdist() {
             if [ "${artifact}" != "${artifact%.dll}" -o \
                     "${artifact}" != "${artifact%.exe}" ] ; then
                 echo "Stripping ${artifact}..."
-                ${build_host}-objcopy --only-keep-debug \
+                ${objcopy} --only-keep-debug \
                         "${root}/bin/${artifact}" \
                         "${zipdir}/bin/${artifact}.debug"
                 chmod -x "${zipdir}/bin/${artifact}.debug"
-                ${build_host}-objcopy -S \
+                ${objcopy} -S \
                         --add-gnu-debuglink="${zipdir}/bin/${artifact}.debug" \
                         "${root}/bin/${artifact}" \
                         "${zipdir}/bin/${artifact}"
@@ -420,12 +427,10 @@ probe() {
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
 
-    if [ "$build_bits" = "64" ] ; then
-        build_host=x86_64-w64-mingw32
-    else
-        build_host=i686-w64-mingw32
-    fi
-    if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
+    cross_file="meson/cross-win${build_bits}.ini"
+    cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
+    objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
+    if ! type ${cc} >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
         exit 1
     fi
