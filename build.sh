@@ -124,15 +124,22 @@ expand() {
     echo "${!1}"
 }
 
-meson_wrap_key() {
-    # $1 = package shortname
+meson_config_key() {
+    # $1 = keyfile
     # $2 = file section
     # $3 = file key
     gawk -F ' *= *' \
             -e 'BEGIN {want_section="'$2'"; want_key="'$3'"}' \
             -e 'match($0, /^\[([^]]*)\]$/, out) {section=out[1]}' \
             -e 'section == want_section && $1 == want_key {print $2}' \
-            "meson/subprojects/$(echo $1 | tr _ -).wrap"
+            "$1"
+}
+
+meson_wrap_key() {
+    # $1 = package shortname
+    # $2 = file section
+    # $3 = file key
+    meson_config_key "meson/subprojects/$(echo $1 | tr _ -).wrap" "$2" "$3"
 }
 
 meson_wrap_version() {
@@ -209,7 +216,7 @@ build() {
     if [ ! -d "$build" ]; then
         meson setup \
                 --buildtype plain \
-                --cross-file "meson/cross-win${build_bits}.ini" \
+                --cross-file "${cross_file}" \
                 --wrap-mode nofallback \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
@@ -261,9 +268,16 @@ sdist() {
     rm -r "${zipdir}"
 }
 
+log_version() {
+    # $1 = zipdir
+    # $2 = package
+    # $3 = version
+    printf "| %-20s | %-53s |\n" "$2" "$3" >> "$1/VERSIONS.md"
+}
+
 bdist() {
     # Build binary distribution
-    local package name srcdir licensedir zipdir prev_ver_suffix
+    local package name version srcdir licensedir zipdir prev_ver_suffix input
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
@@ -285,6 +299,17 @@ bdist() {
     zipdir="openslide-win${build_bits}-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
+    log_version "${zipdir}" "Software" "Version"
+    log_version "${zipdir}" "--------" "-------"
+    for package in $packages
+    do
+        case "${package}" in
+        openslide|openslide_java)
+            log_version "${zipdir}" "**$(expand ${package}_name)**" \
+                    "**$(meson_wrap_version ${package})**"
+            ;;
+        esac
+    done
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -302,11 +327,11 @@ bdist() {
             if [ "${artifact}" != "${artifact%.dll}" -o \
                     "${artifact}" != "${artifact%.exe}" ] ; then
                 echo "Stripping ${artifact}..."
-                ${build_host}-objcopy --only-keep-debug \
+                ${objcopy} --only-keep-debug \
                         "${root}/bin/${artifact}" \
                         "${zipdir}/bin/${artifact}.debug"
                 chmod -x "${zipdir}/bin/${artifact}.debug"
-                ${build_host}-objcopy -S \
+                ${objcopy} -S \
                         --add-gnu-debuglink="${zipdir}/bin/${artifact}.debug" \
                         "${root}/bin/${artifact}" \
                         "${zipdir}/bin/${artifact}"
@@ -346,10 +371,23 @@ bdist() {
                 # If slidetool is present, drop the redundant legacy programs
                 rm "${zipdir}/bin/openslide-"*".exe"*
             fi
+        elif [ "$package" != openslide_java ]; then
+            log_version "${zipdir}" "$(expand ${package}_name)" \
+                    "$(meson_wrap_version ${package})"
         fi
-        printf "%-30s %s\n" "$(expand ${package}_name)" \
-                "$(meson_wrap_version ${package})" >> "${zipdir}/VERSIONS.txt"
     done
+    read -d "" input <<EOF ||:
+#include <_mingw_mac.h>
+#define s(v) #v
+#define ss(v) s(v)
+version=ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
+EOF
+    eval "$(${cc} -E - <<<${input})"
+    log_version "${zipdir}" "_MinGW-w64_" "_${version}_"
+    log_version "${zipdir}" "_GCC_" \
+            "_$(${cc} --version | sed -e 's/.*GCC) //' -e q)_"
+    log_version "${zipdir}" "_Binutils_" \
+            "_$(${ld} --version | sed -e 's/.*version //' -e q)_"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -401,12 +439,11 @@ probe() {
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
 
-    if [ "$build_bits" = "64" ] ; then
-        build_host=x86_64-w64-mingw32
-    else
-        build_host=i686-w64-mingw32
-    fi
-    if ! type ${build_host}-gcc >/dev/null 2>&1 ; then
+    cross_file="meson/cross-win${build_bits}.ini"
+    cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
+    ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
+    objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
+    if ! type ${cc} >/dev/null 2>&1 ; then
         echo "Couldn't find suitable compiler."
         exit 1
     fi

@@ -175,6 +175,9 @@ jobs:
           for bits in 32 64; do
               unzip "${{ needs.sdist.outputs.artifact }}/openslide-win${bits}-${{ inputs.pkgver }}.zip"
           done
+      - name: Report package versions
+        shell: bash
+        run: cat "openslide-win32-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
