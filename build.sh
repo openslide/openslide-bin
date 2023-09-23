@@ -21,10 +21,9 @@
 
 set -eE
 
-packages="winpthreads zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
+packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
 # Package display names
-winpthreads_name="winpthreads"
 zlib_name="zlib"
 libpng_name="libpng"
 libjpeg_turbo_name="libjpeg-turbo"
@@ -45,7 +44,6 @@ openslide_name="OpenSlide"
 openslide_java_name="OpenSlide Java"
 
 # Locations of license files within the source tree
-winpthreads_licenses="mingw-w64-libraries/winpthreads/COPYING"
 zlib_licenses="README"
 libpng_licenses="LICENSE"
 libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
@@ -67,12 +65,10 @@ openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
 openslide_java_licenses="COPYING.LESSER"
 
 # Build artifacts
-winpthreads_artifacts="libwinpthread-1.dll"
 openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe slidetool.exe"
 openslide_java_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
-winpthreads_upurl="https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/"
 zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
 libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
@@ -93,7 +89,6 @@ openslide_upurl="https://github.com/openslide/openslide/tags"
 openslide_java_upurl="https://github.com/openslide/openslide-java/tags"
 
 # Update-checking regexes
-winpthreads_upregex="mingw-w64-v([0-9.]+)\.zip"
 zlib_upregex="source code, version ([0-9.]+)"
 libpng_upregex="libpng-([0-9.]+)-README.txt"
 libjpeg_turbo_upregex="files/([0-9.]+)/"

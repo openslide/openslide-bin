@@ -13,12 +13,6 @@ add_global_arguments(
   language: ['c', 'cpp']
 )
 
-subproject(
-  'winpthreads',
-  default_options : [
-    'default_library=shared',
-  ],
-)
 subproject('zlib')
 subproject('libpng')
 subproject(
