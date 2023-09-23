@@ -387,7 +387,7 @@ EOF
     eval "$(${cc} -E - <<<${input})"
     log_version "${zipdir}" "_MinGW-w64_" "_${version}_"
     log_version "${zipdir}" "_GCC_" \
-            "_$(${cc} --version | sed -e 's/.*GCC) //' -e q)_"
+            "_$(${cc} --version | sed -e 's/.*(/(/' -e q)_"
     log_version "${zipdir}" "_Binutils_" \
             "_$(${ld} --version | sed -e 's/.*version //' -e q)_"
     rm -f "${zipdir}.zip"
