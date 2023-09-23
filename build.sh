@@ -449,6 +449,10 @@ probe() {
         echo "Couldn't find suitable compiler."
         exit 1
     fi
+    if ! ${cc} -v 2>&1 | grep -q "Thread model: win32" ; then
+        echo "Compiler doesn't use win32 thread model."
+        exit 1
+    fi
 
     # Ensure Wine is not run via binfmt_misc, since some packages
     # attempt to run programs after building them.
