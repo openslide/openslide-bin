@@ -16,8 +16,14 @@ jobs:
     name: Set up
     runs-on: ubuntu-latest
     outputs:
+      builder_repo_and_digest: ${{ steps.find.outputs.builder_repo_and_digest }}
       pkgver: ${{ steps.params.outputs.pkgver }}
     steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+      - name: Find builder container digest
+        id: find
+        uses: ./.github/workflows/find-container-digest
       - name: Calculate parameters
         id: params
         run: echo "pkgver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
@@ -27,6 +33,7 @@ jobs:
     needs: setup
     uses: ./.github/workflows/windows.yml
     with:
+      builder_repo_and_digest: ${{ needs.setup.outputs.builder_repo_and_digest }}
       openslide_winbuild_repo: ${{ github.repository }}
       openslide_winbuild_ref: ${{ github.ref }}
       pkgver: ${{ needs.setup.outputs.pkgver }}

@@ -5,6 +5,11 @@ name: Windows
 on:
   workflow_call:
     inputs:
+      builder_repo_and_digest:
+        # Use ./find-container-digest action to get this
+        description: Docker repo and image digest of the builder container
+        required: true
+        type: string
       openslide_repo:
         description: Override OpenSlide with this repo
         required: false
@@ -52,7 +57,7 @@ jobs:
   sdist:
     name: Build source zip
     runs-on: ubuntu-latest
-    container: ghcr.io/openslide/winbuild-builder:latest
+    container: ${{ inputs.builder_repo_and_digest }}
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
@@ -119,7 +124,7 @@ jobs:
     name: Build
     needs: sdist
     runs-on: ubuntu-latest
-    container: ghcr.io/openslide/winbuild-builder:latest
+    container: ${{ inputs.builder_repo_and_digest }}
     strategy:
       matrix:
         bits: [32, 64]
