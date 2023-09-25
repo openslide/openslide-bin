@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Find builder container digest
         id: find
-        uses: ./.github/workflows/find-container-digest
+        uses: ./.github/find-container-digest
       - name: Calculate parameters
         id: params
         run: echo "pkgver=main-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT

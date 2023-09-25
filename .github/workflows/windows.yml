@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       builder_repo_and_digest:
-        # Use ./find-container-digest action to get this
+        # Use .github/find-container-digest action to get this
         description: Docker repo and image digest of the builder container
         required: true
         type: string
