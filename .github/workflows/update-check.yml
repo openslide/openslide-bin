@@ -1,0 +1,92 @@
+# Check for updated dependencies
+
+name: Updates - check
+
+on:
+  push:
+    branches: [main]
+    paths: ['meson/subprojects/*.wrap']
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: none
+
+env:
+  GIT_BRANCH: update-${{ github.repository_owner }}
+  GIT_NAME: OpenSlide Automation
+  GIT_EMAIL: openslide@openslide.org
+
+jobs:
+  update:
+    name: Update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
+      - name: Get bot username
+        id: user
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
+        run: echo "username=$(gh api user -q .login)" >> $GITHUB_OUTPUT
+      - name: Update wraps
+        id: modified
+        run: |
+          pip install --user meson
+          meson wrap update --sourcedir meson
+          modified=$(git status --porcelain "meson/subprojects/*.wrap" |
+                  sed -e 's:.*/::' -e 's/\.wrap$//')
+          modified=$(echo $modified | sed -e 's/ /, /g')
+          echo "modified=$modified" >> $GITHUB_OUTPUT
+      - name: Post updated wraps
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
+          author: "${{ env.GIT_NAME }} <${{ env.GIT_EMAIL }}>"
+          committer: "${{ env.GIT_NAME }} <${{ env.GIT_EMAIL }}>"
+          add-paths: "meson/subprojects/*.wrap"
+          branch: ${{ env.GIT_BRANCH }}
+          commit-message: Update ${{ steps.modified.outputs.modified }}
+          signoff: true
+          title: Update ${{ steps.modified.outputs.modified }}
+          body: "<!-- topic=dependencies -->"
+          push-to-fork: ${{ steps.user.outputs.username }}/${{ github.event.repository.name }}
+          delete-branch: true
+      - name: Check for stale dependencies
+        run: |
+          git checkout ${{ env.GIT_BRANCH }}
+          ./build.sh updates | tee stale-report
+      - name: File issue for stale dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
+        run: |
+          issue=$(gh issue list -A "${{ steps.user.outputs.username }}" \
+              -s open -S 'topic=dependencies in:body' --json number \
+              -q .[0].number)
+          stale=$(awk '{print $1}' stale-report | sort)
+          stale=$(echo $stale | sed -e 's/ /, /g')
+          if [ -n "$stale" ]; then
+              title="Update $stale upstream"
+              body="These wraps need updating in \
+          [wrapdb](https://github.com/mesonbuild/wrapdb), or in this repo if \
+          not imported from wrapdb:
+
+          \`\`\`
+          $(cat stale-report)
+          \`\`\`
+
+          <!-- topic=dependencies -->"
+              if [ -z "$issue" ]; then
+                  echo "Creating issue..."
+                  gh issue create -b "$body" -t "$title"
+              else
+                  echo "Updating issue..."
+                  gh issue edit "$issue" -b "$body" -t "$title"
+              fi
+          elif [ -n "$issue" ]; then
+              gh issue close "$issue" -r completed \
+                  -c "Everything looks up-to-date now."
+          fi
