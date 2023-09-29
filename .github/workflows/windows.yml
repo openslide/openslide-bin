@@ -63,14 +63,14 @@ jobs:
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.openslide_winbuild_repo }}
           ref: ${{ inputs.openslide_winbuild_ref }}
 
       - name: Check out OpenSlide
         if: inputs.openslide_repo != ''
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.openslide_repo }}
           ref: ${{ inputs.openslide_ref }}
@@ -78,7 +78,7 @@ jobs:
           persist-credentials: false
       - name: Check out OpenSlide Java
         if: inputs.openslide_java_repo != ''
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.openslide_java_repo }}
           ref: ${{ inputs.openslide_java_ref }}
