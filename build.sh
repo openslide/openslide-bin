@@ -528,9 +528,6 @@ do
 done
 shift $(( $OPTIND - 1 ))
 
-# Probe build environment
-probe
-
 # Clean up any prior Meson overrides, since various subcommands want to
 # read wrap files
 (
@@ -541,12 +538,15 @@ probe
 # Process command-line arguments
 case "$1" in
 sdist)
+    probe
     sdist
     ;;
 bdist)
+    probe
     bdist
     ;;
 clean)
+    probe
     shift
     clean "$@"
     ;;
