@@ -1,6 +1,6 @@
 # Privileged workflow to label issues and PRs for dependency updates
 
-name: Updates - label
+name: Label
 
 on:
   issues:
@@ -18,7 +18,7 @@ env:
 
 jobs:
   label-update:
-    name: Label update
+    name: Add labels
     runs-on: ubuntu-latest
     steps:
       - name: Get bot username

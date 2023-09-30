@@ -1,6 +1,6 @@
 # Check for updated dependencies
 
-name: Updates - check
+name: Check for updates
 
 on:
   push:
