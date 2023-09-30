@@ -450,6 +450,11 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
+    if [ ! -e /etc/openslide-winbuild-builder-v1 ]; then
+        echo "Must run inside the builder container.  See README.md."
+        exit 1
+    fi
+
     build="${build_bits}/build"
     root="$(pwd)/${build_bits}/root"
 
@@ -458,28 +463,6 @@ probe() {
     ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
     objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
     objdump=$(meson_config_key "${cross_file}" binaries objdump | tr -d "'")
-    if ! type ${cc} >/dev/null 2>&1 ; then
-        echo "Couldn't find suitable compiler."
-        exit 1
-    fi
-    if ! ${cc} -v 2>&1 | grep -q "Thread model: win32" ; then
-        echo "Compiler doesn't use win32 thread model."
-        exit 1
-    fi
-
-    # Ensure Wine is not run via binfmt_misc, since some packages
-    # attempt to run programs after building them.
-    for hdr in PE MZ
-    do
-        echo $hdr > conftest
-        chmod +x conftest
-        if ./conftest >/dev/null 2>&1 || [ $? = 193 ]; then
-            rm conftest
-            echo "Wine is enabled in binfmt_misc.  Please disable it."
-            exit 1
-        fi
-        rm conftest
-    done
 }
 
 fail_handler() {
