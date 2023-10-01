@@ -4,7 +4,7 @@ name: Issue event
 
 on:
   issues:
-    types: [opened]
+    types: [opened, closed]
 
 permissions:
   issues: write
@@ -16,6 +16,8 @@ jobs:
   issue-event:
     name: Process
     runs-on: ubuntu-latest
+    outputs:
+      bot-user: ${{ steps.bot-user.outputs.username }}
     steps:
       - name: Get bot username
         id: bot-user
@@ -24,6 +26,7 @@ jobs:
         run: echo "username=$(gh api user -q .login)" >> $GITHUB_OUTPUT
       - name: Label dependency issue
         if: >-
+          github.event.action == 'opened' &&
           github.actor == steps.bot-user.outputs.username &&
           contains(github.event.issue.body, 'topic=dependencies')
         env:
@@ -32,3 +35,12 @@ jobs:
           gh issue edit -R "${{ github.repository }}" \
               "${{ github.event.issue.number }}" \
               --add-label $GH_LABEL
+  update-from-issue:
+    name: Check for updates
+    needs: issue-event
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.issue.user.login == needs.issue-event.outputs.bot-user &&
+      contains(github.event.issue.body, 'topic=dependencies')
+    uses: ./.github/workflows/update-check.yml
+    secrets: inherit

@@ -8,6 +8,7 @@ on:
     paths: ['meson/subprojects/*.wrap']
   schedule:
     - cron: '0 12 * * 1'
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -79,6 +80,9 @@ jobs:
           \`\`\`
           $(cat stale-report)
           \`\`\`
+
+          I will automatically check wrapdb for updates when this issue is \
+          closed.
 
           <!-- topic=dependencies -->"
               if [ -z "$issue" ]; then
