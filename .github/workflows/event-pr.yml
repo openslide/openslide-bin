@@ -1,24 +1,21 @@
-# Privileged workflow to label issues and PRs for dependency updates
+# Privileged workflow to process PR events
 
-name: Label
+name: PR event
 
 on:
-  issues:
-    types: [opened]
   pull_request_target:
     branches: [main]
     types: [opened]
 
 permissions:
-  issues: write
   pull-requests: write
 
 env:
   GH_LABEL: update
 
 jobs:
-  label-update:
-    name: Add labels
+  pr-event:
+    name: Process
     runs-on: ubuntu-latest
     steps:
       - name: Get bot username
@@ -26,20 +23,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
         run: echo "username=$(gh api user -q .login)" >> $GITHUB_OUTPUT
-      - name: Label dependency issue
-        if: >-
-          github.event_name == 'issues' &&
-          github.actor == steps.bot-user.outputs.username &&
-          contains(github.event.issue.body, 'topic=dependencies')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue edit -R "${{ github.repository }}" \
-              "${{ github.event.issue.number }}" \
-              --add-label $GH_LABEL
       - name: Label dependency PR
         if: >-
-          github.event_name == 'pull_request_target' &&
           github.actor == steps.bot-user.outputs.username &&
           contains(github.event.pull_request.body, 'topic=dependencies')
         env:
