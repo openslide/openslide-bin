@@ -1,0 +1,35 @@
+# Privileged workflow to process PR events
+
+name: PR event
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+env:
+  GH_LABEL: update
+
+jobs:
+  pr-event:
+    name: Process
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get bot username
+        id: bot-user
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
+        run: echo "username=$(gh api user -q .login)" >> $GITHUB_OUTPUT
+      - name: Label dependency PR
+        if: >-
+          github.actor == steps.bot-user.outputs.username &&
+          contains(github.event.pull_request.body, 'topic=dependencies')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit -R "${{ github.repository }}" \
+              "${{ github.event.number }}" \
+              --add-label $GH_LABEL
