@@ -13,6 +13,8 @@ on:
 permissions:
   contents: none
 
+concurrency: update-check
+
 env:
   GIT_BRANCH: update-${{ github.repository_owner }}
   GIT_NAME: OpenSlide Automation
