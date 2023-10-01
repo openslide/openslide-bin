@@ -22,37 +22,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get bot username
-        id: user
+        id: bot-user
         env:
           GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
         run: echo "username=$(gh api user -q .login)" >> $GITHUB_OUTPUT
-      - name: Add label
+      - name: Label dependency issue
+        if: >-
+          github.event_name == 'issues' &&
+          github.actor == steps.bot-user.outputs.username &&
+          contains(github.event.issue.body, 'topic=dependencies')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.actor }}" != "${{ steps.user.outputs.username }}" ]
-          then
-              echo "Actor isn't bot; exiting"
-              exit 0
-          fi
-          case "${{ github.event_name }}" in
-          issues)
-              found=${{ contains(github.event.issue.body, 'topic=dependencies') }}
-              if [ "$found" = true ]; then
-                  gh issue edit -R "${{ github.repository }}" \
-                      "${{ github.event.issue.number }}" \
-                      --add-label $GH_LABEL
-              fi
-              ;;
-          pull_request_target)
-              found=${{ contains(github.event.pull_request.body, 'topic=dependencies') }}
-              if [ "$found" = true ]; then
-                  gh pr edit -R "${{ github.repository }}" \
-                      "${{ github.event.number }}" \
-                      --add-label $GH_LABEL
-              fi
-              ;;
-          *)
-              echo "Unknown event: ${{ github.event_name }}"
-              exit 1
-          esac
+          gh issue edit -R "${{ github.repository }}" \
+              "${{ github.event.issue.number }}" \
+              --add-label $GH_LABEL
+      - name: Label dependency PR
+        if: >-
+          github.event_name == 'pull_request_target' &&
+          github.actor == steps.bot-user.outputs.username &&
+          contains(github.event.pull_request.body, 'topic=dependencies')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit -R "${{ github.repository }}" \
+              "${{ github.event.number }}" \
+              --add-label $GH_LABEL
