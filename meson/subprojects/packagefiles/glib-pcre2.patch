@@ -1,0 +1,39 @@
+From 34e457e9f146425153d4d89dd0b57320ba381702 Mon Sep 17 00:00:00 2001
+From: Benjamin Gilbert <bgilbert@backtick.net>
+Date: Sun, 1 Oct 2023 18:26:02 -0500
+Subject: [PATCH] meson: Fix Windows build with PCRE2 as sibling subproject
+
+If glib and PCRE2 are both built for Windows as subprojects of a parent
+project, cc.links() will fail because PCRE2 hasn't been built yet when
+glib is being configured:
+
+    subprojects/glib-2.78.0/meson.build:2109:20: ERROR: Dependencies must be external dependencies
+
+609d58beea changed the detection logic to avoid cc.links() in this
+case, but dd5683ce64 broke it again.  PCRE2 detection could use a
+broader cleanup, but for now, make the minimum change to fix this case.
+
+use_pcre2_static_flag ends up set to false, matching the behavior of
+609d58beea.
+
+Fixes: dd5683ce64 ("meson: Allow fallback & static build of pcre subproject")
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 25ae10fc211f..3ad200a6a332 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2105,7 +2105,7 @@ if not pcre2.found()
+   # static flags are automatically enabled by the subproject if it's built
+   # with default_library=static
+   use_pcre2_static_flag = false
+-elif host_system == 'windows'
++elif host_system == 'windows' and pcre2.type_name() != 'internal'
+   pcre2_static = cc.links('''#define PCRE2_STATIC
+                              #define PCRE2_CODE_UNIT_WIDTH 8
+                              #include <pcre2.h>
+-- 
+2.41.0
+
