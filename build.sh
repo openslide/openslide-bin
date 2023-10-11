@@ -60,12 +60,11 @@ cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 libxml2_licenses="Copyright"
 uthash_licenses="LICENSE"
 libdicom_licenses="LICENSE"
-# Remove workaround in bdist() when updating these
-openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
+openslide_licenses="COPYING.LESSER"
 openslide_java_licenses="COPYING.LESSER"
 
 # Build artifacts
-openslide_artifacts="libopenslide-0.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe slidetool.exe"
+openslide_artifacts="libopenslide-1.dll slidetool.exe"
 openslide_java_artifacts="openslide-jni.dll openslide.jar"
 
 # Update-checking URLs
@@ -317,11 +316,6 @@ bdist() {
         fi
         for artifact in $(expand ${package}_artifacts)
         do
-            if [ "${artifact}" = slidetool.exe -a \
-                    ! -e "${root}/bin/${artifact}" ]; then
-                # Allow missing slidetool.exe until next OpenSlide release
-                continue
-            fi
             if [ "${artifact}" != "${artifact%.dll}" -o \
                     "${artifact}" != "${artifact%.exe}" ] ; then
                 echo "Stripping ${artifact}..."
@@ -347,12 +341,8 @@ bdist() {
         for artifact in $(expand ${package}_licenses)
         do
             if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
-                # OpenSlide license files were renamed; support both until
-                # the next release
-                if [ "${package}" != openslide ]; then
-                    echo "Failed to copy ${artifact} from ${package}."
-                    exit 1
-                fi
+                echo "Failed to copy ${artifact} from ${package}."
+                exit 1
             fi
         done
         if [ "$package" = openslide ]; then
@@ -376,15 +366,7 @@ bdist() {
             cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
-            if [ -f "${srcdir}/README.md" ]; then
-                cp "${srcdir}/README.md" "${zipdir}/"
-            else
-                cp "${srcdir}/README.txt" "${zipdir}/"
-            fi
-            if [ -e "${zipdir}/bin/slidetool.exe" ]; then
-                # If slidetool is present, drop the redundant legacy programs
-                rm "${zipdir}/bin/openslide-"*".exe"*
-            fi
+            cp "${srcdir}/README.md" "${zipdir}/"
         elif [ "$package" != openslide_java ]; then
             log_version "${zipdir}" "$(expand ${package}_name)" \
                     "$(meson_wrap_version ${package})"
