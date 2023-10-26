@@ -31,11 +31,7 @@ subproject(
     'tests=disabled',
   ],
 )
-subproject('libtiff', default_options: [
-  # 'webp=disabled', # for arm64 darwin
-  # 'lzma=disabled', # arm64 darwin, fixed by removing xz from homebrew
-  # 'zstd=disabled', # not sure, probably arm64 darwin
-])
+subproject('libtiff')
 subproject(
   'libopenjp2',
   default_options : [
@@ -54,8 +50,7 @@ subproject(
 subproject(
   'libxml2',
   default_options : [
-    'iconv=disabled',
-    # 'lzma=disabled', # arm64 darwin, fixed by removing xz from homebrew
+    'iconv=disabled'
   ],
 )
 if host_machine.system() != 'linux'
