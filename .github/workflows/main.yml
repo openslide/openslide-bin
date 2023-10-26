@@ -5,7 +5,7 @@ name: Build main
 
 on:
   push:
-    branches: [main]
+    # branches: [main]
 
 permissions:
   contents: read
@@ -27,10 +27,10 @@ jobs:
         id: params
         run: echo "pkgver=main-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
 
-  stable:
-    name: Stable
+  cross-platform-builds:
+    name: Cross-platform builds (stable)
     needs: setup
-    uses: ./.github/workflows/windows.yml
+    uses: ./.github/workflows/build.yml
     with:
       builder_repo_and_digest: ${{ needs.setup.outputs.builder_repo_and_digest }}
       openslide_winbuild_repo: ${{ github.repository }}

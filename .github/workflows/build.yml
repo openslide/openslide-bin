@@ -1,6 +1,6 @@
 # Reusable workflow for building on Windows
 
-name: Windows
+name: Build
 
 on:
   workflow_call:
@@ -50,6 +50,7 @@ on:
         description: The name of the output artifact
         value: ${{ jobs.sdist.outputs.artifact }}
 
+
 permissions:
   contents: read
 
@@ -85,15 +86,14 @@ jobs:
           path: override/openslide_java
           persist-credentials: false
       - name: Collect overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         run: tar cf overrides.tar override
       - name: Upload overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         uses: actions/upload-artifact@v3
         with:
           name: build-overrides
           path: overrides.tar
-
       - name: Cache sources
         uses: actions/cache@v3
         with:
@@ -106,10 +106,10 @@ jobs:
       - name: Prep artifact
         id: prep
         run: |
-          artifact="openslide-windows-${{ inputs.pkgver }}"
+          artifact="openslide-build-${{ inputs.pkgver }}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "artifacts/$artifact"
-          mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
+          mv "openslide-build-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
           if [ -d override/openslide ]; then
               suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
               echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
@@ -123,12 +123,32 @@ jobs:
   bdist:
     name: Build
     needs: sdist
-    runs-on: ubuntu-latest
-    container: ${{ inputs.builder_repo_and_digest }}
     strategy:
       matrix:
-        bits: [32, 64]
+        include:
+          - arch: i686
+            os: win
+            platform: ubuntu-latest
+            container: ghcr.io/openslide/winbuild-builder:latest
+          - arch: x86_64
+            os: win
+            platform: ubuntu-latest
+            container: ghcr.io/openslide/winbuild-builder:latest
+          - arch: x86_64
+            os: linux
+            platform: ubuntu-latest
+            container: ghcr.io/openslide/winbuild-builder:latest
+          - arch: x86_64
+            os: mac
+            platform: macos-latest
+            container:
+    runs-on: ${{ matrix.platform }}
+    container: ${{ matrix.container }}
     steps:
+      - name: Install homebrew dependencies
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install meson ninja flock
       - name: Download source zip
         uses: actions/download-artifact@v3
         with:
@@ -136,8 +156,8 @@ jobs:
       - name: Unpack source zip
         run: |
           (cd "${{ needs.sdist.outputs.artifact }}" &&
-              unzip "openslide-winbuild-${{ inputs.pkgver }}.zip")
-          mv "${{ needs.sdist.outputs.artifact }}/openslide-winbuild-${{ inputs.pkgver }}"/* .
+              unzip "openslide-build-${{ inputs.pkgver }}.zip")
+          mv "${{ needs.sdist.outputs.artifact }}/openslide-build-${{ inputs.pkgver }}"/* .
           rm -r "${{ needs.sdist.outputs.artifact }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
@@ -147,6 +167,11 @@ jobs:
       - name: Unpack overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         run: tar xf overrides.tar
+      - name: Remove homebrew dependencies
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        run: |
+          brew uninstall git pcre2 xz gettext zstd webp fontconfig freetype --ignore-dependencies
       - name: Build binary zip
         run: |
           suffix="${{ needs.sdist.outputs.version_suffix }}"
@@ -154,11 +179,22 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh -m${{ matrix.bits }} ${suffix:+-s$suffix} \
-              -p "${{ inputs.pkgver }}" $werror bdist
+          ./build.sh ${suffix:+-s$suffix} \
+              -p "${{ inputs.pkgver }}" $werror -m "${{ matrix.os }}-${{ matrix.arch }}" bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
+          EXT="tar.gz"
+          if [ "${{ matrix.os }}" = "win" ]; then
+              EXT="zip"
+          fi
+          mv "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.${EXT}" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
+      - name: Debugging stuff
+        if: matrix.platform == 'macos-latest'
+        run: |
+          pushd "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}" 
+          echo "otool -L lib/libopenslide.dylib"
+          otool -L lib/libopenslide.dylib
+          popd      
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -166,28 +202,66 @@ jobs:
           path: artifacts
 
   smoke:
+    strategy:
+      matrix:
+        include:
+          - image: windows-latest
+            os: win
+            arch: i686
+          - image: windows-latest
+            os: win
+            arch: x86_64
+          - image: ubuntu-latest
+            os: linux
+            arch: x86_64
+          - image: macos-latest
+            arch: x86_64
+            os: mac
+    runs-on: ${{ matrix.image }}
     name: Smoke test
     needs: [sdist, bdist]
-    runs-on: windows-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: ${{ needs.sdist.outputs.artifact }}
-      - name: Unpack artifacts
+      - name: Unpack artifacts (win)
+        shell: bash
+        if: matrix.os == 'win'
+        run: |
+          unzip "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.zip"
+      - name: Unpack artifacts (other)
+        if: matrix.os != 'win'
         shell: bash
         run: |
-          for bits in 32 64; do
-              unzip "${{ needs.sdist.outputs.artifact }}/openslide-win${bits}-${{ inputs.pkgver }}.zip"
-          done
+          tar xf "${{ needs.sdist.outputs.artifact }}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.tar.gz"
       - name: Report package versions
         shell: bash
-        run: cat "openslide-win32-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          for bits in 32 64; do
-              echo "======== ${bits}-bit ========"
-              cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
-              OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
-          done
+          echo "======== ${{ matrix.arch }} ========"
+          cd "${GITHUB_WORKSPACE}/openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}/bin"
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            if [ -e slidetool.exe ]; then
+                showprops="./slidetool.exe prop list"
+            else
+                # OpenSlide 3.4.1
+                showprops="./openslide-show-properties.exe"
+            fi
+          else
+            if [ -e slidetool ]; then
+                showprops="./slidetool prop list"
+            else
+                # OpenSlide 3.4.1
+                showprops="./openslide-show-properties"
+            fi
+          fi
+          OPENSLIDE_DEBUG=? $showprops 2> conftest ||:
+          if ! grep -q "  synthetic  " conftest; then
+              # OpenSlide 3.4.1
+              echo "Smoke test not supported in this OpenSlide version"
+              exit 0
+          fi
+          OPENSLIDE_DEBUG=synthetic $showprops ""

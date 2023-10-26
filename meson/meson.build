@@ -13,6 +13,14 @@ add_global_arguments(
   language: ['c', 'cpp']
 )
 
+subproject(
+  'pcre2',
+  default_options : [
+    'grep=false',
+    'test=false',
+    'jit_sealloc=disabled',# arm64 darwin
+  ],
+)
 subproject('zlib')
 subproject('libpng')
 subproject(
@@ -23,7 +31,11 @@ subproject(
     'tests=disabled',
   ],
 )
-subproject('libtiff')
+subproject('libtiff', default_options: [
+  # 'webp=disabled', # for arm64 darwin
+  # 'lzma=disabled', # arm64 darwin, fixed by removing xz from homebrew
+  # 'zstd=disabled', # not sure, probably arm64 darwin
+])
 subproject(
   'libopenjp2',
   default_options : [
@@ -40,26 +52,30 @@ subproject(
   ],
 )
 subproject(
-  'pcre2',
+  'libxml2',
   default_options : [
-    'grep=false',
-    'test=false',
+    'iconv=disabled',
+    # 'lzma=disabled', # arm64 darwin, fixed by removing xz from homebrew
   ],
 )
-subproject(
-  'glib',
-  default_options : [
-    'nls=disabled',
-  ],
-)
+if host_machine.system() != 'linux'
+  subproject(
+    'glib',
+    default_options : [
+      'nls=disabled',
+      'selinux=disabled',
+      'libmount=disabled'
+    ],
+  )
+endif
 subproject(
   'gdk-pixbuf',
   default_options : [
-    'png=disabled',
-    'tiff=disabled',
-    'jpeg=disabled',
+    'png=enabled',
+    'tiff=enabled',
+    'jpeg=enabled',
     'man=false',
-    'builtin_loaders=bmp',
+    'builtin_loaders=all',
     'installed_tests=false',
   ],
 )
@@ -75,12 +91,6 @@ subproject(
   default_options : [
     'dwrite=disabled',
     'tests=disabled',
-  ],
-)
-subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled',
   ],
 )
 subproject('uthash')
@@ -99,4 +109,4 @@ subproject(
     'version_suffix=' + get_option('version_suffix'),
   ],
 )
-subproject('openslide-java')
+

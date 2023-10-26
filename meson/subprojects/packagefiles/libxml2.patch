@@ -1,0 +1,54 @@
+diff --git a/meson.build b/meson.build
+index a490071a..a285ea97 100644
+--- a/meson.build
++++ b/meson.build
+@@ -117,10 +117,12 @@ if thread_dep.found()
+   deps += thread_dep
+ endif
+ 
+-lzma_dep = dependency('liblzma', required: false)
+-if lzma_dep.found()
+-  cdata.set('HAVE_LIBLZMA', 1)
+-  deps += lzma_dep
++if get_option('lzma').enabled()
++  lzma_dep = dependency('liblzma', required: false)
++  if lzma_dep.found()
++    cdata.set('HAVE_LIBLZMA', 1)
++    deps += lzma_dep
++  endif
+ endif
+ 
+ zlib_dep = dependency('zlib', disabler: true, required: false)
+@@ -214,7 +216,11 @@ configure_file(
+ )
+ 
+ withcdata = configuration_data()
+-withcdata.set10('HAVE_LIBLZMA', lzma_dep.found())
++if get_option('lzma').enabled()
++  withcdata.set10('HAVE_LIBLZMA', lzma_dep.found())
++else
++  withcdata.set10('HAVE_LIBLZMA', false)
++endif
+ version = meson.project_version()
+ version_array = version.split('.')
+ major = version_array[0].to_int()
+@@ -281,7 +287,11 @@ endif
+ withcdata.set('MODULE_EXTENSION', module_ext)
+ 
+ withcdata.set10('WITH_ZLIB', zlib_dep.found())
+-withcdata.set10('WITH_LZMA', lzma_dep.found())
++if get_option('lzma').enabled()
++  withcdata.set10('WITH_LZMA', lzma_dep.found())
++else
++  withcdata.set10('WITH_LZMA', false)
++endif
+ 
+ subdir('include/libxml')
+ 
+diff --git a/meson_options.txt b/meson_options.txt
+index 4545f8e1..7c74aa02 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -1 +1,2 @@
+ option('iconv', type: 'feature', description: 'Build with iconv support')
++option('lzma', type: 'feature', description: 'Build with lzma support')

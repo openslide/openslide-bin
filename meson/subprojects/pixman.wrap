@@ -8,7 +8,7 @@ source_hash = ea1480efada2fd948bc75366f7c349e1c96d3297d09a3fe62626e38e234a625e
 
 # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/72
 # https://gitlab.freedesktop.org/pixman/pixman/-/merge_requests/84
-diff_files = pixman-static.patch, pixman-pthread.patch
+diff_files = pixman-static.patch, pixman-pthread.patch, pixman-0.42.2.patch
 
 [provide]
 dependency_names = pixman-1

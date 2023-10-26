@@ -1,7 +1,8 @@
-# openslide-winbuild
+# openslide-crossplatform-build
 
-This is a set of scripts for building OpenSlide for Windows, including all
-of its dependencies, using MinGW-w64.
+This is a set of scripts for building OpenSlide for Windows, Mac, Linux (x86_64)
+and Mac (aarch64) including all of its dependencies using MinGW-w64, gcc or
+clang depending on the target platform.
 
 ## Building
 
@@ -21,22 +22,22 @@ can be obtained by running `build.sh` with no arguments.
 
 ## build.sh Subcommands
 
-#### `sdist`
+### `sdist`
 
 Build Zip file containing build system and sources for OpenSlide and all
 dependencies.
 
-#### `bdist`
+### `bdist`
 
 Build Zip file containing binaries of OpenSlide and all dependencies.
 
-#### `clean`
+### `clean`
 
 Delete build and binary directories, but not downloaded tarballs.  If one
 or more package shortnames is specified, delete only the build artifacts for
 those packages in the specified bitness.
 
-#### `updates`
+### `updates`
 
 Check for new releases of software packages.
 
@@ -44,22 +45,27 @@ Check for new releases of software packages.
 
 These must be specified before the subcommand.
 
-#### `-j<n>`
+### `-j<n>`
 
 Parallel build with the specified parallelism.
 
-#### `-m{32|64}`
+### `-n`
 
-Select 32-bit or 64-bit build (default: 32).
+Perform native build instead of a cross build (default: cross). Mainly useful for
+building mac binaries natively e.g. on a github action runner.
 
-#### `-p<pkgver>`
+### `-m{win-i686|win-x86_64|linux-x86_64|mac-x86_64}`
+
+Select architecture to target, currently i686 (x86 32-bit) or x86_64 (x86 64-bit) build (default: i686).
+
+### `-p<pkgver>`
 
 Set package version string in Zip file names to `pkgver`.
 
-#### `-s<suffix>`
+### `-s<suffix>`
 
 Append `suffix` to the OpenSlide version string.
 
-#### `-w`
+### `-w`
 
 Treat OpenSlide and OpenSlide Java build warnings as errors.
