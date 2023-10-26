@@ -47,13 +47,6 @@ subproject(
     'jit_sealloc=disabled',# arm64 darwin
   ],
 )
-
-subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled'
-  ],
-)
 if host_machine.system() != 'linux'
   subproject(
     'glib',
@@ -87,6 +80,12 @@ subproject(
   default_options : [
     'dwrite=disabled',
     'tests=disabled',
+  ],
+)
+subproject(
+  'libxml2',
+  default_options : [
+    'iconv=disabled'
   ],
 )
 subproject('uthash')
