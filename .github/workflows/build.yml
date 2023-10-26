@@ -188,13 +188,6 @@ jobs:
           fi
           mv "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}.${EXT}" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
-      - name: Debugging stuff
-        if: matrix.platform == 'macos-latest'
-        run: |
-          pushd "openslide-${{ matrix.os }}-${{ matrix.arch }}-${{ inputs.pkgver }}" 
-          echo "otool -L lib/libopenslide.dylib"
-          otool -L lib/libopenslide.dylib
-          popd      
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

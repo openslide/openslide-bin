@@ -115,7 +115,7 @@ get_artifacts() {
             ;;
         mac)
             openslide_artifacts="libopenslide.dylib libopenslide.1.dylib openslide-quickhash1sum openslide-show-properties openslide-write-png"
-            openslide_java_artifacts="libopenslide-jni.dylib openslide.jar"
+            openslide_java_artifacts="libopenslide-jni.jnilib openslide.jar"
             ;;
     esac
 }
