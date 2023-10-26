@@ -13,14 +13,6 @@ add_global_arguments(
   language: ['c', 'cpp']
 )
 
-subproject(
-  'pcre2',
-  default_options : [
-    'grep=false',
-    'test=false',
-    'jit_sealloc=disabled',# arm64 darwin
-  ],
-)
 subproject('zlib')
 subproject('libpng')
 subproject(
@@ -47,6 +39,15 @@ subproject(
     'tests=false',
   ],
 )
+subproject(
+  'pcre2',
+  default_options : [
+    'grep=false',
+    'test=false',
+    'jit_sealloc=disabled',# arm64 darwin
+  ],
+)
+
 subproject(
   'libxml2',
   default_options : [
@@ -95,6 +96,7 @@ subproject(
     'tests=false',
   ],
 )
+subproject('openslide-java')
 subproject(
   'openslide',
   default_options : [
