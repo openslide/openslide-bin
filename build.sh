@@ -57,8 +57,8 @@ cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
 libxml2_licenses="Copyright"
 uthash_licenses="LICENSE"
 libdicom_licenses="LICENSE"
-# Remove workaround in bdist() when updating these
-openslide_licenses="LICENSE.txt lgpl-2.1.txt COPYING.LESSER"
+openslide_licenses="COPYING.LESSER"
+openslide_java_licenses="COPYING.LESSER"
 
 
 # Update-checking URLs
@@ -107,12 +107,15 @@ get_artifacts() {
     case "$os" in
         win)
             openslide_artifacts="libopenslide-1.dll openslide-quickhash1sum.exe openslide-show-properties.exe openslide-write-png.exe slidetool.exe"
+            openslide_java_artifacts="openslide-jni.dll openslide.jar"
             ;;
         linux)
             openslide_artifacts="libopenslide.so libopenslide.so.1 libopenslide.so.1.0.0 openslide-quickhash1sum openslide-show-properties openslide-write-png"
+            openslide_java_artifacts="libopenslide-jni.so openslide.jar"
             ;;
         mac)
             openslide_artifacts="libopenslide.dylib libopenslide.1.dylib openslide-quickhash1sum openslide-show-properties openslide-write-png"
+            openslide_java_artifacts="libopenslide-jni.dylib openslide.jar"
             ;;
     esac
 }
@@ -120,13 +123,13 @@ get_artifacts() {
 get_packages() {
     case "$1" in
         linux)
-            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide"
+            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
             ;;
         mac)
-            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide"
+            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
             ;;
         win)
-            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide"
+            echo "zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
             ;;
     esac
 }
@@ -251,6 +254,10 @@ build() {
     # vs. fallback) than the initial build.  Do this by setting prefix to "/"
     # and then using --destdir to install into the real rootdir.
     meson install -C "$build" --only-changed --no-rebuild --destdir "${root}"
+    # Move OpenSlide Java artifacts to the right place
+    pushd "${root}/lib/openslide-java" >/dev/null
+    cp ${openslide_java_artifacts} "${root}/bin/"
+    popd >/dev/null
 }
 
 sdist() {
@@ -441,7 +448,7 @@ EOF
             ;;
     esac
     zip -r "${zipdir}.zip" "${zipdir}"
-    # rm -r "${zipdir}"
+    rm -r "${zipdir}"
 }
 
 clean() {

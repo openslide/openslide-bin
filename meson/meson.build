@@ -95,7 +95,6 @@ subproject(
     'tests=false',
   ],
 )
-subproject('openslide-java')
 subproject(
   'openslide',
   default_options : [
@@ -105,4 +104,5 @@ subproject(
     'version_suffix=' + get_option('version_suffix'),
   ],
 )
+subproject('openslide-java')
 
