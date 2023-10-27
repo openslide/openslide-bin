@@ -14,6 +14,20 @@ add_global_arguments(
 )
 
 subproject('zlib')
+subproject(
+  'libffi',
+  default_options : [
+    'tests=false',
+  ],
+)
+subproject(
+  'libxml2',
+  default_options : [
+    'iconv=disabled',
+  ],
+)
+subproject('sqlite3')
+
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
@@ -31,14 +45,7 @@ subproject(
     'build_doc=disabled',
   ],
 )
-subproject('sqlite3')
 subproject('proxy-libintl')
-subproject(
-  'libffi',
-  default_options : [
-    'tests=false',
-  ],
-)
 subproject(
   'pcre2',
   default_options : [
@@ -78,12 +85,6 @@ subproject(
   default_options : [
     'dwrite=disabled',
     'tests=disabled',
-  ],
-)
-subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled',
   ],
 )
 subproject('uthash')
