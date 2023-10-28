@@ -252,8 +252,9 @@ sdist() {
                     "${zipdir}/meson/subprojects/packagefiles/"
         done
     done
-    mkdir -p "${zipdir}/builder/windows" "${zipdir}/meson/include"
+    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}/meson/include"
     cp build.sh README.md COPYING.LESSER "${zipdir}/"
+    cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
     cp meson/cross-win32.ini meson/cross-win64.ini \

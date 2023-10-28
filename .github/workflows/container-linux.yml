@@ -1,0 +1,41 @@
+# Build and push Linux builder container
+
+name: Container - Linux
+
+on:
+  push:
+    branches: [main]
+    paths: [builder/linux/*]
+  pull_request:
+    branches: [main]
+    paths: [builder/linux/*]
+  schedule:
+    - cron: "40 14 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+# Separate PRs can run concurrently; everything else has to queue
+concurrency: container-linux-${{ github.event.number }}
+
+env:
+  CONTAINER_IMAGE: ghcr.io/${{ github.repository_owner }}/linux-builder:latest
+
+jobs:
+  container:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Build container
+        run: |
+          podman build -t $CONTAINER_IMAGE builder/linux
+      - name: Push container
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" |
+              podman login ghcr.io -u $ --password-stdin
+          podman push $CONTAINER_IMAGE
