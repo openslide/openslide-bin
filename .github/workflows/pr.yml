@@ -22,6 +22,8 @@ jobs:
       - name: Find builder container digest
         id: find
         uses: ./.github/find-container-digest
+        with:
+          builder_image: windows
       - name: Calculate parameters
         id: params
         run: echo "pkgver=pr-${{ github.event.number }}.${{ github.run_number }}.${{ github.run_attempt }}-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
