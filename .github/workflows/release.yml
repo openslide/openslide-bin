@@ -24,6 +24,8 @@ jobs:
       - name: Find builder container digest
         id: find
         uses: ./.github/find-container-digest
+        with:
+          builder_image: windows
       - name: Calculate parameters
         id: params
         run: echo "pkgver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT

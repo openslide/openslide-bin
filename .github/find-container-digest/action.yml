@@ -5,7 +5,8 @@ name: Find builder container digest
 description: Get repo and image digest of the OpenSlide builder container
 inputs:
   builder_image:
-    description: Docker image reference of the builder container
+    description: |
+      Docker image reference of the builder container, or "windows" or "linux"
     required: false
     type: string
 outputs:
@@ -20,8 +21,11 @@ runs:
       shell: bash
       run: |
         repo=$(cut -f1 -d: <<<"${{ inputs.builder_image }}")
-        repo="${repo:-ghcr.io/openslide/winbuild-builder}"
-        label=$(cut -f2 -d: <<<"${{ inputs.builder_image }}")
+        case "$repo" in
+        windows|"") repo=ghcr.io/openslide/winbuild-builder ;;
+        linux) repo=ghcr.io/openslide/linux-builder ;;
+        esac
+        label=$(cut -f2 -d: -s <<<"${{ inputs.builder_image }}")
         label="${label:-latest}"
         digest=$(skopeo inspect "docker://${repo}:${label}" | jq -r .Digest)
         ref="${repo}@${digest}"
