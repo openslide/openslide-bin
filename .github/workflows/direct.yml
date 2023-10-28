@@ -1,0 +1,42 @@
+# Temporary workflow to build Linux binaries directly with Meson
+
+name: Direct
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    container: ghcr.io/openslide/linux-builder:latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Cache sources
+        uses: actions/cache@v3
+        with:
+          key: direct-cache
+          path: meson/subprojects/packagecache
+      - name: Build
+        working-directory: meson
+        run: |
+          meson setup build --buildtype plain --wrap-mode nofallback \
+              --native-file native-linux-amd64.ini \
+              -Dopenslide:werror=true -Dopenslide-java:werror=true
+          meson compile -C build
+          DESTDIR=install meson install -C build
+          mkdir output
+          cp build/install/{bin/slidetool,lib64/libopenslide.so.1} output/
+          patchelf --set-rpath '$ORIGIN' output/slidetool
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux
+          path: meson/output
