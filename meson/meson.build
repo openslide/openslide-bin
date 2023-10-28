@@ -60,6 +60,8 @@ subproject(
     'jpeg=disabled',
     'man=false',
     'builtin_loaders=bmp',
+    'introspection=disabled',
+    'gio_sniffing=false',
     'installed_tests=false',
   ],
 )
