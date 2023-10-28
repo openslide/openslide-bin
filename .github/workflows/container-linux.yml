@@ -1,14 +1,14 @@
-# Build and push builder container
+# Build and push Linux builder container
 
-name: Container
+name: Container - Linux
 
 on:
   push:
     branches: [main]
-    paths: [builder/*]
+    paths: [builder/linux/*]
   pull_request:
     branches: [main]
-    paths: [builder/*]
+    paths: [builder/linux/*]
   schedule:
     - cron: "40 14 1 * *"
   workflow_dispatch:
@@ -18,10 +18,10 @@ permissions:
   packages: write
 
 # Separate PRs can run concurrently; everything else has to queue
-concurrency: container-${{ github.event.number }}
+concurrency: container-linux-${{ github.event.number }}
 
 env:
-  CONTAINER_IMAGE: ghcr.io/${{ github.repository_owner }}/winbuild-builder:latest
+  CONTAINER_IMAGE: ghcr.io/${{ github.repository_owner }}/linux-builder:latest
 
 jobs:
   container:
@@ -30,11 +30,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/openslide-winbuild
       - name: Build container
         run: |
-          podman build -t $CONTAINER_IMAGE builder
+          podman build -t $CONTAINER_IMAGE builder/linux
       - name: Push container
         if: github.event_name != 'pull_request'
         run: |
