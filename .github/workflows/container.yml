@@ -30,8 +30,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/openslide-winbuild
       - name: Build container
         run: |
           podman build -t $CONTAINER_IMAGE builder
