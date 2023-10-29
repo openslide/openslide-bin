@@ -34,7 +34,13 @@ jobs:
           DESTDIR=install meson install -C build
           mkdir output
           cp build/install/{bin/slidetool,lib64/libopenslide.so.1} output/
-          patchelf --set-rpath '$ORIGIN' output/slidetool
+          cd output
+          for f in libopenslide.so.1 slidetool; do
+              objcopy --only-keep-debug $f ${f}.debug
+              objcopy -S --add-gnu-debuglink=${f}.debug $f ${f}.new
+              mv ${f}.new $f
+          done
+          patchelf --set-rpath '$ORIGIN' slidetool
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
