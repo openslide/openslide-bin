@@ -28,7 +28,7 @@ jobs:
         working-directory: meson
         run: |
           meson setup build --buildtype plain --wrap-mode nofallback \
-              --native-file native-linux-amd64.ini \
+              --native-file native-linux-x86_64.ini \
               -Dopenslide:werror=true -Dopenslide-java:werror=true
           meson compile -C build
           DESTDIR=install meson install -C build
