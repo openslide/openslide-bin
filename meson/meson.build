@@ -28,6 +28,10 @@ subproject(
 )
 subproject('sqlite3')
 
+if host_machine.system() != 'linux'
+  subproject('proxy-libintl')
+endif
+
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
@@ -45,7 +49,6 @@ subproject(
     'build_doc=disabled',
   ],
 )
-subproject('proxy-libintl')
 subproject(
   'pcre2',
   default_options : [
