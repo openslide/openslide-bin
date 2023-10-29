@@ -41,6 +41,8 @@ jobs:
               mv ${f}.new $f
           done
           patchelf --set-rpath '$ORIGIN' slidetool
+      - name: Smoke test
+        run: OPENSLIDE_DEBUG=synthetic meson/output/slidetool prop list ''
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
