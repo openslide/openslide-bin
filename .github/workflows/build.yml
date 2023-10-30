@@ -1,15 +1,22 @@
-# Reusable workflow for building on Windows
+# Reusable workflow for building binaries
 
-name: Windows
+name: Binaries
 
 on:
   workflow_call:
     inputs:
-      builder_repo_and_digest:
+      linux_builder_repo_and_digest:
         # Use .github/find-container-digest action to get this
-        description: Docker repo and image digest of the builder container
-        required: true
+        description: |
+          Docker repo and image digest of the Linux builder container, or
+          empty to skip Linux build
+        required: false
         type: string
+      macos_enable:
+        description: Build macOS binaries
+        required: false
+        type: boolean
+        default: false
       openslide_repo:
         description: Override OpenSlide with this repo
         required: false
@@ -45,6 +52,12 @@ on:
         required: false
         type: boolean
         default: false
+      windows_builder_repo_and_digest:
+        # Use .github/find-container-digest action to get this
+        description: |
+          Docker repo and image digest of the Windows builder container
+        required: true
+        type: string
     outputs:
       artifact:
         description: The name of the output artifact
@@ -55,9 +68,9 @@ permissions:
 
 jobs:
   sdist:
-    name: Build source zip
+    name: Source zip
     runs-on: ubuntu-latest
-    container: ${{ inputs.builder_repo_and_digest }}
+    container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
@@ -118,11 +131,11 @@ jobs:
           name: ${{ steps.prep.outputs.artifact }}
           path: artifacts
 
-  bdist:
-    name: Build
+  windows:
+    name: Windows
     needs: sdist
     runs-on: ubuntu-latest
-    container: ${{ inputs.builder_repo_and_digest }}
+    container: ${{ inputs.windows_builder_repo_and_digest }}
     strategy:
       matrix:
         bits: [32, 64]
@@ -163,9 +176,9 @@ jobs:
           name: ${{ needs.sdist.outputs.artifact }}
           path: artifacts
 
-  smoke:
-    name: Smoke test
-    needs: [sdist, bdist]
+  windows-smoke:
+    name: Windows smoke test
+    needs: [sdist, windows]
     runs-on: windows-latest
     steps:
       - name: Download artifacts
