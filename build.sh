@@ -257,7 +257,7 @@ sdist() {
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
-    cp meson/{cross-win{32,64},native-linux-x86_64}.ini \
+    cp meson/{cross-{macos-{arm64,x86_64},win{32,64}},native-linux-x86_64}.ini \
             meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"

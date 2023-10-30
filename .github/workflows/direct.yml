@@ -1,4 +1,4 @@
-# Temporary workflow to build Linux binaries directly with Meson
+# Temporary workflow to build Linux and macOS binaries directly with Meson
 
 name: Direct
 
@@ -47,4 +47,48 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: linux
+          path: meson/output
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install meson
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Cache sources
+        uses: actions/cache@v3
+        with:
+          key: direct-cache
+          path: meson/subprojects/packagecache
+      - name: Build
+        working-directory: meson
+        run: |
+          for arch in x86_64 arm64; do
+              meson setup $arch --buildtype plain --wrap-mode nofallback \
+                  --cross-file cross-macos-${arch}.ini \
+                  -Dopenslide:werror=true -Dopenslide-java:werror=true
+              meson compile -C $arch
+              DESTDIR=install meson install -C $arch
+          done
+          mkdir output
+          lipo -create {x86_64,arm64}/install/lib/libopenslide.1.dylib \
+              -output output/libopenslide.1.dylib
+          lipo -create {x86_64,arm64}/install/bin/slidetool \
+              -output output/slidetool
+          cd output
+          for f in libopenslide.1.dylib slidetool; do
+              dsymutil $f
+              strip -u -r $f
+          done
+          install_name_tool -change /lib/libopenslide.1.dylib \
+              '@loader_path/libopenslide.1.dylib' slidetool
+      - name: Smoke test
+        run: OPENSLIDE_DEBUG=synthetic meson/output/slidetool prop list ''
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos
           path: meson/output
