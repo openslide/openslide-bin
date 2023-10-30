@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       linux_builder_repo_and_digest: ${{ needs.setup.outputs.linux_builder_repo_and_digest }}
+      macos_enable: true
       openslide_winbuild_repo: ${{ github.repository }}
       openslide_winbuild_ref: ${{ github.ref }}
       pkgver: ${{ needs.setup.outputs.pkgver }}

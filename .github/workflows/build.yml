@@ -12,6 +12,11 @@ on:
           empty to skip Linux build
         required: false
         type: string
+      macos_enable:
+        description: Build macOS binaries
+        required: false
+        type: boolean
+        default: false
       openslide_repo:
         description: Override OpenSlide with this repo
         required: false
