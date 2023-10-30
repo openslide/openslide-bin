@@ -1,0 +1,21 @@
+diff --git a/meson.build b/meson.build
+index 6fe47a29dbdb..fba16932f0b1 100644
+--- a/meson.build
++++ b/meson.build
+@@ -94,8 +94,14 @@ if cc.has_function('lrint', dependencies: mathlib_dep)
+   gdk_pixbuf_conf.set('HAVE_LRINT', 1)
+ endif
+ 
+-intl_dep = cc.find_library('intl', required: false)
+-if cc.has_function('bind_textdomain_codeset', prefix: '#include <libintl.h>', dependencies: intl_dep)
++if meson.version().version_compare('>=0.59')
++  intl_dep = dependency('intl', required: false)
++else
++  intl_dep = cc.find_library('intl', required: false)
++endif
++# We can't use cc.has_function() if libintl and gdk-pixbuf are both built as
++# subprojects of a parent project; assume bind_textdomain_codeset is available
++if intl_dep.type_name() == 'internal' or cc.has_function('bind_textdomain_codeset', prefix: '#include <libintl.h>', dependencies: intl_dep)
+   gdk_pixbuf_conf.set('HAVE_BIND_TEXTDOMAIN_CODESET', 1)
+ endif
+ 

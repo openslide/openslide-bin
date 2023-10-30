@@ -13,7 +13,58 @@ add_global_arguments(
   language: ['c', 'cpp']
 )
 
-subproject('zlib')
+if host_machine.system() == 'darwin'
+  cc = meson.get_compiler('c')
+  overrides = [
+    # zlib is handled automatically by dependency()
+    # no define for libffi version; pick a value that will pass the checks
+    ['libffi', 'ffi', '3.0.0'],
+    ['libxml-2.0', 'xml2', 'libxml/xmlversion.h', 'LIBXML_DOTTED_VERSION'],
+    ['sqlite3', 'sqlite3', 'sqlite3.h', 'SQLITE_VERSION'],
+  ]
+  foreach o : overrides
+    if o.length() > 3
+      version = cc.get_define(
+        o[3],
+        prefix : '#include <@0@>'.format(o[2])
+      ).strip('"')
+    else
+      version = o[2]
+    endif
+    meson.override_dependency(
+      o[0],
+      declare_dependency(
+        version : version,
+        dependencies : cc.find_library(o[1]),
+      )
+    )
+  endforeach
+  # libffi headers are in a subdirectory
+  add_global_arguments(
+    '-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/ffi',
+    language : ['c', 'cpp']
+  )
+else
+  subproject('zlib')
+  subproject(
+    'libffi',
+    default_options : [
+      'tests=false',
+    ],
+  )
+  subproject(
+    'libxml2',
+    default_options : [
+      'iconv=disabled',
+    ],
+  )
+  subproject('sqlite3')
+endif
+
+if host_machine.system() != 'linux'
+  subproject('proxy-libintl')
+endif
+
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
@@ -29,14 +80,6 @@ subproject(
   default_options : [
     'build_codec_apps=false',
     'build_doc=disabled',
-  ],
-)
-subproject('sqlite3')
-subproject('proxy-libintl')
-subproject(
-  'libffi',
-  default_options : [
-    'tests=false',
   ],
 )
 subproject(
@@ -77,13 +120,8 @@ subproject(
   'cairo',
   default_options : [
     'dwrite=disabled',
+    'quartz=disabled',
     'tests=disabled',
-  ],
-)
-subproject(
-  'libxml2',
-  default_options : [
-    'iconv=disabled',
   ],
 )
 subproject('uthash')
