@@ -5,10 +5,12 @@ name: Binaries
 on:
   workflow_call:
     inputs:
-      builder_repo_and_digest:
+      linux_builder_repo_and_digest:
         # Use .github/find-container-digest action to get this
-        description: Docker repo and image digest of the builder container
-        required: true
+        description: |
+          Docker repo and image digest of the Linux builder container, or
+          empty to skip Linux build
+        required: false
         type: string
       openslide_repo:
         description: Override OpenSlide with this repo
@@ -45,6 +47,12 @@ on:
         required: false
         type: boolean
         default: false
+      windows_builder_repo_and_digest:
+        # Use .github/find-container-digest action to get this
+        description: |
+          Docker repo and image digest of the Windows builder container
+        required: true
+        type: string
     outputs:
       artifact:
         description: The name of the output artifact
@@ -57,7 +65,7 @@ jobs:
   sdist:
     name: Source zip
     runs-on: ubuntu-latest
-    container: ${{ inputs.builder_repo_and_digest }}
+    container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
@@ -122,7 +130,7 @@ jobs:
     name: Windows
     needs: sdist
     runs-on: ubuntu-latest
-    container: ${{ inputs.builder_repo_and_digest }}
+    container: ${{ inputs.windows_builder_repo_and_digest }}
     strategy:
       matrix:
         bits: [32, 64]
