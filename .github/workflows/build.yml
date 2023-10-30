@@ -1,6 +1,6 @@
-# Reusable workflow for building on Windows
+# Reusable workflow for building binaries
 
-name: Windows
+name: Binaries
 
 on:
   workflow_call:
@@ -55,7 +55,7 @@ permissions:
 
 jobs:
   sdist:
-    name: Build source zip
+    name: Source zip
     runs-on: ubuntu-latest
     container: ${{ inputs.builder_repo_and_digest }}
     outputs:
@@ -118,8 +118,8 @@ jobs:
           name: ${{ steps.prep.outputs.artifact }}
           path: artifacts
 
-  bdist:
-    name: Build
+  windows:
+    name: Windows
     needs: sdist
     runs-on: ubuntu-latest
     container: ${{ inputs.builder_repo_and_digest }}
@@ -163,9 +163,9 @@ jobs:
           name: ${{ needs.sdist.outputs.artifact }}
           path: artifacts
 
-  smoke:
-    name: Smoke test
-    needs: [sdist, bdist]
+  windows-smoke:
+    name: Windows smoke test
+    needs: [sdist, windows]
     runs-on: windows-latest
     steps:
       - name: Download artifacts
