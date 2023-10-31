@@ -14,7 +14,7 @@
  * in intermediate stack frames, so this should be fine.
  * https://github.com/openslide/openslide-winbuild/issues/47
  */
-#if defined _WIN32 && defined __x86_64__
+#if defined _WIN32
 #undef setjmp
 #define setjmp(buf) _setjmp(buf, NULL)
 #endif

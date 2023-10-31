@@ -48,10 +48,6 @@ These must be specified before the subcommand.
 
 Parallel build with the specified parallelism.
 
-#### `-m{32|64}`
-
-Select 32-bit or 64-bit build (default: 32).
-
 #### `-p<pkgver>`
 
 Set package version string in Zip file names to `pkgver`.

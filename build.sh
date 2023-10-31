@@ -257,7 +257,7 @@ sdist() {
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
-    cp meson/{cross-{macos-{arm64,x86_64},win{32,64}},native-linux-x86_64}.ini \
+    cp meson/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
     cp meson/include/setjmp.h "${zipdir}/meson/include/"
     rm -f "${zipdir}.zip"
@@ -278,14 +278,14 @@ bdist() {
     local symbols
 
     # Rebuild OpenSlide if suffix changed
-    prev_ver_suffix="$(cat ${build_bits}/.suffix 2>/dev/null ||:)"
+    prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
     if [ "${ver_suffix}" != "${prev_ver_suffix}" ] ; then
         clean openslide
-        mkdir -p "${build_bits}"
-        echo "${ver_suffix}" > "${build_bits}/.suffix"
+        mkdir -p 64
+        echo "${ver_suffix}" > 64/.suffix
     fi
 
-    tag_cachedir "${build_bits}"
+    tag_cachedir 64
 
     (
         override_lock
@@ -294,7 +294,7 @@ bdist() {
         override_remove
     )
 
-    zipdir="openslide-win${build_bits}-${pkgver}"
+    zipdir="openslide-win64-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
     log_version "${zipdir}" "Software" "Version"
@@ -405,7 +405,7 @@ clean() {
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     else
         echo "Cleaning..."
-        rm -rf 32 64 openslide-win*-*.zip
+        rm -rf 64 openslide-win*-*.zip
         grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
         meson subprojects purge --sourcedir meson --confirm >/dev/null
     fi
@@ -433,15 +433,15 @@ updates() {
 
 probe() {
     # Probe the build environment and set up variables
-    if [ ! -e /etc/openslide-winbuild-builder-v1 ]; then
+    if [ ! -e /etc/openslide-winbuild-builder-v1 ] && [ ! -e /etc/openslide-winbuild-builder-v2 ]; then
         echo "Must run inside the builder container.  See README.md."
         exit 1
     fi
 
-    build="${build_bits}/build"
-    root="$(pwd)/${build_bits}/root"
+    build=64/build
+    root="$(pwd)/64/root"
 
-    cross_file="meson/cross-win${build_bits}.ini"
+    cross_file="meson/cross-win64.ini"
     cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
     ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
     objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
@@ -460,26 +460,14 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-build_bits=32
 pkgver="$(date +%Y%m%d)-local"
 ver_suffix=""
 openslide_werror=""
-while getopts "j:m:p:s:w" opt
+while getopts "j:p:s:w" opt
 do
     case "$opt" in
     j)
         parallel="-j${OPTARG}"
-        ;;
-    m)
-        case ${OPTARG} in
-        32|64)
-            build_bits=${OPTARG}
-            ;;
-        *)
-            echo "-m32 or -m64 only."
-            exit 1
-            ;;
-        esac
         ;;
     p)
         pkgver="${OPTARG}"
@@ -522,8 +510,8 @@ updates)
 *)
     cat <<EOF
 Usage: $0 [-p<pkgver>] sdist
-       $0 [-j<n>] [-m{32|64}] [-p<pkgver>] [-s<suffix>] [-w] bdist
-       $0 [-m{32|64}] clean [package...]
+       $0 [-j<n>] [-p<pkgver>] [-s<suffix>] [-w] bdist
+       $0 clean [package...]
        $0 updates
 
 Packages:
