@@ -1,4 +1,2 @@
-cross-i686-w64-mingw32/binutils:2.41 ~amd64
 cross-x86_64-w64-mingw32/binutils:2.41 ~amd64
-cross-i686-w64-mingw32/gcc:13 ~amd64
 cross-x86_64-w64-mingw32/gcc:13 ~amd64

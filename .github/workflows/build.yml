@@ -136,9 +136,6 @@ jobs:
     needs: sdist
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
-    strategy:
-      matrix:
-        bits: [32, 64]
     steps:
       - name: Download source zip
         uses: actions/download-artifact@v3
@@ -165,10 +162,10 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh -m${{ matrix.bits }} ${suffix:+-s$suffix} \
-              -p "${{ inputs.pkgver }}" $werror bdist
+          ./build.sh ${suffix:+-s$suffix} -p "${{ inputs.pkgver }}" \
+              $werror bdist
           mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-win${{ matrix.bits }}-${{ inputs.pkgver }}.zip" \
+          mv "openslide-win64-${{ inputs.pkgver }}.zip" \
               "artifacts/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -185,20 +182,14 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ needs.sdist.outputs.artifact }}
-      - name: Unpack artifacts
+      - name: Unpack artifact
         shell: bash
-        run: |
-          for bits in 32 64; do
-              unzip "${{ needs.sdist.outputs.artifact }}/openslide-win${bits}-${{ inputs.pkgver }}.zip"
-          done
+        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-win64-${{ inputs.pkgver }}.zip"
       - name: Report package versions
         shell: bash
-        run: cat "openslide-win32-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "openslide-win64-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          for bits in 32 64; do
-              echo "======== ${bits}-bit ========"
-              cd "${GITHUB_WORKSPACE}/openslide-win${bits}-${{ inputs.pkgver }}/bin"
-              OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
-          done
+          cd "${GITHUB_WORKSPACE}/openslide-win64-${{ inputs.pkgver }}/bin"
+          OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
