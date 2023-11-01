@@ -140,6 +140,12 @@ subproject(
     'default_library=shared',
     'doc=disabled',
     'version_suffix=' + get_option('version_suffix'),
+    'werror=' + get_option('openslide_werror').to_string(),
   ],
 )
-subproject('openslide-java')
+subproject(
+  'openslide-java',
+  default_options : [
+    'werror=' + get_option('openslide_werror').to_string(),
+  ],
+)

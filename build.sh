@@ -212,8 +212,7 @@ build() {
                 --cross-file "${cross_file}" \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
-                ${openslide_werror:+-Dopenslide:werror=true} \
-                ${openslide_werror:+-Dopenslide-java:werror=true}
+                ${openslide_werror}
     fi
     meson compile -C "$build" $parallel
     # When building multiple interdependent subpackages, we need to make sure
@@ -474,7 +473,7 @@ do
         ver_suffix="${OPTARG}"
         ;;
     w)
-        openslide_werror=1
+        openslide_werror="-Dopenslide_werror=true"
         ;;
     esac
 done
