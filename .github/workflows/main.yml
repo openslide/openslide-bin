@@ -1,4 +1,4 @@
-# Build stable releases on push to openslide-winbuild main.
+# Build stable releases on push to openslide-bin main.
 # Nightly builds from Git are handled elsewhere.
 
 name: Build main
@@ -42,7 +42,7 @@ jobs:
     with:
       linux_builder_repo_and_digest: ${{ needs.setup.outputs.linux_builder_repo_and_digest }}
       macos_enable: true
-      openslide_winbuild_repo: ${{ github.repository }}
-      openslide_winbuild_ref: ${{ github.ref }}
+      openslide_bin_repo: ${{ github.repository }}
+      openslide_bin_ref: ${{ github.ref }}
       pkgver: ${{ needs.setup.outputs.pkgver }}
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}

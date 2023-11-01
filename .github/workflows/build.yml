@@ -33,13 +33,13 @@ on:
         description: Override OpenSlide Java with this openslide_java_repo ref
         required: false
         type: string
-      openslide_winbuild_repo:
-        description: Use openslide-winbuild from this repo
+      openslide_bin_repo:
+        description: Use openslide-bin from this repo
         required: false
         type: string
-        default: openslide/openslide-winbuild
-      openslide_winbuild_ref:
-        description: Use openslide-winbuild from this ref
+        default: openslide/openslide-bin
+      openslide_bin_ref:
+        description: Use openslide-bin from this ref
         required: false
         type: string
         default: main
@@ -78,8 +78,8 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.openslide_winbuild_repo }}
-          ref: ${{ inputs.openslide_winbuild_ref }}
+          repository: ${{ inputs.openslide_bin_repo }}
+          ref: ${{ inputs.openslide_bin_ref }}
 
       - name: Check out OpenSlide
         if: inputs.openslide_repo != ''
@@ -110,7 +110,7 @@ jobs:
       - name: Cache sources
         uses: actions/cache@v3
         with:
-          key: winbuild-tar
+          key: build-packagecache
           path: meson/subprojects/packagecache
       - name: Build source zip
         run: ./build.sh -p "${{ inputs.pkgver }}" sdist

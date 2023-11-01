@@ -152,7 +152,7 @@ tag_cachedir() {
         mkdir -p "$1"
         cat > "$1/CACHEDIR.TAG" <<EOF
 Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by openslide-winbuild.
+# This file is a cache directory tag created by openslide-bin.
 # For information about cache directory tags, see https://bford.info/cachedir/
 EOF
     fi
