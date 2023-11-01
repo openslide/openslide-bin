@@ -4,7 +4,9 @@ project(
   license : 'LGPL-2.1-only',
   meson_version : '>=0.64',
   default_options : [
+    'buildtype=plain',
     'default_library=static',
+    'wrap_mode=nofallback',
   ],
 )
 
@@ -138,6 +140,12 @@ subproject(
     'default_library=shared',
     'doc=disabled',
     'version_suffix=' + get_option('version_suffix'),
+    'werror=' + get_option('openslide_werror').to_string(),
   ],
 )
-subproject('openslide-java')
+subproject(
+  'openslide-java',
+  default_options : [
+    'werror=' + get_option('openslide_werror').to_string(),
+  ],
+)
