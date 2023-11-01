@@ -431,7 +431,9 @@ updates() {
 probe() {
     # Probe the build environment and set up variables
     if [ ! -e /etc/openslide-winbuild-builder-v1 ] && [ ! -e /etc/openslide-winbuild-builder-v2 ]; then
-        echo "Must run inside the builder container.  See README.md."
+        echo "Not running in a compatible builder container.  Either build.sh isn't running"
+        echo "in the container (see instructions in README.md) or the container image is too"
+        echo "old or too new."
         exit 1
     fi
 
