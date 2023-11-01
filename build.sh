@@ -209,9 +209,7 @@ build() {
     fi
     if [ ! -d "$build" ]; then
         meson setup \
-                --buildtype plain \
                 --cross-file "${cross_file}" \
-                --wrap-mode nofallback \
                 "$build" meson \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
                 ${openslide_werror:+-Dopenslide:werror=true} \

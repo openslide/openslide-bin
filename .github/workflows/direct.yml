@@ -27,8 +27,7 @@ jobs:
       - name: Build
         working-directory: meson
         run: |
-          meson setup build --buildtype plain --wrap-mode nofallback \
-              --native-file native-linux-x86_64.ini \
+          meson setup build --native-file native-linux-x86_64.ini \
               -Dopenslide:werror=true -Dopenslide-java:werror=true
           meson compile -C build
           DESTDIR=install meson install -C build
@@ -67,8 +66,7 @@ jobs:
         working-directory: meson
         run: |
           for arch in x86_64 arm64; do
-              meson setup $arch --buildtype plain --wrap-mode nofallback \
-                  --cross-file cross-macos-${arch}.ini \
+              meson setup $arch --cross-file cross-macos-${arch}.ini \
                   -Dopenslide:werror=true -Dopenslide-java:werror=true
               meson compile -C $arch
               DESTDIR=install meson install -C $arch
