@@ -12,7 +12,7 @@
  * pointer to skip the SEH unwind.  Our uses of setjmp/longjmp are all in
  * libpng/libjpeg error handling, which isn't expecting to do any cleanup
  * in intermediate stack frames, so this should be fine.
- * https://github.com/openslide/openslide-winbuild/issues/47
+ * https://github.com/openslide/openslide-bin/issues/47
  */
 #if defined _WIN32
 #undef setjmp

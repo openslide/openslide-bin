@@ -1,5 +1,5 @@
 project(
-  'openslide-winbuild',
+  'openslide-bin',
   'c',
   license : 'LGPL-2.1-only',
   meson_version : '>=0.64',
