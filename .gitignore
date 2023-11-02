@@ -2,6 +2,8 @@
 override
 openslide-win*
 
+__pycache__
+
 # ignore package cache and unpacked packages
 /subprojects/*
 !/subprojects/*.wrap

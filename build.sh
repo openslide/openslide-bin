@@ -248,15 +248,18 @@ sdist() {
                     "${zipdir}/subprojects/packagefiles/"
         done
     done
-    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{deps,machines}
+    mkdir -p "${zipdir}"/builder/{linux,windows} \
+            "${zipdir}"/{common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
             meson_options.txt "${zipdir}/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
+    cp common/{__init__,meson}.py "${zipdir}/common/"
     cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             "${zipdir}/machines/"
     cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"
+    cp utils/get-version.py "${zipdir}/utils/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -438,6 +441,12 @@ probe() {
         exit 1
     fi
 
+    if [ -z "${pkgver}" ]; then
+        export -n OPENSLIDE_BIN_VERSION
+        pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
+    fi
+    export OPENSLIDE_BIN_VERSION="${pkgver}"
+
     build=64/build
     root="$(pwd)/64/root"
 
@@ -460,7 +469,7 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-pkgver="$(date +%Y%m%d)-local"
+pkgver=""
 ver_suffix=""
 openslide_werror=""
 while getopts "j:p:s:w" opt
