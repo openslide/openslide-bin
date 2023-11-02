@@ -252,7 +252,7 @@ sdist() {
             "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
             meson.options "${zipdir}/"
-    cp artifacts/{get-introspect-command,write-project-versions}.py \
+    cp artifacts/{get-introspect-command,postprocess-binary,write-project-versions}.py \
             artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
@@ -269,7 +269,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name version srcdir licensedir zipdir prev_ver_suffix symbols
+    local package name version srcdir licensedir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
@@ -301,19 +301,9 @@ bdist() {
         fi
         for artifact in $(expand ${package}_artifacts)
         do
-            if [ "${artifact}" != "${artifact%.dll}" -o \
-                    "${artifact}" != "${artifact%.exe}" ] ; then
-                echo "Stripping ${artifact}..."
-                ${objcopy} --only-keep-debug \
-                        "${root}/bin/${artifact}" \
-                        "${zipdir}/bin/${artifact}.debug"
-                chmod -x "${zipdir}/bin/${artifact}.debug"
-                ${objcopy} -S \
-                        --add-gnu-debuglink="${zipdir}/bin/${artifact}.debug" \
-                        "${root}/bin/${artifact}" \
-                        "${zipdir}/bin/${artifact}"
-            else
-                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
+            cp "${root}/artifacts/${artifact}" "${zipdir}/bin/"
+            if [ -f "${root}/artifacts/${artifact}.debug" ]; then
+                cp "${root}/artifacts/${artifact}.debug" "${zipdir}/bin/"
             fi
         done
         licensedir="${zipdir}/licenses/$(expand ${package}_name)"
@@ -331,22 +321,6 @@ bdist() {
             fi
         done
         if [ "$package" = openslide ]; then
-            # check for extra symbol exports
-            symbols=$(${objdump} -p "${root}"/bin/libopenslide-*.dll | \
-                    awk -v t=0 \
-                        -e '/Ordinal\/Name Pointer/ {t = 1; next}' \
-                        -e 't == 0 {next}' \
-                        -e '/^$/ {exit}' \
-                        -e '{print $3}')
-            if [ -z "${symbols}" ]; then
-                echo "Couldn't find symbols in OpenSlide DLL"
-                exit 1
-            fi
-            if symbols=$(grep -v ^openslide_ <<<"${symbols}"); then
-                echo -e "\nUnexpected exports:\n${symbols}"
-                exit 1
-            fi
-
             mkdir -p "${zipdir}/lib"
             cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
             mkdir -p "${zipdir}/include"
@@ -419,8 +393,6 @@ probe() {
     root="$(pwd)/64/root"
 
     cross_file="machines/cross-win64.ini"
-    objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
-    objdump=$(meson_config_key "${cross_file}" binaries objdump | tr -d "'")
 }
 
 fail_handler() {

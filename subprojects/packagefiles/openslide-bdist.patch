@@ -1,0 +1,38 @@
+diff --git a/src/meson.build b/src/meson.build
+index 12242230f0f7..f9d184be1bc7 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -31,10 +31,10 @@ else
+ endif
+ 
+ # Public headers
+-openslide_headers = [
++openslide_headers = files(
+   'openslide.h',
+   'openslide-features.h',
+-]
++)
+ include_subdir = 'openslide'
+ install_headers(
+   openslide_headers,
+diff --git a/tools/meson.build b/tools/meson.build
+index 07ad2e769745..78981d4e65ad 100644
+--- a/tools/meson.build
++++ b/tools/meson.build
+@@ -23,7 +23,7 @@ else
+   ]
+ endif
+ foreach target : tools_binaries
+-  executable(
++  exe = executable(
+     target,
+     [
+       'slidetool.c',
+@@ -43,6 +43,7 @@ foreach target : tools_binaries
+     install : true,
+     install_tag : 'bin',
+   )
++  set_variable(target.underscorify(), exe)
+ endforeach
+ 
+ mans = [
