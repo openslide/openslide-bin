@@ -17,6 +17,8 @@ add_global_arguments(
 
 if host_machine.system() == 'darwin'
   cc = meson.get_compiler('c')
+  # [dependency name, library name, version] or
+  # [dependency name, library name, header with version, version define]
   overrides = [
     # zlib is handled automatically by dependency()
     # no define for libffi version; pick a value that will pass the checks
