@@ -249,13 +249,15 @@ sdist() {
         done
     done
     mkdir -p "${zipdir}"/builder/{linux,windows} \
-            "${zipdir}"/{common,deps,machines,utils}
+            "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
             meson_options.txt "${zipdir}/"
+    cp artifacts/{get-introspect-command,write-project-versions}.py \
+            artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
-    cp common/{__init__,meson}.py "${zipdir}/common/"
+    cp common/{__init__,meson,software}.py "${zipdir}/common/"
     cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             "${zipdir}/machines/"
     cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"
@@ -265,17 +267,9 @@ sdist() {
     rm -r "${zipdir}"
 }
 
-log_version() {
-    # $1 = zipdir
-    # $2 = package
-    # $3 = version
-    printf "| %-20s | %-53s |\n" "$2" "$3" >> "$1/VERSIONS.md"
-}
-
 bdist() {
     # Build binary distribution
-    local package name version srcdir licensedir zipdir prev_ver_suffix input
-    local symbols
+    local package name version srcdir licensedir zipdir prev_ver_suffix symbols
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
@@ -297,18 +291,7 @@ bdist() {
     zipdir="openslide-win64-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    cp CHANGELOG.md "${zipdir}/"
-    log_version "${zipdir}" "Software" "Version"
-    log_version "${zipdir}" "--------" "-------"
-    for package in $packages
-    do
-        case "${package}" in
-        openslide|openslide_java)
-            log_version "${zipdir}" "**$(expand ${package}_name)**" \
-                    "**$(meson_wrap_version ${package})**"
-            ;;
-        esac
-    done
+    cp CHANGELOG.md "${root}/share/VERSIONS.md" "${zipdir}/"
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -369,23 +352,8 @@ bdist() {
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
             cp "${srcdir}/README.md" "${zipdir}/"
-        elif [ "$package" != openslide_java ]; then
-            log_version "${zipdir}" "$(expand ${package}_name)" \
-                    "$(meson_wrap_version ${package})"
         fi
     done
-    read -d "" input <<EOF ||:
-#include <_mingw_mac.h>
-#define s(v) #v
-#define ss(v) s(v)
-version=ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
-EOF
-    eval "$(${cc} -E - <<<${input})"
-    log_version "${zipdir}" "_MinGW-w64_" "_${version}_"
-    log_version "${zipdir}" "_GCC_" \
-            "_$(${cc} --version | sed -e 's/.*(/(/' -e q)_"
-    log_version "${zipdir}" "_Binutils_" \
-            "_$(${ld} --version | sed -e 's/.*version //' -e q)_"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -451,8 +419,6 @@ probe() {
     root="$(pwd)/64/root"
 
     cross_file="machines/cross-win64.ini"
-    cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
-    ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
     objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
     objdump=$(meson_config_key "${cross_file}" binaries objdump | tr -d "'")
 }

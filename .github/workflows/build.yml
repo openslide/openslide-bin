@@ -87,6 +87,8 @@ jobs:
         with:
           repository: ${{ inputs.openslide_repo }}
           ref: ${{ inputs.openslide_ref }}
+          # make sure "git describe" works
+          fetch-depth: 0
           path: override/openslide
           persist-credentials: false
       - name: Check out OpenSlide Java
@@ -95,6 +97,8 @@ jobs:
         with:
           repository: ${{ inputs.openslide_java_repo }}
           ref: ${{ inputs.openslide_java_ref }}
+          # make sure "git describe" works
+          fetch-depth: 0
           path: override/openslide_java
           persist-credentials: false
       - name: Collect overrides
