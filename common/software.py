@@ -20,10 +20,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 import configparser
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
+import shutil
 import subprocess
 from typing import TextIO
 
@@ -34,6 +36,7 @@ from .meson import meson_introspect, meson_source_root, parse_ini_file
 class Project:
     id: str
     display: str
+    licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
     primary: bool = False
 
     @staticmethod
@@ -93,81 +96,124 @@ class Project:
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
 
+    def write_licenses(self, dir: Path) -> None:
+        dir.mkdir(parents=True)
+        for license in self.licenses:
+            if callable(license):
+                name, contents = license(self)
+                with open(dir / name, 'w') as fh:
+                    fh.write(contents)
+            else:
+                shutil.copy2(
+                    self.source_dir / license, dir / Path(license).name
+                )
+
+
+def _sqlite3_license(proj: Project) -> tuple[str, str]:
+    '''Extract public-domain dedication from the top of sqlite3.h'''
+    with open(proj.source_dir / 'sqlite3.h') as fh:
+        ret: list[str] = []
+        for line in fh:
+            if not line.startswith('**'):
+                continue
+            if line.startswith('*****'):
+                return 'PUBLIC-DOMAIN.txt', ''.join(ret)
+            ret.append(line)
+    raise Exception("Couldn't parse license header")
+
 
 _PROJECTS = (
     Project(
         id='cairo',
         display='cairo',
+        licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
+        licenses=['COPYING'],
     ),
     Project(
         id='glib',
         display='glib',
+        licenses=['COPYING'],
     ),
     Project(
         id='libdicom',
         display='libdicom',
+        licenses=['LICENSE'],
     ),
     Project(
         id='libffi',
         display='libffi',
+        licenses=['LICENSE'],
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
+        licenses=['LICENSE.md', 'README.ijg'],
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
+        licenses=['LICENSE'],
     ),
     Project(
         id='libpng',
         display='libpng',
+        licenses=['LICENSE'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
+        licenses=['LICENSE.md'],
     ),
     Project(
         id='libxml2',
         display='libxml2',
+        licenses=['Copyright'],
     ),
     Project(
         id='openslide',
         display='OpenSlide',
         primary=True,
+        licenses=['COPYING.LESSER'],
     ),
     Project(
         id='openslide-java',
         display='OpenSlide Java',
         primary=True,
+        licenses=['COPYING.LESSER'],
     ),
     Project(
         id='pcre2',
         display='PCRE2',
+        licenses=['LICENCE'],
     ),
     Project(
         id='pixman',
         display='pixman',
+        licenses=['COPYING'],
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
+        licenses=['COPYING'],
     ),
     Project(
         id='sqlite3',
         display='SQLite',
+        licenses=[_sqlite3_license],
     ),
     Project(
         id='uthash',
         display='uthash',
+        licenses=['LICENSE'],
     ),
     Project(
         id='zlib',
         display='zlib',
+        licenses=['README'],
     ),
 )
 

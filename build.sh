@@ -23,46 +23,6 @@ set -eE
 
 packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
-# Package display names
-zlib_name="zlib"
-libpng_name="libpng"
-libjpeg_turbo_name="libjpeg-turbo"
-libtiff_name="libtiff"
-libopenjp2_name="OpenJPEG"
-sqlite3_name="SQLite"
-proxy_libintl_name="proxy-libintl"
-libffi_name="libffi"
-pcre2_name="PCRE2"
-glib_name="glib"
-gdk_pixbuf_name="gdk-pixbuf"
-pixman_name="pixman"
-cairo_name="cairo"
-libxml2_name="libxml2"
-uthash_name="uthash"
-libdicom_name="libdicom"
-openslide_name="OpenSlide"
-openslide_java_name="OpenSlide Java"
-
-# Locations of license files within the source tree
-zlib_licenses="README"
-libpng_licenses="LICENSE"
-libjpeg_turbo_licenses="LICENSE.md README.ijg"
-libtiff_licenses="LICENSE.md"
-libopenjp2_licenses="LICENSE"
-sqlite3_licenses="PUBLIC-DOMAIN.txt"
-proxy_libintl_licenses="COPYING"
-libffi_licenses="LICENSE"
-pcre2_licenses="LICENCE"
-glib_licenses="COPYING"
-gdk_pixbuf_licenses="COPYING"
-pixman_licenses="COPYING"
-cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
-libxml2_licenses="Copyright"
-uthash_licenses="LICENSE"
-libdicom_licenses="LICENSE"
-openslide_licenses="COPYING.LESSER"
-openslide_java_licenses="COPYING.LESSER"
-
 # Build artifacts
 openslide_artifacts="libopenslide-1.dll slidetool.exe"
 openslide_java_artifacts="openslide-jni.dll openslide.jar"
@@ -252,7 +212,7 @@ sdist() {
             "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
             meson.options "${zipdir}/"
-    cp artifacts/{get-introspect-command,postprocess-binary,write-import-library,write-project-versions}.py \
+    cp artifacts/{get-introspect-command,postprocess-binary,write-import-library,write-licenses,write-project-versions}.py \
             artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
@@ -269,7 +229,7 @@ sdist() {
 
 bdist() {
     # Build binary distribution
-    local package name version srcdir licensedir zipdir prev_ver_suffix
+    local package name version srcdir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
@@ -291,7 +251,7 @@ bdist() {
     zipdir="openslide-win64-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    cp CHANGELOG.md "${root}/share/VERSIONS.md" "${zipdir}/"
+    cp -r CHANGELOG.md "${root}"/share/{licenses,VERSIONS.md} "${zipdir}/"
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -304,20 +264,6 @@ bdist() {
             cp "${root}/artifacts/${artifact}" "${zipdir}/bin/"
             if [ -f "${root}/artifacts/${artifact}.debug" ]; then
                 cp "${root}/artifacts/${artifact}.debug" "${zipdir}/bin/"
-            fi
-        done
-        licensedir="${zipdir}/licenses/$(expand ${package}_name)"
-        mkdir -p "${licensedir}"
-        if [ "$package" = sqlite3 ]; then
-            # Extract public-domain dedication from the top of sqlite3.h
-            awk '/\*{8}/ {exit} /^\*{2}/ {print}' "${srcdir}/sqlite3.h" > \
-                    "${srcdir}/PUBLIC-DOMAIN.txt"
-        fi
-        for artifact in $(expand ${package}_licenses)
-        do
-            if ! cp "${srcdir}/${artifact}" "${licensedir}"; then
-                echo "Failed to copy ${artifact} from ${package}."
-                exit 1
             fi
         done
         if [ "$package" = openslide ]; then

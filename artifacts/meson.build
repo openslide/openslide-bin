@@ -47,6 +47,17 @@ artifacts = [
   ),
 ]
 
+licenses = custom_target(
+  command : [find_program('write-licenses.py'), '@OUTPUT@'],
+  output : 'licenses',
+  # ensure we regenerate after dependency updates
+  build_always_stale : true,
+  env : env,
+  install : true,
+  install_dir : get_option('datadir'),
+)
+artifacts += licenses
+
 libopenslide = openslide.get_variable('libopenslide')
 if system == 'windows'
   artifacts += custom_target(
