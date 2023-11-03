@@ -26,9 +26,10 @@ import configparser
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
+import re
 import shutil
 import subprocess
-from typing import Literal, TextIO, TypedDict
+from typing import Literal, TextIO, TypedDict, cast
 
 from .meson import meson_introspect, meson_source_root, parse_ini_file
 
@@ -77,6 +78,8 @@ class Tool(Software):
 @dataclass
 class Project(Software):
     licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
+    update_url: str
+    update_regex: re.Pattern[str]
     primary: bool = False
 
     @staticmethod
@@ -96,6 +99,10 @@ class Project(Software):
         if unknown:
             raise Exception(f'Unknown projects: {unknown}')
         return ret
+
+    @staticmethod
+    def get_all() -> list[Project]:
+        return list(_PROJECTS)
 
     @cached_property
     def wrap(self) -> configparser.RawConfigParser:
@@ -155,6 +162,19 @@ class Project(Software):
                     self.source_dir / license, dir / Path(license).name
                 )
 
+    def get_upstream_version(self) -> str | None:
+        from packaging.version import Version
+        import requests
+
+        resp = requests.get(self.update_url)
+        if resp.status_code != 200:
+            return None
+        assert self.update_regex.groups == 1
+        version_strings = cast(list[str], self.update_regex.findall(resp.text))
+        if not version_strings:
+            return None
+        return sorted(set(version_strings), key=Version)[-1]
+
 
 def _sqlite3_license(proj: Project) -> tuple[str, str]:
     '''Extract public-domain dedication from the top of sqlite3.h'''
@@ -174,93 +194,132 @@ _PROJECTS = (
         id='cairo',
         display='cairo',
         licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        update_url='https://cairographics.org/releases/',
+        update_regex=re.compile('\"cairo-([0-9.]+)\\.tar'),
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
         licenses=['COPYING'],
+        update_url='https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags',
+        update_regex=re.compile('archive/([0-9]+\\.[0-9]*[02468]\\.[0-9]+)/'),
     ),
     Project(
         id='glib',
         display='glib',
         licenses=['COPYING'],
+        update_url='https://gitlab.gnome.org/GNOME/glib/tags',
+        update_regex=re.compile('archive/([0-9]+\\.[0-9]*[02468]\\.[0-9]+)/'),
     ),
     Project(
         id='libdicom',
         display='libdicom',
         licenses=['LICENSE'],
+        update_url='https://github.com/ImagingDataCommons/libdicom/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libffi',
         display='libffi',
         licenses=['LICENSE'],
+        update_url='https://github.com/libffi/libffi/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
         licenses=['LICENSE.md', 'README.ijg'],
+        update_url='https://github.com/libjpeg-turbo/libjpeg-turbo/tags',
+        update_regex=re.compile('archive/refs/tags/([0-9.]+)\\.tar'),
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
         licenses=['LICENSE'],
+        update_url='https://github.com/uclouvain/openjpeg/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libpng',
         display='libpng',
         licenses=['LICENSE'],
+        update_url='http://www.libpng.org/pub/png/libpng.html',
+        update_regex=re.compile('libpng-([0-9.]+)-README.txt'),
     ),
     Project(
         id='libtiff',
         display='libtiff',
         licenses=['LICENSE.md'],
+        update_url='https://download.osgeo.org/libtiff/',
+        update_regex=re.compile('tiff-([0-9.]+)\\.tar'),
     ),
     Project(
         id='libxml2',
         display='libxml2',
         licenses=['Copyright'],
+        update_url='https://gitlab.gnome.org/GNOME/libxml2/tags',
+        update_regex=re.compile('archive/v([0-9.]+)/'),
     ),
     Project(
         id='openslide',
         display='OpenSlide',
         primary=True,
         licenses=['COPYING.LESSER'],
+        update_url='https://github.com/openslide/openslide/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='openslide-java',
         display='OpenSlide Java',
         primary=True,
         licenses=['COPYING.LESSER'],
+        update_url='https://github.com/openslide/openslide-java/tags',
+        # Exclude old v1.0.0 tag
+        update_regex=re.compile(
+            'archive/refs/tags/v1\\.0\\.0\\.tar.*|.*archive/refs/tags/v([0-9.]+)\\.tar'  # noqa: E501
+        ),
     ),
     Project(
         id='pcre2',
         display='PCRE2',
         licenses=['LICENCE'],
+        update_url='https://github.com/PCRE2Project/pcre2/tags',
+        update_regex=re.compile('archive/refs/tags/pcre2-([0-9.]+)\\.tar'),
     ),
     Project(
         id='pixman',
         display='pixman',
         licenses=['COPYING'],
+        update_url='https://cairographics.org/releases/',
+        update_regex=re.compile('pixman-([0-9.]+)\\.tar'),
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
         licenses=['COPYING'],
+        update_url='https://github.com/frida/proxy-libintl/tags',
+        update_regex=re.compile('archive/refs/tags/([0-9.]+)\\.tar'),
     ),
     Project(
         id='sqlite3',
         display='SQLite',
         licenses=[_sqlite3_license],
+        update_url='https://sqlite.org/changes.html',
+        update_regex=re.compile('[0-9]{4}-[0-9]{2}-[0-9]{2} \\(([0-9.]+)\\)'),
     ),
     Project(
         id='uthash',
         display='uthash',
         licenses=['LICENSE'],
+        update_url='https://github.com/troydhanson/uthash/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='zlib',
         display='zlib',
         licenses=['README'],
+        update_url='https://zlib.net/',
+        update_regex=re.compile('source code, version ([0-9.]+)'),
     ),
 )
 

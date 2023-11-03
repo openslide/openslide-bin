@@ -1,6 +1,6 @@
-64
-override
-openslide-bin-*
+/openslide-bin-*
+/override
+/work
 
 __pycache__
 

@@ -1,0 +1,653 @@
+#!/usr/bin/env python3
+#
+# Tools for building OpenSlide and its dependencies
+#
+# Copyright (c) 2011-2015 Carnegie Mellon University
+# Copyright (c) 2022-2023 Benjamin Gilbert
+# All rights reserved.
+#
+# This script is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License, version 2.1,
+# as published by the Free Software Foundation.
+#
+# This script is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this script. If not, see <http://www.gnu.org/licenses/>.
+#
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+import argparse
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from hashlib import sha256
+import json
+import os
+import os.path
+from pathlib import Path
+import platform
+import shutil
+import subprocess
+import sys
+import tarfile
+from tempfile import TemporaryDirectory
+from typing import Any, BinaryIO, Self
+import zipfile
+
+from common.argparse import TypedArgs
+from common.dist import BDistName
+from common.meson import default_suffix, meson_source_root, project_version
+from common.software import Project
+
+CACHEDIR_TAG_CONTENTS = '''Signature: 8a477f597d28d172789f06886806bc55
+# This file is a cache directory tag created by openslide-bin.
+# For information about cache directory tags, see https://bford.info/cachedir/
+'''
+
+
+def log(msg: str, stderr: bool = False, **kwargs: Any) -> None:
+    if stderr:
+        kwargs['file'] = sys.stderr
+    print(msg, **kwargs, flush=True)
+
+
+def get_python_env() -> dict[str, str]:
+    pythonpath = meson_source_root().as_posix()
+    if 'PYTHONPATH' in os.environ:
+        pythonpath += ':' + os.environ['PYTHONPATH']
+    return {**os.environ, 'PYTHONPATH': pythonpath}
+
+
+class BuildParams:
+    def __init__(self, suffix: str | None = None):
+        self.suffix = suffix if suffix is not None else default_suffix()
+        self.version = project_version(self.suffix)
+        self.root = meson_source_root()
+        self.work = self.root / 'work'
+        self.locked = False
+
+        # modified by caller
+        self.args: list[str] = []
+        self.env = {
+            'OPENSLIDE_BIN_SUFFIX': self.suffix,
+        }
+
+    @contextmanager
+    def lock(self) -> Iterator[Self]:
+        '''Acquire exclusive lock on the source directory.  Overrides and
+        unpacking of subproject source trees affect the source dir, not just
+        the build dir.'''
+        assert not self.locked
+        self.work.mkdir(exist_ok=True)
+
+        cachedir_tag = self.work / 'CACHEDIR.TAG'
+        if not cachedir_tag.exists():
+            cachedir_tag.write_text(CACHEDIR_TAG_CONTENTS)
+
+        with open(self.work / '.lock', 'wb') as lock:
+            try:
+                self._lock(lock, blocking=False)
+            except OSError:
+                log('Waiting for build lock... ', stderr=True, end='')
+                self._lock(lock, blocking=True)
+                log('acquired', stderr=True)
+            self.locked = True
+
+            # clean up any stale overrides
+            self._set_overrides(False)
+            try:
+                yield self
+            finally:
+                self._set_overrides(False)
+                self.locked = False
+
+    @staticmethod
+    def _lock(fh: BinaryIO, blocking: bool) -> None:
+        '''Acquire a file lock.'''
+        if sys.platform == 'win32':
+            import msvcrt
+
+            mode = msvcrt.LK_LOCK if blocking else msvcrt.LK_NBLCK
+            while True:
+                try:
+                    msvcrt.locking(fh.fileno(), mode, 1)
+                    return
+                except OSError:
+                    if not blocking:
+                        raise
+        else:
+            import fcntl
+
+            flag = 0 if blocking else fcntl.LOCK_NB
+            fcntl.flock(fh, fcntl.LOCK_EX | flag)
+
+    @contextmanager
+    def platform(self, overrides: bool = False) -> Iterator[Platform]:
+        '''Acquire source directory lock, configure subproject overrides as
+        requested, purge stale subproject source dirs, and return the
+        current Platform.'''
+
+        def has_api(name: str, versions: Iterable[int]) -> bool:
+            '''Check for builder container API stamps with any of the
+            specified versions.'''
+            for ver in versions:
+                if Path(f'/etc/openslide-{name}-builder-v{ver}').exists():
+                    return True
+            return False
+
+        with self.lock():
+            if has_api('winbuild', [1, 2]):
+                plat: Platform = MesonPlatform(
+                    self, 'windows', 'x64', cross=True
+                )
+            elif has_api('linux', [1]):
+                plat = MesonPlatform(self, 'linux', 'x86_64', cross=False)
+            elif sys.platform == 'darwin':
+                # no container image to check for
+                plat = MacPlatform(self, ['arm64', 'x86_64'])
+            else:
+                raise Exception(
+                    'Not running in a compatible builder container. '
+                    + "Either bintool isn't running in the container (see "
+                    + 'instructions in README.md) or the container image is '
+                    + 'too old or too new.'
+                )
+
+            if overrides:
+                self._set_overrides(True)
+            self._sync_subprojects()
+            yield plat
+
+    def _set_overrides(self, enable: bool) -> None:
+        '''Add/remove symlinks to activate/deactivate subprojects from
+        overrides directory.'''
+        assert self.locked
+        for proj in Project.get_all():
+            override = self.root / 'override' / proj.id
+            dir = self.root / 'subprojects' / proj.id
+            wrap = proj.wrap_path
+            overridden = wrap.with_suffix('.wrap.overridden')
+            if enable:
+                if override.is_dir():
+                    log(f'Overriding {proj.id}...')
+                    dir.symlink_to(
+                        os.path.relpath(override, dir.parent),
+                        target_is_directory=True,
+                    )
+                    wrap.rename(overridden)
+            else:
+                if dir.is_symlink():
+                    dir.unlink()
+                if overridden.exists():
+                    overridden.rename(wrap)
+
+    def _sync_subprojects(self) -> None:
+        '''If a wrap has already been unpacked, Meson will reuse the unpacked
+        source even if the wrap was subsequently updated.  Detect updated
+        wrap files or patches and purge their subproject.'''
+        # https://github.com/mesonbuild/meson/issues/10348
+
+        assert self.locked
+
+        if (self.root / 'suffix').exists():
+            # Running from unpacked sdist.  Assume subproject sources will
+            # not change, and avoid forcing a redownload of the tarballs.
+            return
+
+        stamp = self.work / '.subprojects'
+        try:
+            with stamp.open() as fh:
+                index: dict[str, str] = json.load(fh)
+        except FileNotFoundError:
+            index = {}
+
+        purge = []
+        for proj in Project.get_all():
+            if not proj.wrap_path.exists():
+                # overridden; source cannot be stale
+                continue
+            hash = sha256(proj.wrap_path.read_bytes())
+            diff_names: str = proj.wrap['wrap-file'].get('diff_files', '')
+            diffs = [d.strip() for d in diff_names.split(',') if d.strip()]
+            for name in diffs:
+                path = self.root / 'subprojects' / 'packagefiles' / name
+                hash.update(path.read_bytes())
+            digest = hash.hexdigest()
+            if index.get(proj.id) != digest:
+                purge.append(proj.id)
+                index[proj.id] = digest
+
+        if purge:
+            subprocess.check_call(
+                ['meson', 'subprojects', 'purge', '--confirm'] + purge,
+                cwd=self.root,
+            )
+            with stamp.open('w') as fh:
+                json.dump(index, fh, indent=2, sort_keys=True)
+                fh.write('\n')
+
+
+@dataclass
+class BDistResult:
+    bdist: Path
+
+
+class Platform(ABC):
+    def __init__(self, params: BuildParams, system: str, arch: str):
+        self.params = params
+        self.system = system
+        self.id = f'{system}-{arch}'
+
+    @abstractmethod
+    def sdist(self) -> Path:
+        pass
+
+    @abstractmethod
+    def bdist(self) -> BDistResult:
+        pass
+
+
+class MesonPlatform(Platform):
+    def __init__(
+        self, params: BuildParams, system: str, arch: str, *, cross: bool
+    ):
+        super().__init__(params, system, arch)
+        self.type = 'cross' if cross else 'native'
+        self.machine_file = (
+            params.root / 'machines' / f'{self.type}-{self.id}.ini'
+        )
+
+    def _setup(
+        self, prefix: str, extra_args: Iterable[str] | None = None
+    ) -> Path:
+        '''Configure the build directory with 'meson setup' and return its
+        path.'''
+        assert self.params.locked
+        dir = self.params.work / f'{prefix}-{self.id}'
+        # always reconfigure the build dir, to pick up version number and
+        # option changes, and to unpack subprojects we've purged
+        args: list[str | Path] = [
+            'meson',
+            'setup',
+            dir,
+            '--reconfigure',
+            f'--{self.type}-file',
+            self.machine_file,
+        ]
+        args.extend(self.params.args)
+        args.extend(extra_args or [])
+        if not (dir / 'compile_commands.json').exists():
+            # if setup didn't complete last time, it will fail again unless
+            # we wipe
+            args.append('--wipe')
+
+        openslide_src = Project.get('openslide').source_dir
+        version_suffix = (
+            subprocess.check_output(
+                ['git', 'rev-parse', 'HEAD'], cwd=openslide_src
+            ).decode()[:7]
+            if (openslide_src / '.git').exists()
+            else ''
+        )
+        args.append(f'-Dopenslide:version_suffix={version_suffix}')
+
+        subprocess.check_call(
+            args, env={**os.environ, **self.params.env}, cwd=self.params.root
+        )
+
+        # Manually promote gvdb source to avoid 'meson dist' failure.  Do it
+        # here to ensure gvdb is synced from glib for both sdist and bdist.
+        # https://github.com/mesonbuild/meson/issues/12489
+        gvdb = self.params.root / 'subprojects' / 'gvdb'
+        if gvdb.exists():
+            shutil.rmtree(gvdb)
+        shutil.copytree(
+            Project.get('glib').source_dir / 'subprojects' / 'gvdb',
+            gvdb,
+            symlinks=True,
+        )
+
+        return dir
+
+    def sdist(self) -> Path:
+        assert self.params.locked
+        # force clean unpack of all subprojects
+        subprocess.check_call(
+            ['meson', 'subprojects', 'purge', '--confirm'],
+            cwd=self.params.root,
+        )
+        dir = self._setup('sdist', ['-Dall_subprojects=true'])
+        # avoid spurious complaints about a dirty work tree
+        subprocess.check_call(
+            ['git', 'update-index', '-q', '--refresh'], cwd=self.params.root
+        )
+        subprocess.check_call(
+            [
+                # xz compresses better, but PyPI requires tar.gz, and there's
+                # not much point to distributing two tarballs when we don't
+                # expect the source tarball to be widely used
+                'meson',
+                'dist',
+                '--formats',
+                'gztar',
+                '--include-subprojects',
+                '--no-tests',
+            ],
+            cwd=dir,
+        )
+        return (
+            dir / 'meson-dist' / f'openslide-bin-{self.params.version}.tar.gz'
+        )
+
+    def bdist(self) -> BDistResult:
+        dir = self._setup('bdist')
+        subprocess.check_call(['meson', 'compile'], cwd=dir)
+        ext = 'zip' if self.system == 'windows' else 'tar.xz'
+        return BDistResult(
+            bdist=dir
+            / 'artifacts'
+            / f'openslide-bin-{self.params.version}-{self.id}.{ext}'
+        )
+
+
+class MacPlatform(Platform):
+    def __init__(self, params: BuildParams, arches: Iterable[str]):
+        super().__init__(params, 'macos', '-'.join(sorted(arches)))
+        self.platforms = [
+            MesonPlatform(params, self.system, a, cross=True) for a in arches
+        ]
+
+    def sdist(self) -> Path:
+        return self.platforms[0].sdist()
+
+    def bdist(self) -> BDistResult:
+        assert self.params.locked
+        results = [platform.bdist() for platform in self.platforms]
+        dir = self.params.work / f'bdist-{self.id}'
+        dir.mkdir(exist_ok=True)
+        bdist = dir / f'openslide-bin-{self.params.version}-{self.id}.tar.xz'
+        env = get_python_env()
+
+        log('Building universal archive')
+        args: list[str | Path] = [
+            sys.executable,
+            self.params.root / 'utils' / 'write-universal-bdist.py',
+            '-o',
+            bdist,
+        ]
+        args.extend(result.bdist for result in results)
+        subprocess.check_call(args, env=env)
+        return BDistResult(bdist=bdist)
+
+
+class SmokeTester(ABC):
+    def __init__(self, fh: BinaryIO):
+        self._fh = fh
+        self._system = self._parse()
+
+        # check against system we're running on, not the one we can build for
+        cur_system = sys.platform
+        if cur_system == 'darwin':
+            cur_system = 'macos'
+        elif cur_system == 'win32':
+            cur_system = 'windows'
+        if self._system != cur_system:
+            raise Exception(
+                f"Can't test {self._system} archive from {cur_system}."
+            )
+
+    def __call__(self) -> None:
+        with TemporaryDirectory(prefix='bintool-') as tempdir:
+            dir = Path(tempdir)
+            self._unpack(dir)
+            machine = platform.machine()
+            if machine == 'AMD64':
+                # Windows
+                machine = 'x64'
+            self._invoke(f'{self._system}-{machine}', dir, [])
+            if (self._system, machine) == ('macos', 'arm64'):
+                self._invoke(
+                    f'{self._system}-x86_64', dir, ['arch', '-x86_64']
+                )
+
+    @abstractmethod
+    def _parse(self) -> str:
+        pass
+
+    @abstractmethod
+    def _unpack(self, dir: Path) -> None:
+        pass
+
+    @abstractmethod
+    def _invoke(self, desc: str, dir: Path, cmd_prefix: list[str]) -> None:
+        pass
+
+
+class BDistSmokeTester(SmokeTester):
+    def _parse(self) -> str:
+        self._name = BDistName(Path(self._fh.name).name)
+        self._exe_suffix = '.exe' if self._name.system == 'windows' else ''
+        self._java_libdir = 'bin' if self._name.system == 'windows' else 'lib'
+        return self._name.system
+
+    def _unpack(self, dir: Path) -> None:
+        if self._name.format == 'zip':
+            with zipfile.ZipFile(self._fh) as zip:
+                zip.extractall(dir)
+        else:
+            with tarfile.open(fileobj=self._fh) as tar:
+                tar.extraction_filter = getattr(tarfile, 'tar_filter', None)
+                tar.extractall(dir)
+
+    def _invoke(self, desc: str, dir: Path, cmd_prefix: list[str]) -> None:
+        log(f'Checking {desc} slidetool')
+        slidetool = (
+            dir / self._name.base / 'bin' / f'slidetool{self._exe_suffix}'
+        )
+        subprocess.check_call(
+            cmd_prefix + [slidetool, 'prop', 'list', ''],
+            env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
+            stdout=subprocess.DEVNULL,
+        )
+
+        log(f'Checking {desc} Java TestCLI')
+        subprocess.check_call(
+            cmd_prefix
+            + [
+                'java',
+                '-cp',
+                'openslide.jar',
+                '-Djava.library.path=.',
+                'org.openslide.TestCLI',
+                '',
+            ],
+            cwd=dir / self._name.base / self._java_libdir,
+            env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
+            stdout=subprocess.DEVNULL,
+        )
+
+
+def do_sdist(args: Args) -> None:
+    params = BuildParams(args.suffix)
+    with params.platform() as platform:
+        arc = platform.sdist()
+        shutil.copy2(arc, params.root)
+
+
+def do_bdist(args: Args) -> None:
+    params = BuildParams(args.suffix)
+    for proj in 'openslide', 'openslide-java':
+        params.args.append(f'-D{proj}:werror={str(args.werror).lower()}')
+    with params.platform(overrides=True) as platform:
+        result = platform.bdist()
+        if platform.system == 'windows':
+            log(
+                'Skipping smoke test for Windows build. '
+                + 'Run "bintool smoke" on Windows.'
+            )
+        else:
+            with result.bdist.open('rb') as fh:
+                BDistSmokeTester(fh)()
+        shutil.copy2(result.bdist, params.root)
+
+
+def do_version(args: Args) -> None:
+    suffix = args.suffix if args.suffix is not None else default_suffix()
+    print(project_version(suffix))
+
+
+def do_smoke(args: Args) -> None:
+    for fh in args.archives:
+        BDistSmokeTester(fh)()
+
+
+def do_clean(args: Args) -> None:
+    def remove(path: Path) -> None:
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+
+    with BuildParams().lock() as params:
+        for child in params.work.iterdir():
+            if child.is_dir():
+                remove(child)
+        # if we're running in an unpacked sdist, skip removing subproject
+        # sources, since they're part of the official source distribution
+        # and aren't expected to change
+        if not (params.root / 'suffix').exists():
+            subprocess.check_call(
+                ['meson', 'subprojects', 'purge', '--confirm'],
+                stdout=subprocess.DEVNULL,
+                cwd=params.root,
+            )
+        gvdb = params.root / 'subprojects' / 'gvdb'
+        for child in gvdb, gvdb.with_suffix('.wrap'):
+            remove(child)
+        for child in params.root.iterdir():
+            if child.name.startswith('openslide-bin-'):
+                remove(child)
+
+
+def do_updates(args: Args) -> None:
+    def progress(s: str = '') -> None:
+        # if we're not in a pipeline, write progress to stderr
+        if sys.stdout.isatty():
+            log(f'{s:79}', end='\r', stderr=True)
+
+    # reset overrides before reading package versions
+    with BuildParams().lock():
+        for proj in Project.get_all():
+            progress(f'Checking {proj.id}...')
+            cur = proj.version.split('-')[0]
+            new = proj.get_upstream_version() or 'unknown'
+            if cur != new:
+                print(f'{proj.id:15} {cur:>10}  => {new:>10}')
+        progress()
+
+
+def do_projects(args: Args) -> None:
+    id_len = max(len(proj.id) for proj in Project.get_all())
+    for proj in Project.get_all():
+        print(f'{proj.id:{id_len}} - {proj.display}')
+
+
+def do_versions(args: Args) -> None:
+    cmd: list[str | Path] = [
+        sys.executable,
+        meson_source_root() / 'utils' / 'write-combined-project-versions.py',
+    ]
+    cmd.extend(args.bdists)
+    subprocess.check_call(cmd, env=get_python_env())
+
+
+class Args(TypedArgs):
+    func: Callable[[Args], None] | None = None
+    suffix: str | None  # sdist, bdist, version
+    werror: bool  # bdist
+    archives: list[BinaryIO]  # smoke
+    bdists: list[Path]  # versions
+
+
+def main() -> None:
+    os.environ.setdefault(
+        'MESON_SOURCE_ROOT', Path(__file__).parent.as_posix()
+    )
+
+    args = Args(
+        'bintool',
+        description='Tool for building OpenSlide and its dependencies.',
+    )
+    sub = args.parser.add_subparsers(metavar='command')
+
+    sdist = sub.add_parser('sdist', help='Build source distribution')
+    bdist = sub.add_parser('bdist', help='Build binary distribution')
+    version = sub.add_parser('version', help='Report package version string')
+    for sp in sdist, bdist, version:
+        args.add_arg(
+            '-x',
+            '--suffix',
+            metavar='suffix',
+            help='Set package version suffix in archive filenames.',
+            parser=sp,
+        )
+    args.add_arg(
+        '-w',
+        '--werror',
+        action='store_true',
+        help='Treat OpenSlide and OpenSlide Java build warnings as errors.',
+        parser=bdist,
+    )
+    sdist.set_defaults(func=do_sdist)
+    bdist.set_defaults(func=do_bdist)
+    version.set_defaults(func=do_version)
+
+    smoke = sub.add_parser('smoke', help='Smoke test a binary distribution')
+    args.add_arg(
+        'archives',
+        metavar='archive',
+        nargs='+',
+        type=argparse.FileType('rb'),
+        help='Binary distribution archive.',
+        parser=smoke,
+    )
+    smoke.set_defaults(func=do_smoke)
+
+    clean = sub.add_parser('clean', help='Delete builds and build trees')
+    clean.set_defaults(func=do_clean)
+
+    updates = sub.add_parser('updates', help='Check for project updates')
+    updates.set_defaults(func=do_updates)
+
+    projects = sub.add_parser('projects', help='List component projects')
+    projects.set_defaults(func=do_projects)
+
+    versions = sub.add_parser(
+        'versions', help='Generate aggregate version list from bdist archives'
+    )
+    args.add_arg(
+        'bdists',
+        metavar='dist',
+        nargs='+',
+        type=Path,
+        help='Binary distribution archive.',
+        parser=versions,
+    )
+    versions.set_defaults(func=do_versions)
+
+    args.parse(allow_extra_fields=['func'])
+    if args.func:
+        args.func(args)
+    else:
+        args.parser.print_help()
+        sys.exit(2)
+
+
+if __name__ == '__main__':
+    main()

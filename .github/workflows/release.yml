@@ -57,20 +57,23 @@ jobs:
           pattern: "openslide-bin-*"
           path: upload
           merge-multiple: true
+      - name: Unpack source tarball
+        run: |
+          tar xf "upload/openslide-bin-${{ needs.stable.outputs.version }}.tar.gz"
+          mv "openslide-bin-${{ needs.stable.outputs.version }}"/* .
+          rm -r "openslide-bin-${{ needs.stable.outputs.version }}"
       - name: Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          unzip "upload/openslide-bin-${{ needs.stable.outputs.version }}-windows-x64.zip"
-
           echo "## Changes" > changes
           awk -e '/^## / && ok {exit}' \
               -e '/^## / {ok=1; next}' \
               -e 'ok {print}' \
-              "openslide-bin-${{ needs.stable.outputs.version }}-windows-x64/CHANGELOG.md" \
-              >> changes
+              CHANGELOG.md >> changes
           echo -e "## Versions\n" >> changes
-          cat "openslide-bin-${{ needs.stable.outputs.version }}-windows-x64/VERSIONS.md" \
+          ./bintool versions \
+              "upload/openslide-bin-${{ needs.stable.outputs.version }}"-*.{tar.xz,zip} \
               >> changes
 
           gh release create --latest --verify-tag \
