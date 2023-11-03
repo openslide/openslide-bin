@@ -10,12 +10,14 @@ project(
   ],
 )
 
+system = host_machine.system()
+
 add_global_arguments(
   '-I' + meson.current_source_dir() / 'include',
   language: ['c', 'cpp']
 )
 
-if host_machine.system() == 'darwin'
+if system == 'darwin'
   cc = meson.get_compiler('c')
   # [dependency name, library name, version] or
   # [dependency name, library name, header with version, version define]
@@ -65,7 +67,7 @@ else
   subproject('sqlite3')
 endif
 
-if host_machine.system() != 'linux'
+if system != 'linux'
   subproject('proxy-libintl')
 endif
 
