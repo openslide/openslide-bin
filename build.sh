@@ -338,7 +338,7 @@ bdist() {
         fi
         for artifact in $(expand ${package}_licenses)
         do
-            if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
+            if ! cp "${srcdir}/${artifact}" "${licensedir}"; then
                 echo "Failed to copy ${artifact} from ${package}."
                 exit 1
             fi
