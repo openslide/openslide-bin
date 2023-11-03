@@ -283,7 +283,7 @@ def get_software_info(softwares: Iterable[Software]) -> Infos:
 def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     def line(name: str, version: str, marker: str = '') -> None:
         print(
-            '| {:20} | {:53} |'.format(
+            '| {:21} | {:52} |'.format(
                 f'{marker}{name}{marker}', f'{marker}{version}{marker}'
             ),
             file=fh,
