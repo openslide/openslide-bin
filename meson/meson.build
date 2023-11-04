@@ -150,6 +150,7 @@ subproject(
 subproject(
   'openslide-java',
   default_options : [
+    'embed_jni_path=disabled',
     'werror=' + get_option('openslide_werror').to_string(),
   ],
 )
