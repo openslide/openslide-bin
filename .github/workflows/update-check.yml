@@ -5,7 +5,7 @@ name: Check for updates
 on:
   push:
     branches: [main]
-    paths: ['meson/subprojects/*.wrap']
+    paths: ['subprojects/*.wrap']
   schedule:
     - cron: '0 12 * * 1'
   workflow_call:
@@ -40,7 +40,7 @@ jobs:
         run: |
           pip install --user meson
           meson wrap update --sourcedir meson
-          modified=$(git status --porcelain "meson/subprojects/*.wrap" |
+          modified=$(git status --porcelain "subprojects/*.wrap" |
                   sed -e 's:.*/::' -e 's/\.wrap$//')
           modified=$(echo $modified | sed -e 's/ /, /g')
           echo "modified=$modified" >> $GITHUB_OUTPUT
@@ -50,7 +50,7 @@ jobs:
           token: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
           author: "${{ env.GIT_NAME }} <${{ env.GIT_EMAIL }}>"
           committer: "${{ env.GIT_NAME }} <${{ env.GIT_EMAIL }}>"
-          add-paths: "meson/subprojects/*.wrap"
+          add-paths: "subprojects/*.wrap"
           branch: ${{ env.GIT_BRANCH }}
           commit-message: Update ${{ steps.modified.outputs.modified }}
           signoff: true

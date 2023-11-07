@@ -3,9 +3,9 @@ override
 openslide-win*
 
 # ignore package cache and unpacked packages
-/meson/subprojects/*
-!/meson/subprojects/*.wrap
-!/meson/subprojects/packagefiles
+/subprojects/*
+!/subprojects/*.wrap
+!/subprojects/packagefiles
 
 # ignore promoted wraps
-meson/subprojects/gvdb.wrap
+subprojects/gvdb.wrap

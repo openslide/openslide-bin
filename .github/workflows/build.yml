@@ -111,7 +111,7 @@ jobs:
         uses: actions/cache@v3
         with:
           key: build-packagecache
-          path: meson/subprojects/packagecache
+          path: subprojects/packagecache
       - name: Build source zip
         run: ./build.sh -p "${{ inputs.pkgver }}" sdist
       - name: Prep artifact

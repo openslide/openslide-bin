@@ -23,11 +23,10 @@ jobs:
         uses: actions/cache@v3
         with:
           key: direct-cache
-          path: meson/subprojects/packagecache
+          path: subprojects/packagecache
       - name: Build
-        working-directory: meson
         run: |
-          meson setup build --native-file native-linux-x86_64.ini \
+          meson setup build --native-file machines/native-linux-x86_64.ini \
               -Dopenslide_werror=true
           meson compile -C build
           DESTDIR=install meson install -C build
@@ -41,12 +40,12 @@ jobs:
           done
           patchelf --set-rpath '$ORIGIN' slidetool
       - name: Smoke test
-        run: OPENSLIDE_DEBUG=synthetic meson/output/slidetool prop list ''
+        run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: linux
-          path: meson/output
+          path: output
   macos:
     name: macOS
     runs-on: macos-latest
@@ -61,12 +60,11 @@ jobs:
         uses: actions/cache@v3
         with:
           key: direct-cache
-          path: meson/subprojects/packagecache
+          path: subprojects/packagecache
       - name: Build
-        working-directory: meson
         run: |
           for arch in x86_64 arm64; do
-              meson setup $arch --cross-file cross-macos-${arch}.ini \
+              meson setup $arch --cross-file machines/cross-macos-${arch}.ini \
                   -Dopenslide_werror=true
               meson compile -C $arch
               DESTDIR=install meson install -C $arch
@@ -84,9 +82,9 @@ jobs:
           install_name_tool -change /lib/libopenslide.1.dylib \
               '@loader_path/libopenslide.1.dylib' slidetool
       - name: Smoke test
-        run: OPENSLIDE_DEBUG=synthetic meson/output/slidetool prop list ''
+        run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: macos
-          path: meson/output
+          path: output

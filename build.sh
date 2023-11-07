@@ -133,7 +133,7 @@ meson_wrap_key() {
     # $1 = package shortname
     # $2 = file section
     # $3 = file key
-    meson_config_key "meson/subprojects/$(echo $1 | tr _ -).wrap" "$2" "$3"
+    meson_config_key "subprojects/$(echo $1 | tr _ -).wrap" "$2" "$3"
 }
 
 meson_wrap_version() {
@@ -178,10 +178,9 @@ override_init() {
         if [ -d "override/${package}" ]; then
             echo "Overriding $package..."
             meson_name=$(echo "$package" | tr _ -)
-            ln -s "../../override/${package}" \
-                    "meson/subprojects/${meson_name}"
-            mv "meson/subprojects/${meson_name}.wrap" \
-                    "meson/subprojects/${meson_name}.wrap.overridden"
+            ln -s "../override/${package}" "subprojects/${meson_name}"
+            mv "subprojects/${meson_name}.wrap" \
+                    "subprojects/${meson_name}.wrap.overridden"
         fi
     done
 }
@@ -191,12 +190,12 @@ override_remove() {
     local package meson_name
     for package in $packages; do
         meson_name=$(echo "$package" | tr _ -)
-        if [ -L "meson/subprojects/${meson_name}" ]; then
-            rm "meson/subprojects/${meson_name}"
+        if [ -L "subprojects/${meson_name}" ]; then
+            rm "subprojects/${meson_name}"
         fi
-        if [ -e "meson/subprojects/${meson_name}.wrap.overridden" ]; then
-            mv "meson/subprojects/${meson_name}.wrap.overridden" \
-                    "meson/subprojects/${meson_name}.wrap"
+        if [ -e "subprojects/${meson_name}.wrap.overridden" ]; then
+            mv "subprojects/${meson_name}.wrap.overridden" \
+                    "subprojects/${meson_name}.wrap"
         fi
     done
 }
@@ -210,7 +209,7 @@ build() {
     if [ ! -d "$build" ]; then
         meson setup \
                 --cross-file "${cross_file}" \
-                "$build" meson \
+                "$build" \
                 ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
                 ${openslide_werror}
     fi
@@ -233,30 +232,31 @@ sdist() {
     local package file zipdir
     zipdir="openslide-winbuild-${pkgver}"
     rm -rf "${zipdir}"
-    meson subprojects download --sourcedir meson
-    mkdir -p "${zipdir}/meson/subprojects/packagecache"
+    meson subprojects download
+    mkdir -p "${zipdir}/subprojects/packagecache"
     for package in $packages
     do
-        cp "meson/subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/meson/subprojects/"
+        cp "subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/subprojects/"
         for file in $(meson_wrap_key $package wrap-file source_filename) \
                 $(meson_wrap_key $package wrap-file patch_filename); do
-            cp "meson/subprojects/packagecache/$file" \
-                    "${zipdir}/meson/subprojects/packagecache/"
+            cp "subprojects/packagecache/$file" \
+                    "${zipdir}/subprojects/packagecache/"
         done
         for file in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
-            mkdir -p "${zipdir}/meson/subprojects/packagefiles"
-            cp "meson/subprojects/packagefiles/$file" \
-                    "${zipdir}/meson/subprojects/packagefiles/"
+            mkdir -p "${zipdir}/subprojects/packagefiles"
+            cp "subprojects/packagefiles/$file" \
+                    "${zipdir}/subprojects/packagefiles/"
         done
     done
-    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}/meson/include"
-    cp build.sh README.md COPYING.LESSER "${zipdir}/"
+    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{include,machines}
+    cp build.sh README.md COPYING.LESSER meson.build meson_options.txt \
+            "${zipdir}/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
-    cp meson/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
-            meson/meson.build meson/meson_options.txt "${zipdir}/meson/"
-    cp meson/include/setjmp.h "${zipdir}/meson/include/"
+    cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
+            "${zipdir}/machines/"
+    cp include/setjmp.h "${zipdir}/include/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -310,7 +310,7 @@ bdist() {
         if [ -d "override/${package}" ] ;then
             srcdir="override/${package}"
         else
-            srcdir="meson/subprojects/$(meson_wrap_key ${package} wrap-file directory)"
+            srcdir="subprojects/$(meson_wrap_key ${package} wrap-file directory)"
         fi
         for artifact in $(expand ${package}_artifacts)
         do
@@ -398,13 +398,13 @@ clean() {
             # right now, so this is just a lighter-weight clean
         done
         rm -rf "${build}"
-        grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
-        meson subprojects purge --sourcedir meson --confirm >/dev/null
+        grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
+        meson subprojects purge --confirm >/dev/null
     else
         echo "Cleaning..."
         rm -rf 64 openslide-win*-*.zip
-        grep -Flx "[wrap-redirect]" meson/subprojects/*.wrap | xargs -r rm
-        meson subprojects purge --sourcedir meson --confirm >/dev/null
+        grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
+        meson subprojects purge --confirm >/dev/null
     fi
 }
 
@@ -440,7 +440,7 @@ probe() {
     build=64/build
     root="$(pwd)/64/root"
 
-    cross_file="meson/cross-win64.ini"
+    cross_file="machines/cross-win64.ini"
     cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
     ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
     objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
