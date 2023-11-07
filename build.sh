@@ -248,7 +248,7 @@ sdist() {
                     "${zipdir}/subprojects/packagefiles/"
         done
     done
-    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{include,machines}
+    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{deps,machines}
     cp build.sh README.md COPYING.LESSER meson.build meson_options.txt \
             "${zipdir}/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
@@ -256,7 +256,7 @@ sdist() {
             "${zipdir}/builder/windows/"
     cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             "${zipdir}/machines/"
-    cp include/setjmp.h "${zipdir}/include/"
+    cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
