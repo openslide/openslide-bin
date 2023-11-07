@@ -5,3 +5,6 @@ directory = openslide-4.0.0
 source_url = https://github.com/openslide/openslide/releases/download/v4.0.0/openslide-4.0.0.tar.xz
 source_filename = openslide-4.0.0.tar.xz
 source_hash = cc227c44316abb65fb28f1c967706eb7254f91dbfab31e9ae6a48db6cf4ae562
+
+# https://github.com/openslide/openslide/pull/535
+diff_files = openslide-symbols.patch
