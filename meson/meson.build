@@ -143,6 +143,7 @@ subproject(
     # We don't run tests, but we still check that they build
     'default_library=shared',
     'doc=disabled',
+    '_filter_external_symbols=true',
     'version_suffix=' + get_option('version_suffix'),
     'werror=' + get_option('openslide_werror').to_string(),
   ],
@@ -150,6 +151,7 @@ subproject(
 subproject(
   'openslide-java',
   default_options : [
+    'embed_jni_path=disabled',
     'werror=' + get_option('openslide_werror').to_string(),
   ],
 )
