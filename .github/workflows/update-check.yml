@@ -39,7 +39,7 @@ jobs:
         id: modified
         run: |
           pip install --user meson
-          meson wrap update --sourcedir meson
+          meson wrap update
           modified=$(git status --porcelain "subprojects/*.wrap" |
                   sed -e 's:.*/::' -e 's/\.wrap$//')
           modified=$(echo $modified | sed -e 's/ /, /g')
