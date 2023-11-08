@@ -46,7 +46,7 @@ openslide_java_name="OpenSlide Java"
 # Locations of license files within the source tree
 zlib_licenses="README"
 libpng_licenses="LICENSE"
-libjpeg_turbo_licenses="LICENSE.md README.ijg simd/nasm/jsimdext.inc" # !!!
+libjpeg_turbo_licenses="LICENSE.md README.ijg"
 libtiff_licenses="LICENSE.md"
 libopenjp2_licenses="LICENSE"
 sqlite3_licenses="PUBLIC-DOMAIN.txt"
@@ -338,7 +338,7 @@ bdist() {
         fi
         for artifact in $(expand ${package}_licenses)
         do
-            if ! cp "${srcdir}/${artifact}" "${licensedir}" 2>/dev/null; then
+            if ! cp "${srcdir}/${artifact}" "${licensedir}"; then
                 echo "Failed to copy ${artifact} from ${package}."
                 exit 1
             fi
