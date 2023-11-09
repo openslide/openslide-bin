@@ -25,27 +25,25 @@ jobs:
           key: direct-cache
           path: subprojects/packagecache
       - name: Build
+        id: build
         run: |
           meson setup build --native-file machines/native-linux-x86_64.ini \
               -Dopenslide:werror=true -Dopenslide-java:werror=true
           meson compile -C build
-          DESTDIR=install meson install -C build
-          mkdir output
-          cp build/install/{bin/slidetool,lib64/libopenslide.so.1} output/
-          cd output
-          for f in libopenslide.so.1 slidetool; do
-              objcopy --only-keep-debug $f ${f}.debug
-              objcopy -S --add-gnu-debuglink=${f}.debug $f ${f}.new
-              mv ${f}.new $f
-          done
-          patchelf --set-rpath '$ORIGIN' slidetool
+          artifact=$(cd build/artifacts && echo openslide-bin-*-linux-x86_64.tar.xz)
+          mv "build/artifacts/$artifact" .
+          echo "artifact=$artifact" >> $GITHUB_OUTPUT
       - name: Smoke test
-        run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
+        run: |
+          tar xf "${{ steps.build.outputs.artifact }}"
+          OPENSLIDE_DEBUG=synthetic \
+              openslide-bin-*-linux-x86_64/bin/slidetool prop list ''
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux
-          path: output
+          name: ${{ steps.build.outputs.artifact }}
+          path: ${{ steps.build.outputs.artifact }}
+          compression-level: 0
   macos:
     name: macOS
     runs-on: macos-latest
@@ -68,29 +66,28 @@ jobs:
           key: direct-cache
           path: subprojects/packagecache
       - name: Build
+        id: build
         run: |
+          export OPENSLIDE_BIN_SUFFIX="$(date +%Y%m%d).local"
+          version=$(MESON_SOURCE_ROOT=$(pwd) python3 utils/get-version.py)
           for arch in x86_64 arm64; do
               meson setup $arch --cross-file machines/cross-macos-${arch}.ini \
                   -Dopenslide:werror=true -Dopenslide-java:werror=true
               meson compile -C $arch
-              DESTDIR=install meson install -C $arch
           done
-          mkdir output
-          lipo -create {x86_64,arm64}/install/lib/libopenslide.1.dylib \
-              -output output/libopenslide.1.dylib
-          lipo -create {x86_64,arm64}/install/bin/slidetool \
-              -output output/slidetool
-          cd output
-          for f in libopenslide.1.dylib slidetool; do
-              dsymutil $f
-              strip -u -r $f
-          done
-          install_name_tool -change /lib/libopenslide.1.dylib \
-              '@loader_path/libopenslide.1.dylib' slidetool
+          artifact="openslide-bin-${version}-macos-arm64-x86_64.tar.xz"
+          PYTHONPATH=. python3 utils/write-universal-bdist.py \
+              -o "$artifact" \
+              */artifacts/openslide-bin-"${version}"-macos-*.tar.xz
+          echo "artifact=$artifact" >> $GITHUB_OUTPUT
       - name: Smoke test
-        run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
+        run: |
+          tar xf "${{ steps.build.outputs.artifact }}"
+          OPENSLIDE_DEBUG=synthetic \
+              openslide-bin-*-macos-arm64-x86_64/bin/slidetool prop list ''
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos
-          path: output
+          name: ${{ steps.build.outputs.artifact }}
+          path: ${{ steps.build.outputs.artifact }}
+          compression-level: 0
