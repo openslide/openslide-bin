@@ -31,8 +31,11 @@ meson.add_dist_script(
 
 artifacts = [
   custom_target(
-    command : [find_program('write-project-versions.py'), '-o', '@OUTPUT@'],
-    output : 'VERSIONS.md',
+    command : [
+      find_program('write-project-versions.py'), '-j', '@OUTPUT0@',
+      '-m', '@OUTPUT1@',
+    ],
+    output : ['versions.json', 'VERSIONS.md'],
     # ensure we regenerate after dependency updates
     build_always_stale : true,
     env : env,

@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 
+from abc import ABC
 from collections.abc import Callable, Iterable
 import configparser
 from dataclasses import dataclass
@@ -27,15 +28,54 @@ from functools import cached_property
 from pathlib import Path
 import shutil
 import subprocess
-from typing import TextIO
+from typing import Literal, TextIO, TypedDict
 
 from .meson import meson_introspect, meson_source_root, parse_ini_file
 
 
-@dataclass
-class Project:
+class Infos(TypedDict):
+    versions: list[Info]
+
+
+class Info(TypedDict):
     id: str
     display: str
+    version: str
+    type: SoftwareType
+
+
+SoftwareType = Literal['primary', 'dependency', 'tool']
+
+
+@dataclass
+class Software(ABC):
+    id: str
+    display: str
+
+    @property
+    def info(self) -> Info:
+        if isinstance(self, Tool):
+            typ: SoftwareType = 'tool'
+        elif isinstance(self, Project) and self.primary:
+            typ = 'primary'
+        else:
+            typ = 'dependency'
+        return {
+            'id': self.id,
+            'display': self.display,
+            # non-abstract subclasses have a version field or property
+            'version': self.version,  # type: ignore[attr-defined]
+            'type': typ,
+        }
+
+
+@dataclass
+class Tool(Software):
+    version: str
+
+
+@dataclass
+class Project(Software):
     licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
     primary: bool = False
 
@@ -228,9 +268,19 @@ _PROJECTS = (
 _PROJECTS_IGNORE = {'gvdb'}
 
 
-def write_project_versions(
-    fh: TextIO, env_info: None | dict[str, str] = None
-) -> None:
+def _sorted_infos(infos: list[Info]) -> list[Info]:
+    def key(info: Info) -> tuple[int, str]:
+        return (typ_map[info['type']], info['display'].lower())
+
+    typ_map = {'primary': 0, 'dependency': 1, 'tool': 2}
+    return sorted(infos, key=key)
+
+
+def get_software_info(softwares: Iterable[Software]) -> Infos:
+    return {'versions': _sorted_infos([sw.info for sw in softwares])}
+
+
+def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     def line(name: str, version: str, marker: str = '') -> None:
         print(
             '| {:20} | {:53} |'.format(
@@ -241,11 +291,6 @@ def write_project_versions(
 
     line('Software', 'Version')
     line('--------', '-------')
-
-    def key(proj: Project) -> tuple[int, str]:
-        return (0 if proj.primary else 1, proj.display.lower())
-
-    for proj in sorted(Project.get_enabled(), key=key):
-        line(proj.display, proj.version, '**' if proj.primary else '')
-    for software, version in sorted((env_info or {}).items()):
-        line(software, version, '_')
+    typ_map = {'primary': '**', 'dependency': '', 'tool': '_'}
+    for info in _sorted_infos(infos['versions']):
+        line(info['display'], info['version'], typ_map[info['type']])
