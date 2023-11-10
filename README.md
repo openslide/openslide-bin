@@ -6,10 +6,11 @@ of its dependencies, using MinGW-w64.
 ## Building
 
 The `builder/windows` directory defines a container image with the
-dependencies needed to run the build script.  To pull the container image
-and use it to run a build:
+dependencies needed to run the build script.  On Linux, or in Windows
+PowerShell with WSL 2, you can pull the container image and use it to run a
+build:
 
-    docker run -ti --rm -v $PWD:/work -w /work \
+    docker run -ti --rm -v ${PWD}:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./build.sh bdist
 
 ## Substitute Sources
