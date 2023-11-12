@@ -1,0 +1,4 @@
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#flake8
+[flake8]
+extend-ignore = E203
+# we configure black to match flake8's default line length of 79
