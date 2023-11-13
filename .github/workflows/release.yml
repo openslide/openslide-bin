@@ -58,7 +58,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: "openslide-bin-*"
+          pattern: "openslide[-_]bin-*"
           path: upload
           merge-multiple: true
       - name: Unpack source tarball

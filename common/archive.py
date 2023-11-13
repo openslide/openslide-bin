@@ -20,11 +20,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from base64 import urlsafe_b64encode
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import ExitStack, contextmanager
 import copy
 from dataclasses import dataclass
 from functools import cached_property
+from hashlib import sha256
+from io import BytesIO
 from itertools import zip_longest
 import os
 from pathlib import Path, PurePath
@@ -180,6 +183,48 @@ class ZipArchiveWriter(ArchiveWriter):
         self._zip.close()
 
 
+class WheelWriter(ZipArchiveWriter):
+    def __init__(self, fh: BinaryIO):
+        (
+            self.package,
+            self.version,
+            self.python,
+            self.abi,
+            self.platform,
+        ) = Path(fh.name).stem.split('-')
+        self.tag = f'{self.python}-{self.abi}-{self.platform}'
+        self.datadir = PurePath(self.package)
+        self.metadir = PurePath(f'{self.package}-{self.version}.dist-info')
+        self._records: list[str] = []
+        super().__init__(fh)
+
+    def add(self, member: Member) -> None:
+        if isinstance(member, FileMember):
+            contents = member.fh.read()
+            member.fh.seek(0)
+            hash = (
+                urlsafe_b64encode(sha256(contents).digest())
+                .decode()
+                .rstrip('=')
+            )
+            self._records.append(
+                f'{member.path.as_posix()},sha256={hash},{len(contents)}'
+            )
+        super().add(member)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        record_path = self.metadir / 'RECORD'
+        self._records.append(f'{record_path.as_posix()},,')
+        record_data = '\n'.join(sorted(self._records)) + '\n'
+        super().add(FileMember(record_path, BytesIO(record_data.encode())))
+        return super().__exit__(exc_type, exc_val, exc_tb)
+
+
 class ArchiveReader(ABC):
     def __init__(self, path: Path):
         self.base = _path_base(path)
@@ -244,6 +289,26 @@ class TarArchiveReader(ArchiveReader):
             else:
                 raise Exception(
                     f'Unsupported member type: {info.type.decode()}'
+                )
+
+
+class ZipArchiveReader(ArchiveReader):
+    def __init__(self, fh: BinaryIO):
+        super().__init__(Path(fh.name))
+        self._zip = zipfile.ZipFile(fh)
+
+    def close(self) -> None:
+        self._zip.close()
+        super().close()
+
+    def __iter__(self) -> Iterator[Member]:
+        for info in self._zip.infolist():
+            path = PurePath(info.filename)
+            if info.is_dir():
+                yield DirMember(path)
+            else:
+                yield FileMember(
+                    path, open(self._zip.extract(info, self._dir), 'rb')
                 )
 
 

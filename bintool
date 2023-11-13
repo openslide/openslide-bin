@@ -42,7 +42,12 @@ import zipfile
 
 from common.argparse import TypedArgs
 from common.dist import BDistName
-from common.meson import default_suffix, meson_source_root, project_version
+from common.meson import (
+    default_suffix,
+    meson_source_root,
+    parse_ini_file,
+    project_version,
+)
 from common.software import Project
 
 CACHEDIR_TAG_CONTENTS = '''Signature: 8a477f597d28d172789f06886806bc55
@@ -236,12 +241,14 @@ class BuildParams:
 @dataclass
 class BDistResult:
     bdist: Path
+    wheel: Path
 
 
 class Platform(ABC):
     def __init__(self, params: BuildParams, system: str, arch: str):
         self.params = params
         self.system = system
+        self.arch = arch
         self.id = f'{system}-{arch}'
 
     @abstractmethod
@@ -262,6 +269,10 @@ class MesonPlatform(Platform):
         self.machine_file = (
             params.root / 'machines' / f'{self.type}-{self.id}.ini'
         )
+        machine = parse_ini_file(self.machine_file)
+        self.python_platform_tag = machine['properties'][
+            'python_platform_tag'
+        ].strip("'")
 
     def _setup(
         self, prefix: str, extra_args: Iterable[str] | None = None
@@ -360,7 +371,10 @@ class MesonPlatform(Platform):
         return BDistResult(
             bdist=dir
             / 'artifacts'
-            / f'openslide-bin-{self.params.version}-{self.id}.{ext}'
+            / f'openslide-bin-{self.params.version}-{self.id}.{ext}',
+            wheel=dir
+            / 'artifacts'
+            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl',  # noqa: E501
         )
 
 
@@ -370,6 +384,10 @@ class MacPlatform(Platform):
         self.platforms = [
             MesonPlatform(params, self.system, a, cross=True) for a in arches
         ]
+        tag = self.platforms[0].python_platform_tag
+        self.python_platform_tag = tag.replace(
+            self.platforms[0].arch, 'universal2'
+        )
 
     def sdist(self) -> Path:
         return self.platforms[0].sdist()
@@ -380,6 +398,10 @@ class MacPlatform(Platform):
         dir = self.params.work / f'bdist-{self.id}'
         dir.mkdir(exist_ok=True)
         bdist = dir / f'openslide-bin-{self.params.version}-{self.id}.tar.xz'
+        wheel = (
+            dir
+            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl'  # noqa: E501
+        )
         env = get_python_env()
 
         log('Building universal archive')
@@ -391,13 +413,24 @@ class MacPlatform(Platform):
         ]
         args.extend(result.bdist for result in results)
         subprocess.check_call(args, env=env)
-        return BDistResult(bdist=bdist)
+
+        log('Building universal wheel')
+        args = [
+            sys.executable,
+            self.params.root / 'utils' / 'write-universal-wheel.py',
+            '-o',
+            wheel,
+        ]
+        args.extend(result.wheel for result in results)
+        subprocess.check_call(args, env=env)
+        return BDistResult(bdist=bdist, wheel=wheel)
 
 
 class SmokeTester(ABC):
     def __init__(self, fh: BinaryIO):
         self._fh = fh
         self._system = self._parse()
+        self._exe_suffix = '.exe' if self._system == 'windows' else ''
 
         # check against system we're running on, not the one we can build for
         cur_system = sys.platform
@@ -440,7 +473,6 @@ class SmokeTester(ABC):
 class BDistSmokeTester(SmokeTester):
     def _parse(self) -> str:
         self._name = BDistName(Path(self._fh.name).name)
-        self._exe_suffix = '.exe' if self._name.system == 'windows' else ''
         self._java_libdir = 'bin' if self._name.system == 'windows' else 'lib'
         return self._name.system
 
@@ -481,6 +513,65 @@ class BDistSmokeTester(SmokeTester):
         )
 
 
+class WheelSmokeTester(SmokeTester):
+    def _parse(self) -> str:
+        platform = Path(self._fh.name).stem.split('-')[4]
+        self._update_pip = False
+        self._venv_bindir = 'bin'
+        if platform.startswith('manylinux'):
+            # EL 8 pip doesn't understand PEP 600, so can't install EL 8 wheels
+            self._update_pip = True
+            return 'linux'
+        elif platform.startswith('macosx'):
+            return 'macos'
+        elif platform == 'win_amd64':
+            self._venv_bindir = 'Scripts'
+            return 'windows'
+        else:
+            raise Exception(f'Unknown platform: {platform}')
+
+    def _unpack(self, dir: Path) -> None:
+        log('Creating virtualenv')
+        # /usr/bin/python3 on macOS because sys.executable may not be a
+        # universal binary
+        python = (
+            '/usr/bin/python3' if self._system == 'macos' else sys.executable
+        )
+        # resolve 8.3 shortname of tempdir to avoid venv warning on Windows
+        # https://github.com/python/cpython/issues/90329
+        subprocess.check_call([python, '-m', 'venv', dir.resolve()])
+        if self._update_pip:
+            subprocess.check_call(
+                [
+                    dir / self._venv_bindir / f'pip{self._exe_suffix}',
+                    'install',
+                    '--upgrade',
+                    'pip',
+                ],
+                stdout=subprocess.DEVNULL,
+            )
+        subprocess.check_call(
+            [
+                dir / self._venv_bindir / f'pip{self._exe_suffix}',
+                'install',
+                '--disable-pip-version-check',
+                self._fh.name,
+            ],
+            stdout=subprocess.DEVNULL,
+        )
+
+    def _invoke(self, desc: str, dir: Path, cmd_prefix: list[str]) -> None:
+        log(f'Checking {desc} wheel')
+        subprocess.check_call(
+            cmd_prefix
+            + [
+                dir / self._venv_bindir / f'python{self._exe_suffix}',
+                meson_source_root() / 'utils' / 'test-wheel.py',
+            ],
+            env=get_python_env(),
+        )
+
+
 def do_sdist(args: Args) -> None:
     params = BuildParams(args.suffix)
     with params.platform() as platform:
@@ -502,7 +593,10 @@ def do_bdist(args: Args) -> None:
         else:
             with result.bdist.open('rb') as fh:
                 BDistSmokeTester(fh)()
-        shutil.copy2(result.bdist, params.root)
+            with result.wheel.open('rb') as fh:
+                WheelSmokeTester(fh)()
+        for src in result.bdist, result.wheel:
+            shutil.copy2(src, params.root)
 
 
 def do_version(args: Args) -> None:
@@ -512,7 +606,10 @@ def do_version(args: Args) -> None:
 
 def do_smoke(args: Args) -> None:
     for fh in args.archives:
-        BDistSmokeTester(fh)()
+        if Path(fh.name).suffix == '.whl':
+            WheelSmokeTester(fh)()
+        else:
+            BDistSmokeTester(fh)()
 
 
 def do_clean(args: Args) -> None:
@@ -539,7 +636,7 @@ def do_clean(args: Args) -> None:
         for child in gvdb, gvdb.with_suffix('.wrap'):
             remove(child)
         for child in params.root.iterdir():
-            if child.name.startswith('openslide-bin-'):
+            if child.name.replace('_', '-').startswith('openslide-bin-'):
                 remove(child)
 
 
@@ -602,7 +699,7 @@ def main() -> None:
             '-x',
             '--suffix',
             metavar='suffix',
-            help='Set package version suffix in archive filenames.',
+            help='Set package version suffix in archive filenames and Python wheel.',  # noqa: E501
             parser=sp,
         )
     args.add_arg(
@@ -622,7 +719,7 @@ def main() -> None:
         metavar='archive',
         nargs='+',
         type=argparse.FileType('rb'),
-        help='Binary distribution archive.',
+        help='Binary distribution archive or Python wheel.',
         parser=smoke,
     )
     smoke.set_defaults(func=do_smoke)
