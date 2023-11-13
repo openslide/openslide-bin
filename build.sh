@@ -251,7 +251,7 @@ sdist() {
     mkdir -p "${zipdir}"/builder/{linux,windows} \
             "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
-            meson_options.txt "${zipdir}/"
+            meson.options "${zipdir}/"
     cp artifacts/{get-introspect-command,write-project-versions}.py \
             artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
