@@ -33,3 +33,11 @@ Homepage = "https://openslide.org/"
 # use GitHub Releases page because it has subproject versions
 "Release notes" = "https://github.com/openslide/openslide-bin/releases"
 Repository = "https://github.com/openslide/openslide-bin"
+
+[build-system]
+# The sole purpose of this build is to fail.  See comment in meson.build.
+build-backend = "mesonpy"
+requires = ["meson-python"]
+
+[tool.meson-python.args]
+setup = ['-Dpep517=true']

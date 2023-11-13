@@ -15,3 +15,9 @@ option(
   value : false,
   description : 'Enable subprojects for OpenSlide Git main',
 )
+option(
+  'pep517',
+  type : 'boolean',
+  value : false,
+  description : 'PEP 517 build inside meson-python',
+)
