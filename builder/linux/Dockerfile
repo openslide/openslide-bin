@@ -9,4 +9,4 @@ RUN dnf -y upgrade && \
     dnf -y install gcc-c++ git-core java-1.8.0-openjdk-devel nasm ninja-build \
     patchelf python3.8 unzip && \
     dnf clean all
-RUN pip3 install meson
+RUN pip3 install auditwheel meson tomli
