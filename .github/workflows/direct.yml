@@ -27,7 +27,7 @@ jobs:
       - name: Build
         run: |
           meson setup build --native-file machines/native-linux-x86_64.ini \
-              -Dopenslide_werror=true
+              -Dopenslide:werror=true -Dopenslide-java:werror=true
           meson compile -C build
           DESTDIR=install meson install -C build
           mkdir output
@@ -65,7 +65,7 @@ jobs:
         run: |
           for arch in x86_64 arm64; do
               meson setup $arch --cross-file machines/cross-macos-${arch}.ini \
-                  -Dopenslide_werror=true
+                  -Dopenslide:werror=true -Dopenslide-java:werror=true
               meson compile -C $arch
               DESTDIR=install meson install -C $arch
           done

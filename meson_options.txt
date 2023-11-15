@@ -1,11 +1,4 @@
-option(
-  'openslide_werror',
-  type : 'boolean',
-  value : false,
-  description : 'Fail on compile warnings from OpenSlide/OpenSlide Java',
-)
-option(
-  'version_suffix',
-  type : 'string',
-  description : 'Suffix to append to the OpenSlide version string',
-)
+# useful subproject options:
+# -Dopenslide:version_suffix=foo - append foo to OpenSlide version string
+# -Dopenslide:werror=true        - fail OpenSlide build on warnings
+# -Dopenslide-java:werror=true   - fail OpenSlide Java build on warnings
