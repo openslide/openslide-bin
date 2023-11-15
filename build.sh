@@ -210,7 +210,7 @@ build() {
         meson setup \
                 --cross-file "${cross_file}" \
                 "$build" \
-                ${ver_suffix:+-Dversion_suffix=${ver_suffix}} \
+                ${ver_suffix:+-Dopenslide:version_suffix=${ver_suffix}} \
                 ${openslide_werror}
     fi
     meson compile -C "$build" $parallel
@@ -475,7 +475,7 @@ do
         ver_suffix="${OPTARG}"
         ;;
     w)
-        openslide_werror="-Dopenslide_werror=true"
+        openslide_werror="-Dopenslide:werror=true -Dopenslide-java:werror=true"
         ;;
     esac
 done
