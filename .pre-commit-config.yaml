@@ -32,8 +32,6 @@ repos:
     hooks:
       - id: black
         name: Format python code with black
-        language_version: python3
-        args: ["--line-length=79", "--skip-string-normalization"]
 
   - repo: https://github.com/asottile/yesqa
     rev: v1.5.0
