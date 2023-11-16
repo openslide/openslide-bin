@@ -25,9 +25,6 @@ else
   env.set('OBJDUMP', find_program('objdump').full_path())
 endif
 
-fs = import('fs')
-openslide_jar = openslide_java.get_variable('openslide_jar')
-artifact_dir = get_option('prefix') / 'artifacts'
 artifacts = [
   custom_target(
     command : [find_program('write-project-versions.py'), '-o', '@OUTPUT@'],
@@ -35,16 +32,10 @@ artifacts = [
     # ensure we regenerate after dependency updates
     build_always_stale : true,
     env : env,
-    install : true,
-    install_dir : get_option('datadir'),
   ),
-  custom_target(
-    command : ['cp', '@INPUT@', '@OUTPUT@'],
-    input : openslide_jar,
-    output : fs.name(openslide_jar.full_path()),
-    install : true,
-    install_dir : artifact_dir,
-  ),
+  openslide.get_variable('openslide_headers'),
+  openslide_java.get_variable('openslide_jar'),
+  meson.project_source_root() / 'CHANGELOG.md',
 ]
 
 licenses = custom_target(
@@ -53,8 +44,6 @@ licenses = custom_target(
   # ensure we regenerate after dependency updates
   build_always_stale : true,
   env : env,
-  install : true,
-  install_dir : get_option('datadir'),
 )
 artifacts += licenses
 
@@ -67,11 +56,10 @@ if system == 'windows'
     input : libopenslide,
     output : 'libopenslide.lib',
     env : env,
-    install : true,
-    install_dir : artifact_dir,
   )
 endif
 
+fs = import('fs')
 postprocess = find_program('postprocess-binary.py')
 foreach bin : [
   libopenslide,
@@ -84,7 +72,20 @@ foreach bin : [
     input : bin,
     output : [name, name + (system == 'darwin' ? '.dSYM' : '.debug')],
     env : env,
-    install : true,
-    install_dir : artifact_dir,
   )
 endforeach
+
+custom_target(
+  command : [
+    find_program('write-bdist.py'), '-o', '@OUTPUT@', '@INPUT@'
+  ],
+  input : artifacts,
+  output : '@0@-@1@-@2@.@3@'.format(
+    meson.project_name(),
+    meson.project_version(),
+    meson.get_external_property('openslide_bin_platform'),
+    system == 'windows' ? 'zip' : 'tar.xz'
+  ),
+  env : env,
+  build_by_default : true,
+)

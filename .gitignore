@@ -1,6 +1,7 @@
 64
 override
 openslide-win*
+openslide-bin-*
 
 __pycache__
 

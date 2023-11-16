@@ -169,7 +169,7 @@ jobs:
           ./build.sh ${suffix:+-s$suffix} -p "${{ inputs.pkgver }}" \
               $werror bdist
           mkdir -p "output/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-win64-${{ inputs.pkgver }}.zip" \
+          mv "openslide-bin-${{ inputs.pkgver }}-windows-x64.zip" \
               "output/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -188,12 +188,12 @@ jobs:
           name: ${{ needs.sdist.outputs.artifact }}
       - name: Unpack artifact
         shell: bash
-        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-win64-${{ inputs.pkgver }}.zip"
+        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ inputs.pkgver }}-windows-x64.zip"
       - name: Report package versions
         shell: bash
-        run: cat "openslide-win64-${{ inputs.pkgver }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "openslide-bin-${{ inputs.pkgver }}-windows-x64/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          cd "${GITHUB_WORKSPACE}/openslide-win64-${{ inputs.pkgver }}/bin"
+          cd "${GITHUB_WORKSPACE}/openslide-bin-${{ inputs.pkgver }}-windows-x64/bin"
           OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
