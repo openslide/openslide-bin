@@ -257,7 +257,7 @@ sdist() {
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
-    cp common/{__init__,meson,software}.py "${zipdir}/common/"
+    cp common/{__init__,argparse,meson,software}.py "${zipdir}/common/"
     cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             "${zipdir}/machines/"
     cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"

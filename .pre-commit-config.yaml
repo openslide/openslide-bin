@@ -69,3 +69,9 @@ repos:
         # don't work because --multiline causes them to match at newlines.
         entry: "(?<!.)(?!.)|\nfrom __future__ import annotations"
         args: [--multiline, --negate]
+      - id: argparse
+        name: Require common.argparse wrapper
+        language: pygrep
+        exclude: common/argparse.py
+        types: [python]
+        entry: "(add_argument|parse_args)\\("

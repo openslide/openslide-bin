@@ -25,7 +25,9 @@ import os
 import re
 import subprocess
 import sys
+from typing import TextIO
 
+from common.argparse import TypedArgs
 from common.meson import meson_host, meson_introspect
 from common.software import write_project_versions
 
@@ -37,17 +39,21 @@ ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUG
 '''
 
 
-parser = argparse.ArgumentParser(
+class Args(TypedArgs):
+    output: TextIO
+
+
+args = Args(
     'write-project-versions', description='Write subproject version list.'
 )
-parser.add_argument(
+args.add_arg(
     '-o',
     '--output',
     type=argparse.FileType('w'),
     default=sys.stdout,
     help='output file',
 )
-args = parser.parse_args()
+args.parse()
 
 env_info = {}
 compiler = meson_introspect('compilers')['host']['c']
