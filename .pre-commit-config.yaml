@@ -44,9 +44,28 @@ repos:
     hooks:
       - id: flake8
         name: Lint python code with flake8
-        additional_dependencies: [flake8-bugbear]
+        additional_dependencies: [flake8-bugbear, Flake8-pyproject]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.0
+    hooks:
+      - id: mypy
+        name: Check Python types
 
   - repo: meta
     hooks:
       # - id: check-hooks-apply
       - id: check-useless-excludes
+
+  - repo: local
+    hooks:
+      - id: annotations
+        name: Require "from __future__ import annotations"
+        language: pygrep
+        types: [python]
+        # Allow files with import statement, or of less than two characters.
+        # One-character files are allowed because that's the best we can do
+        # with paired negative lookbehind and lookahead assertions.  ^ and $
+        # don't work because --multiline causes them to match at newlines.
+        entry: "(?<!.)(?!.)|\nfrom __future__ import annotations"
+        args: [--multiline, --negate]
