@@ -7,6 +7,6 @@ RUN dnf -y upgrade && \
     dnf -y install 'dnf-command(config-manager)' epel-release && \
     dnf config-manager --set-enabled powertools && \
     dnf -y install gcc-c++ git-core java-1.8.0-openjdk-devel nasm ninja-build \
-    patchelf python3.8 unzip && \
+    patchelf python3.11-pip unzip && \
     dnf clean all
 RUN pip3 install auditwheel meson tomli
