@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       linux_builder_repo_and_digest: ${{ steps.find-linux.outputs.builder_repo_and_digest }}
-      pkgver: ${{ steps.params.outputs.pkgver }}
+      suffix: ${{ steps.params.outputs.suffix }}
       windows_builder_repo_and_digest: ${{ steps.find-windows.outputs.builder_repo_and_digest }}
     steps:
       - name: Check out repo
@@ -45,7 +45,7 @@ jobs:
           builder_image: windows
       - name: Calculate parameters
         id: params
-        run: echo "pkgver=main-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
+        run: echo "suffix=$(date +%Y%m%d).bin.main.$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
 
   stable:
     name: Stable
@@ -56,5 +56,5 @@ jobs:
       macos_enable: true
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
-      pkgver: ${{ needs.setup.outputs.pkgver }}
+      suffix: ${{ needs.setup.outputs.suffix }}
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}

@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       linux_builder_repo_and_digest: ${{ steps.find-linux.outputs.builder_repo_and_digest }}
-      pkgver: ${{ steps.params.outputs.pkgver }}
+      suffix: ${{ steps.params.outputs.suffix }}
       windows_builder_repo_and_digest: ${{ steps.find-windows.outputs.builder_repo_and_digest }}
     steps:
       - name: Check out repo
@@ -44,7 +44,7 @@ jobs:
           builder_image: windows
       - name: Calculate parameters
         id: params
-        run: echo "pkgver=pr-${{ github.event.number }}.${{ github.run_number }}.${{ github.run_attempt }}-$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
+        run: echo "suffix=$(date +%Y%m%d).bin.pr.${{ github.event.number }}.${{ github.run_number }}.${{ github.run_attempt }}.$(echo ${{ github.sha }} | cut -c-7)" >> $GITHUB_OUTPUT
 
   stable:
     name: Stable
@@ -55,7 +55,7 @@ jobs:
       macos_enable: true
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
-      pkgver: ${{ needs.setup.outputs.pkgver }}-stable
+      suffix: ${{ needs.setup.outputs.suffix }}.stable
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}
 
   git:
@@ -71,6 +71,6 @@ jobs:
       openslide_java_ref: main
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
-      pkgver: ${{ needs.setup.outputs.pkgver }}-git
+      suffix: ${{ needs.setup.outputs.suffix }}.git
       werror: true
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}

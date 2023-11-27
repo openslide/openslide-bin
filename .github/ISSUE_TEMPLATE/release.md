@@ -2,7 +2,7 @@
 
 - [ ] Run [workflow](https://github.com/openslide/openslide-bin/actions/workflows/update-check.yml) to check for updates
 - [ ] Merge any resulting PR; perform any needed manual updates reported by the workflow
-- [ ] Submit PR to update `CHANGELOG.md`
+- [ ] Submit PR to update `CHANGELOG.md` and `_PROJECT_VERSION`
 - [ ] Land PR
 - [ ] Create and push signed tag
 - [ ] Verify that CI creates a [GitHub release](https://github.com/openslide/openslide-bin/releases/) with release notes, software versions, and artifacts

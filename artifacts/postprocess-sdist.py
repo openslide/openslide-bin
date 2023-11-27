@@ -47,6 +47,10 @@ args.parse()
 os.environ['MESONINTROSPECT'] = args.introspect
 dest = Path(os.environ['MESON_DIST_ROOT'])
 
-# pin openslide-bin version
+# pin openslide-bin version suffix
 version: str = meson_introspect('projectinfo')['version']
-(dest / 'version').write_text(version + '\n')
+try:
+    suffix = version.split('+', 1)[1]
+except IndexError:
+    suffix = ''
+(dest / 'suffix').write_text(suffix + '\n')

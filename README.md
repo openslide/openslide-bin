@@ -41,6 +41,10 @@ those packages in the specified bitness.
 
 Check for new releases of software packages.
 
+#### `version`
+
+Report the version number that will be used in archive file names.
+
 ## Options
 
 These must be specified before the subcommand.
@@ -49,10 +53,6 @@ These must be specified before the subcommand.
 
 Parallel build with the specified parallelism.
 
-#### `-p<pkgver>`
-
-Set package version string in Zip file names to `pkgver`.
-
 #### `-s<suffix>`
 
 Append `suffix` to the OpenSlide version string.
@@ -60,3 +60,7 @@ Append `suffix` to the OpenSlide version string.
 #### `-w`
 
 Treat OpenSlide and OpenSlide Java build warnings as errors.
+
+#### `-x<suffix>`
+
+Set version number suffix in archive file names to `suffix`.

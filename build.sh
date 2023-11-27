@@ -235,14 +235,14 @@ clean() {
         done
         rm -rf "${build}"
         grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
-        if [ ! -e version ]; then
+        if [ ! -e suffix ]; then
             meson subprojects purge --confirm >/dev/null
         fi
     else
         echo "Cleaning..."
         rm -rf 64 openslide-bin-*.{tar.gz,zip}
         grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
-        if [ ! -e version ]; then
+        if [ ! -e suffix ]; then
             meson subprojects purge --confirm >/dev/null
         fi
     fi
@@ -277,11 +277,12 @@ probe() {
         exit 1
     fi
 
-    if [ -z "${pkgver}" ]; then
-        export -n OPENSLIDE_BIN_VERSION
-        pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
+    if [ "${pkg_suffix}" != "-DEFAULT-" ]; then
+        export OPENSLIDE_BIN_SUFFIX="${pkg_suffix}"
+    else
+        export -n OPENSLIDE_BIN_SUFFIX
     fi
-    export OPENSLIDE_BIN_VERSION="${pkgver}"
+    pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
 
     sbuild=64/sdist
     build=64/build
@@ -300,23 +301,23 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-pkgver=""
+pkg_suffix="-DEFAULT-"
 ver_suffix=""
 openslide_werror=""
-while getopts "j:p:s:w" opt
+while getopts "j:s:wx:" opt
 do
     case "$opt" in
     j)
         parallel="-j${OPTARG}"
-        ;;
-    p)
-        pkgver="${OPTARG}"
         ;;
     s)
         ver_suffix="${OPTARG}"
         ;;
     w)
         openslide_werror="-Dopenslide:werror=true -Dopenslide-java:werror=true"
+        ;;
+    x)
+        pkg_suffix="${OPTARG}"
         ;;
     esac
 done
@@ -347,12 +348,17 @@ clean)
 updates)
     updates
     ;;
+version)
+    probe
+    echo "${pkgver}"
+    ;;
 *)
     cat <<EOF
-Usage: $0 [-p<pkgver>] sdist
-       $0 [-j<n>] [-p<pkgver>] [-s<suffix>] [-w] bdist
+Usage: $0 [-x<suffix>] sdist
+       $0 [-j<n>] [-s<suffix>] [-w] [-x<suffix>] bdist
        $0 clean [package...]
        $0 updates
+       $0 [-x<suffix>] version
 
 Packages:
 $packages

@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       linux_builder_repo_and_digest: ${{ steps.find-linux.outputs.builder_repo_and_digest }}
-      pkgver: ${{ steps.params.outputs.pkgver }}
       windows_builder_repo_and_digest: ${{ steps.find-windows.outputs.builder_repo_and_digest }}
     steps:
       - name: Check out repo
@@ -32,9 +31,6 @@ jobs:
         uses: ./.github/find-container-digest
         with:
           builder_image: windows
-      - name: Calculate parameters
-        id: params
-        run: echo "pkgver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
   stable:
     name: Stable
@@ -45,7 +41,7 @@ jobs:
       macos_enable: true
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
-      pkgver: ${{ needs.setup.outputs.pkgver }}
+      suffix: ""
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}
 
   release:
@@ -63,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          unzip "${{ needs.stable.outputs.artifact }}/openslide-bin-${{ needs.setup.outputs.pkgver }}-windows-x64.zip"
+          unzip "${{ needs.stable.outputs.artifact }}/openslide-bin-${{ needs.stable.outputs.version }}-windows-x64.zip"
 
           echo "## Changes" > changes
           awk -e '/^## / && ok {exit}' \
@@ -72,12 +68,12 @@ jobs:
               "openslide-win64-${{ needs.setup.outputs.pkgver }}/CHANGELOG.md" \
               >> changes
           echo -e "## Versions\n" >> changes
-          cat "openslide-bin-${{ needs.setup.outputs.pkgver }}-windows-x64/VERSIONS.md" \
+          cat "openslide-bin-${{ needs.stable.outputs.version }}-windows-x64/VERSIONS.md" \
               >> changes
 
           gh release create --latest --verify-tag \
               --repo "${{ github.repository }}" \
-              --title "Windows build ${{ needs.setup.outputs.pkgver }}" \
+              --title "Windows build ${{ needs.stable.outputs.version }}" \
               --notes-file changes \
               "${{ github.ref_name }}" \
               "${{ needs.stable.outputs.artifact }}/"*

@@ -43,8 +43,8 @@ on:
         required: false
         type: string
         default: main
-      pkgver:
-        description: Set package version string
+      suffix:
+        description: Set package version suffix
         required: true
         type: string
       werror:
@@ -62,6 +62,9 @@ on:
       artifact:
         description: The name of the output artifact
         value: ${{ jobs.sdist.outputs.artifact }}
+      version:
+        description: The version of the output artifact
+        value: ${{ jobs.sdist.outputs.version }}
 
 permissions:
   contents: read
@@ -73,6 +76,7 @@ jobs:
     container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
+      version: ${{ steps.prep.outputs.version }}
       version_suffix: ${{ steps.prep.outputs.version_suffix }}
     steps:
       - name: Check out repo
@@ -119,14 +123,16 @@ jobs:
       - name: Build source tarball
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          ./build.sh -p "${{ inputs.pkgver }}" sdist
+          ./build.sh -x "${{ inputs.suffix }}" sdist
       - name: Prep artifact
         id: prep
         run: |
-          artifact="openslide-windows-${{ inputs.pkgver }}"
+          version=$(./build.sh -x "${{ inputs.suffix }}" version)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          artifact="openslide-windows-${version}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "output/$artifact"
-          mv "openslide-bin-${{ inputs.pkgver }}.tar.gz" "output/$artifact"
+          mv "openslide-bin-${version}.tar.gz" "output/$artifact"
           if [ -d override/openslide ]; then
               suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
               echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
@@ -150,8 +156,8 @@ jobs:
       - name: Unpack source tarball
         run: |
           (cd "${{ needs.sdist.outputs.artifact }}" &&
-              tar xf "openslide-bin-${{ inputs.pkgver }}.tar.gz")
-          mv "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ inputs.pkgver }}"/* .
+              tar xf "openslide-bin-${{ needs.sdist.outputs.version }}.tar.gz")
+          mv "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ needs.sdist.outputs.version }}"/* .
           rm -r "${{ needs.sdist.outputs.artifact }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
@@ -168,10 +174,10 @@ jobs:
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh ${suffix:+-s$suffix} -p "${{ inputs.pkgver }}" \
+          ./build.sh ${suffix:+-s$suffix} -x "${{ inputs.suffix }}" \
               $werror bdist
           mkdir -p "output/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-bin-${{ inputs.pkgver }}-windows-x64.zip" \
+          mv "openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip" \
               "output/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -190,12 +196,12 @@ jobs:
           name: ${{ needs.sdist.outputs.artifact }}
       - name: Unpack artifact
         shell: bash
-        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ inputs.pkgver }}-windows-x64.zip"
+        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip"
       - name: Report package versions
         shell: bash
-        run: cat "openslide-bin-${{ inputs.pkgver }}-windows-x64/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          cd "${GITHUB_WORKSPACE}/openslide-bin-${{ inputs.pkgver }}-windows-x64/bin"
+          cd "${GITHUB_WORKSPACE}/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64/bin"
           OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
