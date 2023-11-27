@@ -68,7 +68,7 @@ permissions:
 
 jobs:
   sdist:
-    name: Source zip
+    name: Source tarball
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
@@ -116,15 +116,17 @@ jobs:
         with:
           key: build-packagecache
           path: subprojects/packagecache
-      - name: Build source zip
-        run: ./build.sh -p "${{ inputs.pkgver }}" sdist
+      - name: Build source tarball
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          ./build.sh -p "${{ inputs.pkgver }}" sdist
       - name: Prep artifact
         id: prep
         run: |
           artifact="openslide-windows-${{ inputs.pkgver }}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "output/$artifact"
-          mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "output/$artifact"
+          mv "openslide-bin-${{ inputs.pkgver }}.tar.gz" "output/$artifact"
           if [ -d override/openslide ]; then
               suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
               echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
@@ -141,15 +143,15 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
     steps:
-      - name: Download source zip
+      - name: Download source tarball
         uses: actions/download-artifact@v3
         with:
           name: ${{ needs.sdist.outputs.artifact }}
-      - name: Unpack source zip
+      - name: Unpack source tarball
         run: |
           (cd "${{ needs.sdist.outputs.artifact }}" &&
-              unzip "openslide-winbuild-${{ inputs.pkgver }}.zip")
-          mv "${{ needs.sdist.outputs.artifact }}/openslide-winbuild-${{ inputs.pkgver }}"/* .
+              tar xf "openslide-bin-${{ inputs.pkgver }}.tar.gz")
+          mv "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ inputs.pkgver }}"/* .
           rm -r "${{ needs.sdist.outputs.artifact }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''

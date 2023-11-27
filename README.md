@@ -24,8 +24,8 @@ can be obtained by running `build.sh` with no arguments.
 
 #### `sdist`
 
-Build Zip file containing build system and sources for OpenSlide and all
-dependencies.
+Build `tar.gz` file containing build system and sources for OpenSlide and
+all dependencies.
 
 #### `bdist`
 

@@ -54,4 +54,12 @@ def parse_ini_file(path: Path) -> configparser.RawConfigParser:
 
 
 def default_version() -> str:
-    return date.today().strftime('%Y%m%d') + '-local'
+    # try the version pinned by 'meson dist'
+    try:
+        ver = (meson_source_root() / 'version').read_text().strip()
+        # append "-local" if missing
+        if '-local' not in ver:
+            ver += '-local'
+        return ver
+    except FileNotFoundError:
+        return date.today().strftime('%Y%m%d') + '-local'

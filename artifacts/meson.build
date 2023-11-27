@@ -25,6 +25,10 @@ else
   env.set('OBJDUMP', find_program('objdump').full_path())
 endif
 
+meson.add_dist_script(
+  files('postprocess-sdist.py'), '-i', mesonintrospect
+)
+
 artifacts = [
   custom_target(
     command : [find_program('write-project-versions.py'), '-o', '@OUTPUT@'],

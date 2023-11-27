@@ -1,9 +1,13 @@
+# should we enable all subprojects?  this is needed when building source
+# distributions so we don't leave anything out
+force_subprojects = get_option('all_subprojects')
+
 add_global_arguments(
   '-I' + meson.current_source_dir(),
   language: ['c', 'cpp']
 )
 
-if system == 'darwin'
+if system == 'darwin' and not force_subprojects
   cc = meson.get_compiler('c')
   # [dependency name, library name, version] or
   # [dependency name, library name, header with version, version define]
@@ -53,7 +57,7 @@ else
   subproject('sqlite3')
 endif
 
-if system != 'linux'
+if system != 'linux' or force_subprojects
   subproject('proxy-libintl')
 endif
 
