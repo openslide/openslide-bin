@@ -6,6 +6,9 @@
 - [ ] Submit PR to update `CHANGELOG.md` and `_PROJECT_VERSION`
 - [ ] Land PR
 - [ ] Create and push signed tag
+- [ ] Find the [workflow run](https://github.com/openslide/openslide-bin/actions/workflows/release.yml) for the tag
+  - [ ] Once the build finishes, approve deployment to PyPI
+- [ ] Verify that CI creates a [PyPI release](https://pypi.org/p/openslide-bin) with a description, source tarball, and wheels
 - [ ] Verify that CI creates a [GitHub release](https://github.com/openslide/openslide-bin/releases/) with release notes, software versions, and artifacts
 - [ ] Update website: `_data/releases.yaml`, maybe `_includes/news.md`
 - [ ] Possibly send mail to -announce and -users

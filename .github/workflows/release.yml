@@ -46,10 +46,14 @@ jobs:
 
   release:
     name: Release
+    environment:
+      name: pypi
+      url: https://pypi.org/p/openslide-bin
     needs: [setup, stable]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Update Python
         uses: actions/setup-python@v5
@@ -66,7 +70,18 @@ jobs:
           tar xf "upload/openslide-bin-${{ needs.stable.outputs.version }}.tar.gz"
           mv "openslide-bin-${{ needs.stable.outputs.version }}"/* .
           rm -r "openslide-bin-${{ needs.stable.outputs.version }}"
-      - name: Release
+      - name: Collect PyPI artifacts
+        run: |
+          mkdir pypi
+          cp -a \
+              "upload/openslide-bin-${{ needs.stable.outputs.version }}.tar.gz" \
+              upload/*.whl pypi/
+      - name: Release to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: pypi
+          repository-url: ${{ vars.PYPI_URL }}
+      - name: Release to GitHub
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
