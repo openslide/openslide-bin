@@ -249,8 +249,8 @@ sdist() {
         done
     done
     mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{deps,machines}
-    cp build.sh README.md COPYING.LESSER meson.build meson_options.txt \
-            "${zipdir}/"
+    cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
+            meson_options.txt "${zipdir}/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
@@ -294,6 +294,7 @@ bdist() {
     zipdir="openslide-win64-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
+    cp CHANGELOG.md "${zipdir}/"
     log_version "${zipdir}" "Software" "Version"
     log_version "${zipdir}" "--------" "-------"
     for package in $packages

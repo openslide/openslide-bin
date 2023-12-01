@@ -64,9 +64,20 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           unzip "${{ needs.stable.outputs.artifact }}/openslide-win64-${{ needs.setup.outputs.pkgver }}.zip"
+
+          echo "## Changes" > changes
+          awk -e '/^## / && ok {exit}' \
+              -e '/^## / {ok=1; next}' \
+              -e 'ok {print}' \
+              "openslide-win64-${{ needs.setup.outputs.pkgver }}/CHANGELOG.md" \
+              >> changes
+          echo -e "## Versions\n" >> changes
+          cat "openslide-win64-${{ needs.setup.outputs.pkgver }}/VERSIONS.md" \
+              >> changes
+
           gh release create --latest --verify-tag \
               --repo "${{ github.repository }}" \
               --title "Windows build ${{ needs.setup.outputs.pkgver }}" \
-              --notes-file "openslide-win64-${{ needs.setup.outputs.pkgver }}/VERSIONS.md" \
+              --notes-file changes \
               "${{ github.ref_name }}" \
               "${{ needs.stable.outputs.artifact }}/"*
