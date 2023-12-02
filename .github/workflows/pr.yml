@@ -1,6 +1,6 @@
 # PR CI workflow for openslide-bin
 
-name: Build
+name: Build PR
 
 on:
   pull_request:
