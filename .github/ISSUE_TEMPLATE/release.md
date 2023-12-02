@@ -1,10 +1,12 @@
 # openslide-bin release process
 
-- [ ] Update software versions, submit PR
+- [ ] Run [workflow](https://github.com/openslide/openslide-bin/actions/workflows/update-check.yml) to check for updates
+- [ ] Merge any resulting PR; perform any needed manual updates reported by the workflow
+- [ ] Submit PR to update `CHANGELOG.md`
 - [ ] Land PR
 - [ ] Create and push signed tag
-- [ ] Verify that CI creates a [GitHub release](https://github.com/openslide/openslide-bin/releases/) with artifacts
+- [ ] Verify that CI creates a [GitHub release](https://github.com/openslide/openslide-bin/releases/) with release notes, software versions, and artifacts
 - [ ] Update website: `_data/releases.yaml`, maybe `_includes/news.md`
 - [ ] Possibly send mail to -announce and -users
 - [ ] Possibly post to [forum.image.sc](https://forum.image.sc/c/announcements/10)
-- [ ] Update `WINBUILD_RELEASE` in [OpenSlide Python CI](https://github.com/openslide/openslide-python/blob/main/.github/workflows/python.yml)
+- [ ] Update `BIN_RELEASE` in [OpenSlide Python CI](https://github.com/openslide/openslide-python/blob/main/.github/workflows/python.yml)
