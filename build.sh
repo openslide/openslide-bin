@@ -252,7 +252,7 @@ sdist() {
             "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
             meson.options "${zipdir}/"
-    cp artifacts/{get-introspect-command,postprocess-binary,write-project-versions}.py \
+    cp artifacts/{get-introspect-command,postprocess-binary,write-import-library,write-project-versions}.py \
             artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
@@ -322,7 +322,7 @@ bdist() {
         done
         if [ "$package" = openslide ]; then
             mkdir -p "${zipdir}/lib"
-            cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
+            cp "${root}/artifacts/libopenslide.lib" "${zipdir}/lib/"
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
             cp "${srcdir}/README.md" "${zipdir}/"

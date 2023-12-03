@@ -47,9 +47,23 @@ artifacts = [
   ),
 ]
 
+libopenslide = openslide.get_variable('libopenslide')
+if system == 'windows'
+  artifacts += custom_target(
+    command : [
+      find_program('write-import-library.py'), '@INPUT@', '@OUTPUT@'
+    ],
+    input : libopenslide,
+    output : 'libopenslide.lib',
+    env : env,
+    install : true,
+    install_dir : artifact_dir,
+  )
+endif
+
 postprocess = find_program('postprocess-binary.py')
 foreach bin : [
-  openslide.get_variable('libopenslide'),
+  libopenslide,
   openslide.get_variable('slidetool'),
   openslide_java.get_variable('openslide_jni'),
 ]
