@@ -23,46 +23,6 @@ set -eE
 
 packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
-# Package display names
-zlib_name="zlib"
-libpng_name="libpng"
-libjpeg_turbo_name="libjpeg-turbo"
-libtiff_name="libtiff"
-libopenjp2_name="OpenJPEG"
-sqlite3_name="SQLite"
-proxy_libintl_name="proxy-libintl"
-libffi_name="libffi"
-pcre2_name="PCRE2"
-glib_name="glib"
-gdk_pixbuf_name="gdk-pixbuf"
-pixman_name="pixman"
-cairo_name="cairo"
-libxml2_name="libxml2"
-uthash_name="uthash"
-libdicom_name="libdicom"
-openslide_name="OpenSlide"
-openslide_java_name="OpenSlide Java"
-
-# Locations of license files within the source tree
-zlib_licenses="README"
-libpng_licenses="LICENSE"
-libjpeg_turbo_licenses="LICENSE.md README.ijg"
-libtiff_licenses="LICENSE.md"
-libopenjp2_licenses="LICENSE"
-sqlite3_licenses="PUBLIC-DOMAIN.txt"
-proxy_libintl_licenses="COPYING"
-libffi_licenses="LICENSE"
-pcre2_licenses="LICENCE"
-glib_licenses="COPYING"
-gdk_pixbuf_licenses="COPYING"
-pixman_licenses="COPYING"
-cairo_licenses="COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1"
-libxml2_licenses="Copyright"
-uthash_licenses="LICENSE"
-libdicom_licenses="LICENSE"
-openslide_licenses="COPYING.LESSER"
-openslide_java_licenses="COPYING.LESSER"
-
 # Build artifacts
 openslide_artifacts="libopenslide-1.dll slidetool.exe"
 openslide_java_artifacts="openslide-jni.dll openslide.jar"
@@ -248,31 +208,28 @@ sdist() {
                     "${zipdir}/subprojects/packagefiles/"
         done
     done
-    mkdir -p "${zipdir}"/builder/{linux,windows} "${zipdir}"/{deps,machines}
+    mkdir -p "${zipdir}"/builder/{linux,windows} \
+            "${zipdir}"/{artifacts,common,deps,machines,utils}
     cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
-            meson_options.txt "${zipdir}/"
+            meson.options "${zipdir}/"
+    cp artifacts/{get-introspect-command,postprocess-binary,write-import-library,write-licenses,write-project-versions}.py \
+            artifacts/meson.build "${zipdir}/artifacts/"
     cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
     cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
             "${zipdir}/builder/windows/"
+    cp common/{__init__,argparse,meson,software}.py "${zipdir}/common/"
     cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
             "${zipdir}/machines/"
     cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"
+    cp utils/get-version.py "${zipdir}/utils/"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
 }
 
-log_version() {
-    # $1 = zipdir
-    # $2 = package
-    # $3 = version
-    printf "| %-20s | %-53s |\n" "$2" "$3" >> "$1/VERSIONS.md"
-}
-
 bdist() {
     # Build binary distribution
-    local package name version srcdir licensedir zipdir prev_ver_suffix input
-    local symbols
+    local package name version srcdir zipdir prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
@@ -294,18 +251,7 @@ bdist() {
     zipdir="openslide-win64-${pkgver}"
     rm -rf "${zipdir}"
     mkdir -p "${zipdir}/bin"
-    cp CHANGELOG.md "${zipdir}/"
-    log_version "${zipdir}" "Software" "Version"
-    log_version "${zipdir}" "--------" "-------"
-    for package in $packages
-    do
-        case "${package}" in
-        openslide|openslide_java)
-            log_version "${zipdir}" "**$(expand ${package}_name)**" \
-                    "**$(meson_wrap_version ${package})**"
-            ;;
-        esac
-    done
+    cp -r CHANGELOG.md "${root}"/share/{licenses,VERSIONS.md} "${zipdir}/"
     for package in $packages
     do
         if [ -d "override/${package}" ] ;then
@@ -315,74 +261,19 @@ bdist() {
         fi
         for artifact in $(expand ${package}_artifacts)
         do
-            if [ "${artifact}" != "${artifact%.dll}" -o \
-                    "${artifact}" != "${artifact%.exe}" ] ; then
-                echo "Stripping ${artifact}..."
-                ${objcopy} --only-keep-debug \
-                        "${root}/bin/${artifact}" \
-                        "${zipdir}/bin/${artifact}.debug"
-                chmod -x "${zipdir}/bin/${artifact}.debug"
-                ${objcopy} -S \
-                        --add-gnu-debuglink="${zipdir}/bin/${artifact}.debug" \
-                        "${root}/bin/${artifact}" \
-                        "${zipdir}/bin/${artifact}"
-            else
-                cp "${root}/bin/${artifact}" "${zipdir}/bin/"
-            fi
-        done
-        licensedir="${zipdir}/licenses/$(expand ${package}_name)"
-        mkdir -p "${licensedir}"
-        if [ "$package" = sqlite3 ]; then
-            # Extract public-domain dedication from the top of sqlite3.h
-            awk '/\*{8}/ {exit} /^\*{2}/ {print}' "${srcdir}/sqlite3.h" > \
-                    "${srcdir}/PUBLIC-DOMAIN.txt"
-        fi
-        for artifact in $(expand ${package}_licenses)
-        do
-            if ! cp "${srcdir}/${artifact}" "${licensedir}"; then
-                echo "Failed to copy ${artifact} from ${package}."
-                exit 1
+            cp "${root}/artifacts/${artifact}" "${zipdir}/bin/"
+            if [ -f "${root}/artifacts/${artifact}.debug" ]; then
+                cp "${root}/artifacts/${artifact}.debug" "${zipdir}/bin/"
             fi
         done
         if [ "$package" = openslide ]; then
-            # check for extra symbol exports
-            symbols=$(${objdump} -p "${root}"/bin/libopenslide-*.dll | \
-                    awk -v t=0 \
-                        -e '/Ordinal\/Name Pointer/ {t = 1; next}' \
-                        -e 't == 0 {next}' \
-                        -e '/^$/ {exit}' \
-                        -e '{print $3}')
-            if [ -z "${symbols}" ]; then
-                echo "Couldn't find symbols in OpenSlide DLL"
-                exit 1
-            fi
-            if symbols=$(grep -v ^openslide_ <<<"${symbols}"); then
-                echo -e "\nUnexpected exports:\n${symbols}"
-                exit 1
-            fi
-
             mkdir -p "${zipdir}/lib"
-            cp "${root}/lib/libopenslide.dll.a" "${zipdir}/lib/libopenslide.lib"
+            cp "${root}/artifacts/libopenslide.lib" "${zipdir}/lib/"
             mkdir -p "${zipdir}/include"
             cp -r "${root}/include/openslide" "${zipdir}/include/"
             cp "${srcdir}/README.md" "${zipdir}/"
-        elif [ "$package" != openslide_java ]; then
-            log_version "${zipdir}" "$(expand ${package}_name)" \
-                    "$(meson_wrap_version ${package})"
         fi
     done
-    read -d "" input <<EOF ||:
-#include <_mingw_mac.h>
-#define s(v) #v
-#define ss(v) s(v)
-version=ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
-EOF
-    eval "$(${cc} -E - <<<${input})"
-    log_version "${zipdir}" "_MinGW-w64_" "_${version}_"
-    log_version "${zipdir}" "_GCC_" \
-            "_$(${cc} --version | sed -e 's/.*(/(/' -e q)_"
-    log_version "${zipdir}" "_Binutils_" \
-            "_$(${ld} --version | sed -e 's/.*version //' -e q)_"
     rm -f "${zipdir}.zip"
     zip -r "${zipdir}.zip" "${zipdir}"
     rm -r "${zipdir}"
@@ -438,14 +329,16 @@ probe() {
         exit 1
     fi
 
+    if [ -z "${pkgver}" ]; then
+        export -n OPENSLIDE_BIN_VERSION
+        pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
+    fi
+    export OPENSLIDE_BIN_VERSION="${pkgver}"
+
     build=64/build
     root="$(pwd)/64/root"
 
     cross_file="machines/cross-win64.ini"
-    cc=$(meson_config_key "${cross_file}" binaries c | tr -d "'")
-    ld=$(meson_config_key "${cross_file}" binaries ld | tr -d "'")
-    objcopy=$(meson_config_key "${cross_file}" binaries objcopy | tr -d "'")
-    objdump=$(meson_config_key "${cross_file}" binaries objdump | tr -d "'")
 }
 
 fail_handler() {
@@ -460,7 +353,7 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-pkgver="$(date +%Y%m%d)-local"
+pkgver=""
 ver_suffix=""
 openslide_werror=""
 while getopts "j:p:s:w" opt

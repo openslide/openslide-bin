@@ -87,6 +87,8 @@ jobs:
         with:
           repository: ${{ inputs.openslide_repo }}
           ref: ${{ inputs.openslide_ref }}
+          # make sure "git describe" works
+          fetch-depth: 0
           path: override/openslide
           persist-credentials: false
       - name: Check out OpenSlide Java
@@ -95,6 +97,8 @@ jobs:
         with:
           repository: ${{ inputs.openslide_java_repo }}
           ref: ${{ inputs.openslide_java_ref }}
+          # make sure "git describe" works
+          fetch-depth: 0
           path: override/openslide_java
           persist-credentials: false
       - name: Collect overrides
@@ -119,8 +123,8 @@ jobs:
         run: |
           artifact="openslide-windows-${{ inputs.pkgver }}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
-          mkdir -p "artifacts/$artifact"
-          mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "artifacts/$artifact"
+          mkdir -p "output/$artifact"
+          mv "openslide-winbuild-${{ inputs.pkgver }}.zip" "output/$artifact"
           if [ -d override/openslide ]; then
               suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
               echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
@@ -129,7 +133,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.prep.outputs.artifact }}
-          path: artifacts
+          path: output
 
   windows:
     name: Windows
@@ -164,14 +168,14 @@ jobs:
           fi
           ./build.sh ${suffix:+-s$suffix} -p "${{ inputs.pkgver }}" \
               $werror bdist
-          mkdir -p "artifacts/${{ needs.sdist.outputs.artifact }}"
+          mkdir -p "output/${{ needs.sdist.outputs.artifact }}"
           mv "openslide-win64-${{ inputs.pkgver }}.zip" \
-              "artifacts/${{ needs.sdist.outputs.artifact }}"
+              "output/${{ needs.sdist.outputs.artifact }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ needs.sdist.outputs.artifact }}
-          path: artifacts
+          path: output
 
   windows-smoke:
     name: Windows smoke test
