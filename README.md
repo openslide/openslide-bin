@@ -53,10 +53,6 @@ These must be specified before the subcommand.
 
 Parallel build with the specified parallelism.
 
-#### `-s<suffix>`
-
-Append `suffix` to the OpenSlide version string.
-
 #### `-w`
 
 Treat OpenSlide and OpenSlide Java build warnings as errors.

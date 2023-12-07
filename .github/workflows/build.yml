@@ -77,7 +77,6 @@ jobs:
     outputs:
       artifact: ${{ steps.prep.outputs.artifact }}
       version: ${{ steps.prep.outputs.version }}
-      version_suffix: ${{ steps.prep.outputs.version_suffix }}
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -133,10 +132,6 @@ jobs:
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "output/$artifact"
           mv "openslide-bin-${version}.tar.gz" "output/$artifact"
-          if [ -d override/openslide ]; then
-              suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
-              echo "version_suffix=$suffix" >> $GITHUB_OUTPUT
-          fi
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -169,13 +164,11 @@ jobs:
         run: tar xf overrides.tar
       - name: Build binary zip
         run: |
-          suffix="${{ needs.sdist.outputs.version_suffix }}"
           werror=
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
-          ./build.sh ${suffix:+-s$suffix} -x "${{ inputs.suffix }}" \
-              $werror bdist
+          ./build.sh -x "${{ inputs.suffix }}" $werror bdist
           mkdir -p "output/${{ needs.sdist.outputs.artifact }}"
           mv "openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip" \
               "output/${{ needs.sdist.outputs.artifact }}"

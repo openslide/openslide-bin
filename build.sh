@@ -284,6 +284,10 @@ probe() {
     fi
     pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
 
+    if [ -d override/openslide ]; then
+        ver_suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
+    fi
+
     sbuild=64/sdist
     build=64/build
     cross_file="machines/cross-windows-x64.ini"
@@ -302,16 +306,12 @@ trap fail_handler ERR
 # Parse command-line options
 parallel=""
 pkg_suffix="-DEFAULT-"
-ver_suffix=""
 openslide_werror=""
-while getopts "j:s:wx:" opt
+while getopts "j:wx:" opt
 do
     case "$opt" in
     j)
         parallel="-j${OPTARG}"
-        ;;
-    s)
-        ver_suffix="${OPTARG}"
         ;;
     w)
         openslide_werror="-Dopenslide:werror=true -Dopenslide-java:werror=true"
@@ -355,7 +355,7 @@ version)
 *)
     cat <<EOF
 Usage: $0 [-x<suffix>] sdist
-       $0 [-j<n>] [-s<suffix>] [-w] [-x<suffix>] bdist
+       $0 [-j<n>] [-w] [-x<suffix>] bdist
        $0 clean [package...]
        $0 updates
        $0 [-x<suffix>] version
