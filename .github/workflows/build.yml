@@ -128,7 +128,7 @@ jobs:
         run: |
           version=$(./build.sh -x "${{ inputs.suffix }}" version)
           echo "version=$version" >> $GITHUB_OUTPUT
-          artifact="openslide-windows-${version}"
+          artifact="openslide-bin-${version}"
           echo "artifact=$artifact" >> $GITHUB_OUTPUT
           mkdir -p "output/$artifact"
           mv "openslide-bin-${version}.tar.gz" "output/$artifact"

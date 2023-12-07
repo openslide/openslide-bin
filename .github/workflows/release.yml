@@ -73,7 +73,7 @@ jobs:
 
           gh release create --latest --verify-tag \
               --repo "${{ github.repository }}" \
-              --title "Windows build ${{ needs.stable.outputs.version }}" \
+              --title "openslide-bin ${{ needs.stable.outputs.version }}" \
               --notes-file changes \
               "${{ github.ref_name }}" \
               "${{ needs.stable.outputs.artifact }}/"*
