@@ -21,13 +21,36 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import sys
 
-# handle our own PYTHONPATH prepending, since meson can't do it this early
+# handle our own PYTHONPATH prepending, since meson can't set environment
+# variables for dist scripts
 # flake8 isn't happy about this
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
-from common.meson import default_suffix, project_version  # noqa: E402
+from common.argparse import TypedArgs  # noqa: E402
+from common.meson import meson_introspect  # noqa: E402
 
-suffix = os.environ.get('OPENSLIDE_BIN_SUFFIX', default_suffix())
-print(project_version(suffix))
+
+class Args(TypedArgs):
+    introspect: str
+
+
+args = Args(
+    'postprocess-sdist', description='Modify sdist directory before packing.'
+)
+args.add_arg(
+    '-i', '--introspect', required=True, help='Meson introspect command'
+)
+args.parse()
+os.environ['MESONINTROSPECT'] = args.introspect
+dest = Path(os.environ['MESON_DIST_ROOT'])
+
+# pin openslide-bin version suffix
+version: str = meson_introspect('projectinfo')['version']
+try:
+    suffix = version.split('+', 1)[1]
+except IndexError:
+    suffix = ''
+(dest / 'suffix').write_text(suffix + '\n')

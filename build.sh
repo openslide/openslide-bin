@@ -23,10 +23,6 @@ set -eE
 
 packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl libffi pcre2 glib gdk_pixbuf pixman cairo libxml2 uthash libdicom openslide openslide_java"
 
-# Build artifacts
-openslide_artifacts="libopenslide-1.dll slidetool.exe"
-openslide_java_artifacts="openslide-jni.dll openslide.jar"
-
 # Update-checking URLs
 zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
@@ -174,62 +170,38 @@ build() {
                 ${openslide_werror}
     fi
     meson compile -C "$build" $parallel
-    # When building multiple interdependent subpackages, we need to make sure
-    # the subpackages aren't accessible in the rootdir on subsequent builds,
-    # or else subsequent builds may use a different detection path (system
-    # vs. fallback) than the initial build.  Do this by setting prefix to "/"
-    # and then using --destdir to install into the real rootdir.
-    meson install -C "$build" \
-            --only-changed --no-rebuild --destdir "${root}"
-    # Move OpenSlide Java artifacts to the right place
-    pushd "${root}/lib/openslide-java" >/dev/null
-    cp ${openslide_java_artifacts} "${root}/bin/"
-    popd >/dev/null
 }
 
 sdist() {
     # Build source distribution
-    local package file zipdir
-    zipdir="openslide-winbuild-${pkgver}"
-    rm -rf "${zipdir}"
-    meson subprojects download
-    mkdir -p "${zipdir}/subprojects/packagecache"
-    for package in $packages
-    do
-        cp "subprojects/$(echo $package | tr _ -).wrap" "${zipdir}/subprojects/"
-        for file in $(meson_wrap_key $package wrap-file source_filename) \
-                $(meson_wrap_key $package wrap-file patch_filename); do
-            cp "subprojects/packagecache/$file" \
-                    "${zipdir}/subprojects/packagecache/"
-        done
-        for file in $(meson_wrap_key $package wrap-file diff_files | tr , " "); do
-            mkdir -p "${zipdir}/subprojects/packagefiles"
-            cp "subprojects/packagefiles/$file" \
-                    "${zipdir}/subprojects/packagefiles/"
-        done
-    done
-    mkdir -p "${zipdir}"/builder/{linux,windows} \
-            "${zipdir}"/{artifacts,common,deps,machines,utils}
-    cp build.sh README.md CHANGELOG.md COPYING.LESSER meson.build \
-            meson.options "${zipdir}/"
-    cp artifacts/{get-introspect-command,postprocess-binary,write-import-library,write-licenses,write-project-versions}.py \
-            artifacts/meson.build "${zipdir}/artifacts/"
-    cp builder/linux/Dockerfile "${zipdir}/builder/linux/"
-    cp builder/windows/{Dockerfile,package.accept_keywords,package.use,repos.conf} \
-            "${zipdir}/builder/windows/"
-    cp common/{__init__,argparse,meson,software}.py "${zipdir}/common/"
-    cp machines/{cross-{macos-{arm64,x86_64},win64},native-linux-x86_64}.ini \
-            "${zipdir}/machines/"
-    cp deps/{meson.build,setjmp.h} "${zipdir}/deps/"
-    cp utils/get-version.py "${zipdir}/utils/"
-    rm -f "${zipdir}.zip"
-    zip -r "${zipdir}.zip" "${zipdir}"
-    rm -r "${zipdir}"
+    local glib_dir
+    meson subprojects purge --confirm >/dev/null
+    if [ ! -f "${sbuild}/compile_commands.json" ]; then
+        # If the sbuild directory exists, setup didn't complete last time,
+        # and will fail again unless we delete the directory.
+        rm -rf "${sbuild}"
+    fi
+    meson setup \
+            --cross-file "${cross_file}" \
+            "$sbuild" \
+            --reconfigure \
+            -Dall_subprojects=true
+    tag_cachedir 64
+    # manually promote gvdb source to avoid 'meson dist' failure
+    # https://github.com/mesonbuild/meson/issues/12489
+    # delete and recreate for consistency
+    rm -rf subprojects/gvdb
+    glib_dir="$(meson_wrap_key glib wrap-file directory)"
+    cp -a "subprojects/${glib_dir}/subprojects/gvdb" subprojects/
+    # avoid spurious complaints about a dirty work tree
+    git update-index -q --refresh
+    meson dist -C "$sbuild" --formats gztar --include-subprojects --no-tests
+    cp "${sbuild}/meson-dist/openslide-bin-${pkgver}.tar.gz" .
 }
 
 bdist() {
     # Build binary distribution
-    local package name version srcdir zipdir prev_ver_suffix
+    local prev_ver_suffix
 
     # Rebuild OpenSlide if suffix changed
     prev_ver_suffix="$(cat 64/.suffix 2>/dev/null ||:)"
@@ -248,35 +220,7 @@ bdist() {
         override_remove
     )
 
-    zipdir="openslide-win64-${pkgver}"
-    rm -rf "${zipdir}"
-    mkdir -p "${zipdir}/bin"
-    cp -r CHANGELOG.md "${root}"/share/{licenses,VERSIONS.md} "${zipdir}/"
-    for package in $packages
-    do
-        if [ -d "override/${package}" ] ;then
-            srcdir="override/${package}"
-        else
-            srcdir="subprojects/$(meson_wrap_key ${package} wrap-file directory)"
-        fi
-        for artifact in $(expand ${package}_artifacts)
-        do
-            cp "${root}/artifacts/${artifact}" "${zipdir}/bin/"
-            if [ -f "${root}/artifacts/${artifact}.debug" ]; then
-                cp "${root}/artifacts/${artifact}.debug" "${zipdir}/bin/"
-            fi
-        done
-        if [ "$package" = openslide ]; then
-            mkdir -p "${zipdir}/lib"
-            cp "${root}/artifacts/libopenslide.lib" "${zipdir}/lib/"
-            mkdir -p "${zipdir}/include"
-            cp -r "${root}/include/openslide" "${zipdir}/include/"
-            cp "${srcdir}/README.md" "${zipdir}/"
-        fi
-    done
-    rm -f "${zipdir}.zip"
-    zip -r "${zipdir}.zip" "${zipdir}"
-    rm -r "${zipdir}"
+    cp "${build}/artifacts/openslide-bin-${pkgver}-windows-x64.zip" .
 }
 
 clean() {
@@ -291,12 +235,16 @@ clean() {
         done
         rm -rf "${build}"
         grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
-        meson subprojects purge --confirm >/dev/null
+        if [ ! -e suffix ]; then
+            meson subprojects purge --confirm >/dev/null
+        fi
     else
         echo "Cleaning..."
-        rm -rf 64 openslide-win*-*.zip
+        rm -rf 64 openslide-bin-*.{tar.gz,zip}
         grep -Flx "[wrap-redirect]" subprojects/*.wrap | xargs -r rm
-        meson subprojects purge --confirm >/dev/null
+        if [ ! -e suffix ]; then
+            meson subprojects purge --confirm >/dev/null
+        fi
     fi
 }
 
@@ -329,16 +277,20 @@ probe() {
         exit 1
     fi
 
-    if [ -z "${pkgver}" ]; then
-        export -n OPENSLIDE_BIN_VERSION
-        pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
+    if [ "${pkg_suffix}" != "-DEFAULT-" ]; then
+        export OPENSLIDE_BIN_SUFFIX="${pkg_suffix}"
+    else
+        export -n OPENSLIDE_BIN_SUFFIX
     fi
-    export OPENSLIDE_BIN_VERSION="${pkgver}"
+    pkgver="$(MESON_SOURCE_ROOT=. python3 utils/get-version.py)"
 
+    if [ -d override/openslide ]; then
+        ver_suffix=$(git -C override/openslide rev-parse HEAD | cut -c-7)
+    fi
+
+    sbuild=64/sdist
     build=64/build
-    root="$(pwd)/64/root"
-
-    cross_file="machines/cross-win64.ini"
+    cross_file="machines/cross-windows-x64.ini"
 }
 
 fail_handler() {
@@ -353,23 +305,19 @@ trap fail_handler ERR
 
 # Parse command-line options
 parallel=""
-pkgver=""
-ver_suffix=""
+pkg_suffix="-DEFAULT-"
 openslide_werror=""
-while getopts "j:p:s:w" opt
+while getopts "j:wx:" opt
 do
     case "$opt" in
     j)
         parallel="-j${OPTARG}"
         ;;
-    p)
-        pkgver="${OPTARG}"
-        ;;
-    s)
-        ver_suffix="${OPTARG}"
-        ;;
     w)
         openslide_werror="-Dopenslide:werror=true -Dopenslide-java:werror=true"
+        ;;
+    x)
+        pkg_suffix="${OPTARG}"
         ;;
     esac
 done
@@ -400,12 +348,17 @@ clean)
 updates)
     updates
     ;;
+version)
+    probe
+    echo "${pkgver}"
+    ;;
 *)
     cat <<EOF
-Usage: $0 [-p<pkgver>] sdist
-       $0 [-j<n>] [-p<pkgver>] [-s<suffix>] [-w] bdist
+Usage: $0 [-x<suffix>] sdist
+       $0 [-j<n>] [-w] [-x<suffix>] bdist
        $0 clean [package...]
        $0 updates
+       $0 [-x<suffix>] version
 
 Packages:
 $packages

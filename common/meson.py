@@ -25,9 +25,16 @@ from functools import lru_cache
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import subprocess
 from typing import Any
+
+# A.B.C.D
+# A.B.C = OpenSlide version
+# D = ordinal of the openslide-bin release with this A.B.C, starting from 1
+# Update the version when releasing openslide-bin.
+_PROJECT_VERSION = '4.0.0.1'
 
 
 def meson_source_root() -> Path:
@@ -53,5 +60,23 @@ def parse_ini_file(path: Path) -> configparser.RawConfigParser:
         return ini
 
 
-def default_version() -> str:
-    return date.today().strftime('%Y%m%d') + '-local'
+def project_version(suffix: str) -> str:
+    if not re.match('[a-zA-Z0-9.]*$', suffix):
+        raise Exception('Invalid character in version suffix')
+    if suffix:
+        return f'{_PROJECT_VERSION}+{suffix}'
+    else:
+        return _PROJECT_VERSION
+
+
+def default_suffix() -> str:
+    # try the suffix pinned by 'meson dist'
+    try:
+        suffix = (meson_source_root() / 'suffix').read_text().strip()
+        segments = suffix.split('.') if suffix else []
+        # append "local" segment if missing
+        if 'local' not in segments:
+            segments.append('local')
+        return '.'.join(segments)
+    except FileNotFoundError:
+        return date.today().strftime('%Y%m%d') + '.local'

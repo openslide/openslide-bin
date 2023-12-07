@@ -40,6 +40,13 @@ class Project:
     primary: bool = False
 
     @staticmethod
+    def get(id: str) -> Project:
+        for p in _PROJECTS:
+            if p.id == id:
+                return p
+        raise KeyError
+
+    @staticmethod
     def get_enabled() -> list[Project]:
         enabled = {
             s['name'] for s in meson_introspect('projectinfo')['subprojects']
