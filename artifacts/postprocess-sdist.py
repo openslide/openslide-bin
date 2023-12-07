@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import sys
 
 # handle our own PYTHONPATH prepending, since meson can't set environment
@@ -46,6 +47,9 @@ args.add_arg(
 args.parse()
 os.environ['MESONINTROSPECT'] = args.introspect
 dest = Path(os.environ['MESON_DIST_ROOT'])
+
+# remove those parts of .github not ignored from .gitattributes
+shutil.rmtree(dest / '.github')
 
 # pin openslide-bin version suffix
 version: str = meson_introspect('projectinfo')['version']
