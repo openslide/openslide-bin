@@ -2,9 +2,12 @@
 *.sh		eol=lf
 
 # Don't include Git/GitHub metadata and development tool configs in
-# sdist tarballs
+# sdist tarballs.
+# Don't ignore the find-container-digest composite action; remove it from
+# postprocess-sdist.py.  This is necessary so other repos can use the action.
 .gitattributes			export-ignore
 .gitignore			export-ignore
-/.github			export-ignore
+/.github/ISSUE_TEMPLATE		export-ignore
+/.github/workflows		export-ignore
 /.pre-commit-config.yaml	export-ignore
 /pyproject.toml			export-ignore
