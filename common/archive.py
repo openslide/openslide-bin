@@ -141,9 +141,7 @@ class TarArchiveWriter(ArchiveWriter):
 class ZipArchiveWriter(ArchiveWriter):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
-        self._zip = zipfile.ZipFile(
-            fh, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9
-        )
+        self._zip = zipfile.ZipFile(fh, 'w')
 
     def close(self) -> None:
         for _, member in sorted(self._members.items()):
@@ -154,7 +152,12 @@ class ZipArchiveWriter(ArchiveWriter):
                     )
                 except AttributeError:
                     info = member.path.as_posix()
-                self._zip.writestr(info, member.fh.read())
+                self._zip.writestr(
+                    info,
+                    member.fh.read(),
+                    compress_type=zipfile.ZIP_DEFLATED,
+                    compresslevel=9,
+                )
             elif isinstance(member, DirMember):
                 self._zip.writestr(member.path.as_posix() + '/', b'')
             elif isinstance(member, SymlinkMember):
