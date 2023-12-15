@@ -1,3 +1,6 @@
+
+
+
 # openslide-bin
 
 This is a set of scripts for building OpenSlide for Windows, including all
