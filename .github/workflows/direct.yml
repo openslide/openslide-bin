@@ -42,7 +42,7 @@ jobs:
       - name: Smoke test
         run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux
           path: output
@@ -90,7 +90,7 @@ jobs:
       - name: Smoke test
         run: OPENSLIDE_DEBUG=synthetic output/slidetool prop list ''
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos
           path: output

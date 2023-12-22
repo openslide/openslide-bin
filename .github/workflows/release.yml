@@ -52,14 +52,16 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.stable.outputs.artifact }}
+          pattern: "openslide-bin-*"
+          path: upload
+          merge-multiple: true
       - name: Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          unzip "${{ needs.stable.outputs.artifact }}/openslide-bin-${{ needs.stable.outputs.version }}-windows-x64.zip"
+          unzip "upload/openslide-bin-${{ needs.stable.outputs.version }}-windows-x64.zip"
 
           echo "## Changes" > changes
           awk -e '/^## / && ok {exit}' \
@@ -76,4 +78,4 @@ jobs:
               --title "openslide-bin ${{ needs.stable.outputs.version }}" \
               --notes-file changes \
               "${{ github.ref_name }}" \
-              "${{ needs.stable.outputs.artifact }}/"*
+              upload/*
