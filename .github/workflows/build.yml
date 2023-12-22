@@ -59,11 +59,8 @@ on:
         required: true
         type: string
     outputs:
-      artifact:
-        description: The name of the output artifact
-        value: ${{ jobs.sdist.outputs.artifact }}
       version:
-        description: The version of the output artifact
+        description: The version of the output artifacts
         value: ${{ jobs.sdist.outputs.version }}
 
 permissions:
@@ -75,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
+      artifact_base: ${{ steps.prep.outputs.artifact_base }}
       artifact: ${{ steps.prep.outputs.artifact }}
       version: ${{ steps.prep.outputs.version }}
     steps:
@@ -109,7 +107,7 @@ jobs:
         run: tar cf overrides.tar override
       - name: Upload overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-overrides
           path: overrides.tar
@@ -128,73 +126,78 @@ jobs:
         run: |
           version=$(./build.sh -x "${{ inputs.suffix }}" version)
           echo "version=$version" >> $GITHUB_OUTPUT
-          artifact="openslide-bin-${version}"
-          echo "artifact=$artifact" >> $GITHUB_OUTPUT
-          mkdir -p "output/$artifact"
-          mv "openslide-bin-${version}.tar.gz" "output/$artifact"
+          artifact_base="openslide-bin-${version}"
+          echo "artifact_base=$artifact_base" >> $GITHUB_OUTPUT
+          echo "artifact=${artifact_base}.tar.gz" >> $GITHUB_OUTPUT
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.prep.outputs.artifact }}
-          path: output
+          path: ${{ steps.prep.outputs.artifact }}
+          compression-level: 0
 
   windows:
     name: Windows
     needs: sdist
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
+    outputs:
+      artifact_base: ${{ steps.build.outputs.artifact_base }}
+      artifact: ${{ steps.build.outputs.artifact }}
     steps:
       - name: Download source tarball
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.sdist.outputs.artifact }}
       - name: Unpack source tarball
         run: |
-          (cd "${{ needs.sdist.outputs.artifact }}" &&
-              tar xf "openslide-bin-${{ needs.sdist.outputs.version }}.tar.gz")
-          mv "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ needs.sdist.outputs.version }}"/* .
-          rm -r "${{ needs.sdist.outputs.artifact }}"
+          tar xf "${{ needs.sdist.outputs.artifact }}"
+          mv "${{ needs.sdist.outputs.artifact_base }}"/* .
+          rm -r "${{ needs.sdist.outputs.artifact_base }}" \
+              "${{ needs.sdist.outputs.artifact }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-overrides
       - name: Unpack overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
-        run: tar xf overrides.tar
+        run: tar xf overrides.tar && rm overrides.tar
       - name: Build binary zip
+        id: build
         run: |
           werror=
           if [ "${{ inputs.werror }}" = true ]; then
               werror="-w"
           fi
           ./build.sh -x "${{ inputs.suffix }}" $werror bdist
-          mkdir -p "output/${{ needs.sdist.outputs.artifact }}"
-          mv "openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip" \
-              "output/${{ needs.sdist.outputs.artifact }}"
+          artifact_base="openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64"
+          echo "artifact_base=$artifact_base" >> $GITHUB_OUTPUT
+          echo "artifact=${artifact_base}.zip" >> $GITHUB_OUTPUT
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.sdist.outputs.artifact }}
-          path: output
+          name: ${{ steps.build.outputs.artifact }}
+          path: ${{ steps.build.outputs.artifact }}
+          compression-level: 0
 
   windows-smoke:
     name: Windows smoke test
     needs: [sdist, windows]
     runs-on: windows-latest
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.sdist.outputs.artifact }}
-      - name: Unpack artifact
+          name: ${{ needs.windows.outputs.artifact }}
+      - name: Unpack Windows build
         shell: bash
-        run: unzip "${{ needs.sdist.outputs.artifact }}/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip"
+        run: unzip "${{ needs.windows.outputs.artifact }}"
       - name: Report package versions
         shell: bash
-        run: cat "openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "${{ needs.windows.outputs.artifact_base }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          cd "${GITHUB_WORKSPACE}/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64/bin"
+          cd "${GITHUB_WORKSPACE}/${{ needs.windows.outputs.artifact_base }}/bin"
           OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
