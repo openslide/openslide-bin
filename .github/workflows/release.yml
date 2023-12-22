@@ -65,7 +65,7 @@ jobs:
           awk -e '/^## / && ok {exit}' \
               -e '/^## / {ok=1; next}' \
               -e 'ok {print}' \
-              "openslide-win64-${{ needs.setup.outputs.pkgver }}/CHANGELOG.md" \
+              "openslide-bin-${{ needs.stable.outputs.version }}-windows-x64/CHANGELOG.md" \
               >> changes
           echo -e "## Versions\n" >> changes
           cat "openslide-bin-${{ needs.stable.outputs.version }}-windows-x64/VERSIONS.md" \
