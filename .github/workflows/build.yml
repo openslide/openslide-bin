@@ -161,7 +161,7 @@ jobs:
           name: build-overrides
       - name: Unpack overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
-        run: tar xf overrides.tar
+        run: tar xf overrides.tar && rm overrides.tar
       - name: Build binary zip
         run: |
           werror=
