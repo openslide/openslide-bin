@@ -20,20 +20,35 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import ExitStack, contextmanager
+import copy
 from dataclasses import dataclass
+from functools import cached_property
+from itertools import zip_longest
 import os
 from pathlib import Path, PurePath
 import re
 import tarfile
+import tempfile
 import time
 from types import TracebackType
-from typing import BinaryIO, Self
+from typing import BinaryIO, Self, cast
 import zipfile
 
 
 @dataclass
 class Member(ABC):
     path: PurePath
+
+    @property
+    def relpath(self) -> PurePath:
+        return PurePath(*self.path.parts[1:])
+
+    def with_base(self, base: PurePath) -> Member:
+        member = copy.copy(self)
+        member.path = base / member.relpath
+        return member
 
 
 @dataclass
@@ -53,7 +68,7 @@ class SymlinkMember(Member):
 
 class ArchiveWriter(ABC):
     def __init__(self, path: Path):
-        self.base = PurePath(re.sub('\\.(tar\\.xz|zip)$', '', path.name))
+        self.base = _path_base(path)
         self._members: dict[PurePath, Member] = {}
 
     def __enter__(self) -> Self:
@@ -163,3 +178,101 @@ class ZipArchiveWriter(ArchiveWriter):
             elif isinstance(member, SymlinkMember):
                 raise Exception('Symlinks not supported in Zip')
         self._zip.close()
+
+
+class ArchiveReader(ABC):
+    def __init__(self, path: Path):
+        self.base = _path_base(path)
+        self._tempdir = tempfile.TemporaryDirectory(prefix='openslide-bin-')
+        self._dir = Path(self._tempdir.name)
+
+    @classmethod
+    @contextmanager
+    def group(cls, fhs: Iterable[BinaryIO]) -> Iterator[Iterator[MemberSet]]:
+        with ExitStack() as stack:
+            readers = [
+                # mypy thinks we're initializing this ABC, not a subclass
+                stack.enter_context(cls(fh))  # type: ignore[arg-type]
+                for fh in fhs
+            ]
+            yield (MemberSet(members) for members in zip_longest(*readers))
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.close()
+
+    @abstractmethod
+    def close(self) -> None:
+        self._tempdir.cleanup()
+
+    @abstractmethod
+    def __iter__(self) -> Iterator[Member]:
+        pass
+
+
+class TarArchiveReader(ArchiveReader):
+    def __init__(self, fh: BinaryIO):
+        super().__init__(Path(fh.name))
+        self._tar = tarfile.open(fileobj=fh)
+        if hasattr(tarfile, 'data_filter'):
+            self._tar.extraction_filter = tarfile.data_filter
+
+    def close(self) -> None:
+        self._tar.close()
+        super().close()
+
+    def __iter__(self) -> Iterator[Member]:
+        while True:
+            info = self._tar.next()
+            if info is None:
+                return
+            path = PurePath(info.name)
+            if info.type == tarfile.DIRTYPE:
+                yield DirMember(path)
+            elif info.type == tarfile.REGTYPE:
+                self._tar.extract(info, self._dir)
+                yield FileMember(path, open(self._dir / path, 'rb'))
+            elif info.type == tarfile.SYMTYPE:
+                yield SymlinkMember(path, PurePath(info.linkname))
+            else:
+                raise Exception(
+                    f'Unsupported member type: {info.type.decode()}'
+                )
+
+
+class MemberSet:
+    def __init__(self, members: Sequence[Member | None]):
+        if not all(members):
+            raise Exception('Missing member in one or more archives')
+        self.members = cast(Sequence[Member], members)
+
+    def __getitem__(self, idx: int) -> Member:
+        return self.members[idx]
+
+    def __iter__(self) -> Iterator[Member]:
+        return iter(self.members)
+
+    @property
+    def relpaths(self) -> Sequence[PurePath]:
+        return [member.relpath for member in self]
+
+    @cached_property
+    def datas(self) -> Sequence[bytes]:
+        ret = []
+        for member in self:
+            if not isinstance(member, FileMember):
+                raise Exception('Member is not a file')
+            ret.append(member.fh.read())
+            member.fh.seek(0)
+        return ret
+
+
+def _path_base(path: Path) -> PurePath:
+    return PurePath(re.sub('\\.(tar\\.xz|zip)$', '', path.name))
