@@ -72,8 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
-      artifact_base: ${{ steps.prep.outputs.artifact_base }}
-      artifact: ${{ steps.prep.outputs.artifact }}
+      archive_base: ${{ steps.prep.outputs.archive_base }}
+      archive: ${{ steps.prep.outputs.archive }}
       version: ${{ steps.prep.outputs.version }}
     steps:
       - name: Check out repo
@@ -122,19 +122,19 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           ./build.sh -x "${{ inputs.suffix }}" sdist
-      - name: Prep artifact
+      - name: Prep archive
         id: prep
         run: |
           version=$(./build.sh -x "${{ inputs.suffix }}" version)
           echo "version=$version" >> $GITHUB_OUTPUT
-          artifact_base="openslide-bin-${version}"
-          echo "artifact_base=$artifact_base" >> $GITHUB_OUTPUT
-          echo "artifact=${artifact_base}.tar.gz" >> $GITHUB_OUTPUT
-      - name: Upload artifact
+          archive_base="openslide-bin-${version}"
+          echo "archive_base=$archive_base" >> $GITHUB_OUTPUT
+          echo "archive=${archive_base}.tar.gz" >> $GITHUB_OUTPUT
+      - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.prep.outputs.artifact }}
-          path: ${{ steps.prep.outputs.artifact }}
+          name: ${{ steps.prep.outputs.archive }}
+          path: ${{ steps.prep.outputs.archive }}
           compression-level: 0
 
   windows:
@@ -143,19 +143,19 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.windows_builder_repo_and_digest }}
     outputs:
-      artifact_base: ${{ steps.build.outputs.artifact_base }}
-      artifact: ${{ steps.build.outputs.artifact }}
+      archive_base: ${{ steps.build.outputs.archive_base }}
+      archive: ${{ steps.build.outputs.archive }}
     steps:
       - name: Download source tarball
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.sdist.outputs.artifact }}
+          name: ${{ needs.sdist.outputs.archive }}
       - name: Unpack source tarball
         run: |
-          tar xf "${{ needs.sdist.outputs.artifact }}"
-          mv "${{ needs.sdist.outputs.artifact_base }}"/* .
-          rm -r "${{ needs.sdist.outputs.artifact_base }}" \
-              "${{ needs.sdist.outputs.artifact }}"
+          tar xf "${{ needs.sdist.outputs.archive }}"
+          mv "${{ needs.sdist.outputs.archive_base }}"/* .
+          rm -r "${{ needs.sdist.outputs.archive_base }}" \
+              "${{ needs.sdist.outputs.archive }}"
       - name: Download overrides
         if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
         uses: actions/download-artifact@v4
@@ -172,14 +172,14 @@ jobs:
               werror="-w"
           fi
           ./build.sh -x "${{ inputs.suffix }}" $werror bdist
-          artifact_base="openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64"
-          echo "artifact_base=$artifact_base" >> $GITHUB_OUTPUT
-          echo "artifact=${artifact_base}.zip" >> $GITHUB_OUTPUT
-      - name: Upload artifact
+          archive_base="openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64"
+          echo "archive_base=$archive_base" >> $GITHUB_OUTPUT
+          echo "archive=${archive_base}.zip" >> $GITHUB_OUTPUT
+      - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.artifact }}
-          path: ${{ steps.build.outputs.artifact }}
+          name: ${{ steps.build.outputs.archive }}
+          path: ${{ steps.build.outputs.archive }}
           compression-level: 0
 
   windows-smoke:
@@ -190,15 +190,15 @@ jobs:
       - name: Download Windows build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.windows.outputs.artifact }}
+          name: ${{ needs.windows.outputs.archive }}
       - name: Unpack Windows build
         shell: bash
-        run: unzip "${{ needs.windows.outputs.artifact }}"
+        run: unzip "${{ needs.windows.outputs.archive }}"
       - name: Report package versions
         shell: bash
-        run: cat "${{ needs.windows.outputs.artifact_base }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "${{ needs.windows.outputs.archive_base }}/VERSIONS.md" >> $GITHUB_STEP_SUMMARY
       - name: Smoke test
         shell: bash
         run: |
-          cd "${GITHUB_WORKSPACE}/${{ needs.windows.outputs.artifact_base }}/bin"
+          cd "${GITHUB_WORKSPACE}/${{ needs.windows.outputs.archive_base }}/bin"
           OPENSLIDE_DEBUG=synthetic ./slidetool.exe prop list ""
