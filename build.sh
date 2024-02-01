@@ -26,7 +26,7 @@ packages="zlib libpng libjpeg_turbo libtiff libopenjp2 sqlite3 proxy_libintl lib
 # Update-checking URLs
 zlib_upurl="https://zlib.net/"
 libpng_upurl="http://www.libpng.org/pub/png/libpng.html"
-libjpeg_turbo_upurl="https://sourceforge.net/projects/libjpeg-turbo/files/"
+libjpeg_turbo_upurl="https://github.com/libjpeg-turbo/libjpeg-turbo/tags"
 libtiff_upurl="https://download.osgeo.org/libtiff/"
 libopenjp2_upurl="https://github.com/uclouvain/openjpeg/tags"
 sqlite3_upurl="https://sqlite.org/changes.html"
@@ -46,7 +46,7 @@ openslide_java_upurl="https://github.com/openslide/openslide-java/tags"
 # Update-checking regexes
 zlib_upregex="source code, version ([0-9.]+)"
 libpng_upregex="libpng-([0-9.]+)-README.txt"
-libjpeg_turbo_upregex="files/([0-9.]+)/"
+libjpeg_turbo_upregex="archive/refs/tags/([0-9.]+)\.tar"
 libtiff_upregex="tiff-([0-9.]+)\.tar"
 libopenjp2_upregex="archive/refs/tags/v([0-9.]+)\.tar"
 sqlite3_upregex="[0-9]{4}-[0-9]{2}-[0-9]{2} \(([0-9.]+)\)"
