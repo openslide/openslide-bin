@@ -20,10 +20,11 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
       - name: Cache sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: direct-cache
           path: subprojects/packagecache
+          save-always: true
       - name: Build
         id: build
         run: |
@@ -61,10 +62,11 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
       - name: Cache sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: direct-cache
           path: subprojects/packagecache
+          save-always: true
       - name: Build
         id: build
         run: |
