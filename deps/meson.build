@@ -75,7 +75,6 @@ subproject(
   'libopenjp2',
   default_options : [
     'build_codec_apps=false',
-    'build_doc=disabled',
   ],
 )
 subproject(
