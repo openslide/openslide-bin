@@ -63,6 +63,15 @@ if all_systems or system != 'linux'
   subproject('proxy-libintl')
 endif
 
+if dev_deps
+  subproject(
+    'zstd',
+    default_options : [
+      'bin_programs=false',
+    ],
+  )
+endif
+
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
