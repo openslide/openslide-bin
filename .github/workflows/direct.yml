@@ -58,9 +58,8 @@ jobs:
               brew link --overwrite $formula
           done
           brew update
-          # setuptools needed by glib 2.78
-          # https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3740
-          brew install meson python-setuptools
+          # python-packaging needed by glib
+          brew install meson python-packaging
       - name: Check out repo
         uses: actions/checkout@v4
       - name: Cache sources
