@@ -322,7 +322,7 @@ class MesonPlatform(Platform):
             ['meson', 'subprojects', 'purge', '--confirm'],
             cwd=self.params.root,
         )
-        dir = self._setup('sdist', ['-Dall_subprojects=true'])
+        dir = self._setup('sdist', ['-Dall_systems=true'])
         # avoid spurious complaints about a dirty work tree
         subprocess.check_call(
             ['git', 'update-index', '-q', '--refresh'], cwd=self.params.root
