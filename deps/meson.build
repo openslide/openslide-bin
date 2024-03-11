@@ -1,6 +1,8 @@
 # should we enable all subprojects that are needed by any OS?  this is
 # needed when building source distributions so we don't leave anything out
 all_systems = get_option('all_systems')
+# should we enable subprojects needed by OpenSlide Git main?
+dev_deps = get_option('dev_deps')
 
 add_global_arguments(
   '-I' + meson.current_source_dir(),

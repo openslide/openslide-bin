@@ -112,6 +112,10 @@ class Project(Software):
     def wrap_path(self) -> Path:
         return meson_source_root() / 'subprojects' / f'{self.id}.wrap'
 
+    @property
+    def override_path(self) -> Path:
+        return meson_source_root() / 'override' / self.id
+
     @cached_property
     def version(self) -> str:
         try:

@@ -1,5 +1,6 @@
 # openslide-bin release process
 
+- [ ] If there's a new OpenSlide release, remove `dev_deps` condition from any subprojects used by the new release
 - [ ] Run [workflow](https://github.com/openslide/openslide-bin/actions/workflows/update-check.yml) to check for updates
 - [ ] Merge any resulting PR; perform any needed manual updates reported by the workflow
 - [ ] Submit PR to update `CHANGELOG.md` and `_PROJECT_VERSION`
