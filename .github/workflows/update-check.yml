@@ -60,6 +60,7 @@ jobs:
           delete-branch: true
       - name: Check for stale dependencies
         run: |
+          set -o pipefail
           git checkout ${{ env.GIT_BRANCH }}
           ./bintool updates | tee stale-report
       - name: File issue for stale dependencies
