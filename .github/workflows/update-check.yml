@@ -26,6 +26,10 @@ jobs:
     name: Update
     runs-on: ubuntu-latest
     steps:
+      - name: Update Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
       - name: Check out repo
         uses: actions/checkout@v4
         with:
@@ -60,6 +64,7 @@ jobs:
           delete-branch: true
       - name: Check for stale dependencies
         run: |
+          set -o pipefail
           git checkout ${{ env.GIT_BRANCH }}
           ./bintool updates | tee stale-report
       - name: File issue for stale dependencies
