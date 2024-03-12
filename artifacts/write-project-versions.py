@@ -21,15 +21,21 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
-import sys
 from typing import TextIO
 
 from common.argparse import TypedArgs
 from common.meson import meson_host, meson_introspect
-from common.software import write_project_versions
+from common.software import (
+    Project,
+    Software,
+    Tool,
+    get_software_info,
+    write_version_markdown,
+)
 
 MINGW_VERSION_CHECK_HDR = b'''
 #include <_mingw_mac.h>
@@ -40,22 +46,30 @@ ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUG
 
 
 class Args(TypedArgs):
-    output: TextIO
+    json: TextIO
+    markdown: TextIO
 
 
 args = Args(
     'write-project-versions', description='Write subproject version list.'
 )
 args.add_arg(
-    '-o',
-    '--output',
+    '-j',
+    '--json',
     type=argparse.FileType('w'),
-    default=sys.stdout,
-    help='output file',
+    required=True,
+    help='output JSON',
+)
+args.add_arg(
+    '-m',
+    '--markdown',
+    type=argparse.FileType('w'),
+    required=True,
+    help='output Markdown',
 )
 args.parse()
 
-env_info = {}
+sw: list[Software] = list(Project.get_enabled())
 compiler = meson_introspect('compilers')['host']['c']
 if meson_host() == 'windows':
     out = subprocess.Popen(
@@ -63,24 +77,31 @@ if meson_host() == 'windows':
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     ).communicate(MINGW_VERSION_CHECK_HDR)[0]
-    env_info['MinGW-w64'] = [
+    ver = [
         line
         for line in out.decode().split('\n')
         if line.strip() and not line.startswith('#')
     ][0].replace('"', '')
+    sw.append(Tool(id='mingw-w64', display='MinGW-w64', version=ver))
 if compiler['id'] == 'gcc':
     ver = compiler['full_version']
     match = re.match('[^ ]+ (.+)', ver)
     if match:
         ver = match[1]
-    env_info['GCC'] = ver
-    env_info['Binutils'] = (
+    sw.append(Tool(id='gcc', display='GCC', version=ver))
+    ver = (
         subprocess.check_output([os.environ['LD'], '--version'])
         .decode()
         .split('\n')[0]
     )
+    sw.append(Tool(id='binutils', display='Binutils', version=ver))
 elif compiler['id'] == 'clang':
-    env_info['Clang'] = re.sub('.* version ', '', compiler['full_version'])
+    ver = re.sub('.* version ', '', compiler['full_version'])
+    sw.append(Tool(id='clang', display='Clang', version=ver))
 
-with args.output as fh:
-    write_project_versions(fh, env_info)
+info = get_software_info(sw)
+with args.json as fh:
+    json.dump(info, fh, indent=2, sort_keys=True)
+    fh.write('\n')
+with args.markdown as fh:
+    write_version_markdown(fh, info)

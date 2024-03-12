@@ -61,7 +61,7 @@ jobs:
       - name: Check for stale dependencies
         run: |
           git checkout ${{ env.GIT_BRANCH }}
-          ./build.sh updates | tee stale-report
+          ./bintool updates | tee stale-report
       - name: File issue for stale dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.OPENSLIDE_BOT_TOKEN }}

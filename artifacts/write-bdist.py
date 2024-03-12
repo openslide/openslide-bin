@@ -77,7 +77,12 @@ with arc:
                 arcdir = arc.base / 'bin'
             else:
                 arcdir = arc.base / 'lib'
-        elif name in ('CHANGELOG.md', 'VERSIONS.md', 'licenses'):
+        elif name in (
+            'CHANGELOG.md',
+            'VERSIONS.md',
+            'versions.json',
+            'licenses',
+        ):
             arcdir = arc.base
         else:
             arcdir = arc.base / 'bin'
