@@ -30,6 +30,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
+      - name: Install dependencies
+        run: pip install --user meson packaging requests
       - name: Check out repo
         uses: actions/checkout@v4
         with:
@@ -42,7 +44,6 @@ jobs:
       - name: Update wraps
         id: modified
         run: |
-          pip install --user meson
           meson wrap update
           modified=$(git status --porcelain "subprojects/*.wrap" |
                   sed -e 's:.*/::' -e 's/\.wrap$//')
