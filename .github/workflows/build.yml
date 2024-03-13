@@ -138,6 +138,17 @@ jobs:
           path: ${{ steps.prep.outputs.archive }}
           compression-level: 0
 
+      - name: Check source tarball size
+        # check after uploading, to aid debugging
+        run: |
+          size=$(stat -c "%s" "${{ steps.prep.outputs.archive }}")
+          if [ $size -gt 104857600 ]; then
+              # https://github.com/pypi/warehouse/blob/cf94b41/warehouse/forklift/legacy.py#L77
+              echo "Source tarball is $size bytes, which is larger than 100 MiB."
+              echo "Maintainers will need to request a larger PyPI file size limit."
+              echo "https://pypi.org/help/#file-size-limit"
+              exit 1
+          fi
       - name: Compute bdist systems
         id: systems
         shell: python
