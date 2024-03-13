@@ -144,13 +144,13 @@ jobs:
         run: |
           import json, os
           sys_map = {
-            '${{ inputs.linux_builder_repo_and_digest }}': 'linux',
-            '${{ inputs.macos_enable && 'true' || '' }}': 'macos',
-            '${{ inputs.windows_builder_repo_and_digest }}': 'windows',
+              '${{ inputs.linux_builder_repo_and_digest }}': 'linux',
+              '${{ inputs.macos_enable && 'true' || '' }}': 'macos',
+              '${{ inputs.windows_builder_repo_and_digest }}': 'windows',
           }
           systems = json.dumps(sorted(v for k, v in sys_map.items() if k))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-            fh.write(f'systems={systems}\n')
+              fh.write(f'systems={systems}\n')
 
   bdist:
     name: Binaries
