@@ -112,6 +112,10 @@ class Project(Software):
     def wrap_path(self) -> Path:
         return meson_source_root() / 'subprojects' / f'{self.id}.wrap'
 
+    @property
+    def override_path(self) -> Path:
+        return meson_source_root() / 'override' / self.id
+
     @cached_property
     def version(self) -> str:
         try:
@@ -320,6 +324,14 @@ _PROJECTS = (
         licenses=['README'],
         update_url='https://zlib.net/',
         update_regex=re.compile('source code, version ([0-9.]+)'),
+    ),
+    Project(
+        id='zstd',
+        display='Zstandard',
+        # Dual-licensed BSD or GPLv2.  Elect BSD.
+        licenses=['LICENSE'],
+        update_url='https://github.com/facebook/zstd/tags',
+        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
 )
 

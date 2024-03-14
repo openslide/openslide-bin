@@ -1,13 +1,15 @@
-# should we enable all subprojects?  this is needed when building source
-# distributions so we don't leave anything out
-force_subprojects = get_option('all_subprojects')
+# should we enable all subprojects that are needed by any OS?  this is
+# needed when building source distributions so we don't leave anything out
+all_systems = get_option('all_systems')
+# should we enable subprojects needed by OpenSlide Git main?
+dev_deps = get_option('dev_deps')
 
 add_global_arguments(
   '-I' + meson.current_source_dir(),
   language: ['c', 'cpp']
 )
 
-if system == 'darwin' and not force_subprojects
+if not all_systems and system == 'darwin'
   cc = meson.get_compiler('c')
   # [dependency name, library name, version] or
   # [dependency name, library name, header with version, version define]
@@ -57,8 +59,17 @@ else
   subproject('sqlite3')
 endif
 
-if system != 'linux' or force_subprojects
+if all_systems or system != 'linux'
   subproject('proxy-libintl')
+endif
+
+if dev_deps
+  subproject(
+    'zstd',
+    default_options : [
+      'bin_programs=false',
+    ],
+  )
 endif
 
 subproject('libpng')

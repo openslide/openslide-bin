@@ -4,8 +4,14 @@
 # -Dopenslide-java:werror=true   - fail OpenSlide Java build on warnings
 
 option(
-  'all_subprojects',
+  'all_systems',
   type : 'boolean',
   value : false,
-  description : 'Enable all subprojects (for building the source tarball)',
+  description : 'Enable subprojects for all OSes (for building source tarball)',
+)
+option(
+  'dev_deps',
+  type : 'boolean',
+  value : false,
+  description : 'Enable subprojects for OpenSlide Git main',
 )

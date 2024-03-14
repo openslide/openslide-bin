@@ -169,7 +169,7 @@ class BuildParams:
         overrides directory.'''
         assert self.locked
         for proj in Project.get_all():
-            override = self.root / 'override' / proj.id
+            override = proj.override_path
             dir = self.root / 'subprojects' / proj.id
             wrap = proj.wrap_path
             overridden = wrap.with_suffix('.wrap.overridden')
@@ -287,12 +287,20 @@ class MesonPlatform(Platform):
             # we wipe
             args.append('--wipe')
 
-        openslide_src = Project.get('openslide').source_dir
+        openslide = Project.get('openslide')
+        # we can't check for the existence of the wrap file; sdist needs
+        # dev_deps but doesn't activate overrides
+        dev_deps = openslide.override_path.is_dir()
+        args.append(f'-Ddev_deps={str(dev_deps).lower()}')
+        if dev_deps:
+            # OpenSlide is overridden; enable deps used by its Git main
+            log('Enabling development dependencies...')
+
         version_suffix = (
             subprocess.check_output(
-                ['git', 'rev-parse', 'HEAD'], cwd=openslide_src
+                ['git', 'rev-parse', 'HEAD'], cwd=openslide.source_dir
             ).decode()[:7]
-            if (openslide_src / '.git').exists()
+            if (openslide.source_dir / '.git').exists()
             else ''
         )
         args.append(f'-Dopenslide:version_suffix={version_suffix}')
@@ -322,7 +330,7 @@ class MesonPlatform(Platform):
             ['meson', 'subprojects', 'purge', '--confirm'],
             cwd=self.params.root,
         )
-        dir = self._setup('sdist', ['-Dall_subprojects=true'])
+        dir = self._setup('sdist', ['-Dall_systems=true'])
         # avoid spurious complaints about a dirty work tree
         subprocess.check_call(
             ['git', 'update-index', '-q', '--refresh'], cwd=self.params.root
