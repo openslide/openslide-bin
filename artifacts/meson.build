@@ -12,6 +12,7 @@ env.set('MESONINTROSPECT', mesonintrospect)
 env.set('MESON_SOURCE_ROOT', meson.project_source_root())
 env.set('LD', find_program('ld').full_path())
 if system == 'linux'
+  env.set('AUDITWHEEL', find_program('auditwheel').full_path())
   env.set('PATCHELF', find_program('patchelf').full_path())
 endif
 if system == 'darwin'
@@ -80,6 +81,9 @@ foreach bin : [
     output : [name, name + (system == 'darwin' ? '.dSYM' : '.debug')],
     env : env,
   )
+  if bin.name() == libopenslide.name()
+    libopenslide_postprocessed = artifacts[-1][0]
+  endif
 endforeach
 
 custom_target(
@@ -92,6 +96,21 @@ custom_target(
     meson.project_version(),
     meson.get_external_property('openslide_bin_platform'),
     system == 'windows' ? 'zip' : 'tar.xz'
+  ),
+  env : env,
+  build_by_default : true,
+)
+
+subdir('python')
+
+custom_target(
+  command : [
+    find_program('write-wheel.py'), '-o', '@OUTPUT@', '@INPUT@'
+  ],
+  input : py_artifacts,
+  output : 'openslide_bin-@0@-py3-none-@1@.whl'.format(
+    meson.project_version(),
+    meson.get_external_property('python_platform_tag')
   ),
   env : env,
   build_by_default : true,

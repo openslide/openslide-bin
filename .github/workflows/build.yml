@@ -138,6 +138,17 @@ jobs:
           path: ${{ steps.prep.outputs.archive }}
           compression-level: 0
 
+      - name: Check source tarball size
+        # check after uploading, to aid debugging
+        run: |
+          size=$(stat -c "%s" "${{ steps.prep.outputs.archive }}")
+          if [ $size -gt 104857600 ]; then
+              # https://github.com/pypi/warehouse/blob/cf94b41/warehouse/forklift/legacy.py#L77
+              echo "Source tarball is $size bytes, which is larger than 100 MiB."
+              echo "Maintainers will need to request a larger PyPI file size limit."
+              echo "https://pypi.org/help/#file-size-limit"
+              exit 1
+          fi
       - name: Compute bdist systems
         id: systems
         shell: python
@@ -173,6 +184,7 @@ jobs:
           brew update
           # python-packaging needed by glib
           brew install meson python-packaging
+          python3 -m pip install --break-system-packages tomli
       - name: Download source tarball
         uses: actions/download-artifact@v4
         with:
@@ -201,11 +213,19 @@ jobs:
           ./bintool bdist -x "${{ inputs.suffix }}" $werror
           archive=$(echo openslide-bin-"${{ needs.sdist.outputs.version }}"-*)
           echo "archive=$archive" >> $GITHUB_OUTPUT
+          wheel=$(echo openslide_bin-"${{ needs.sdist.outputs.version }}"-*-*-*.whl)
+          echo "wheel=$wheel" >> $GITHUB_OUTPUT
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.archive }}
           path: ${{ steps.build.outputs.archive }}
+          compression-level: 0
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.wheel }}
+          path: ${{ steps.build.outputs.wheel }}
           compression-level: 0
 
   finalize:
@@ -220,7 +240,7 @@ jobs:
       - name: Download archives
         uses: actions/download-artifact@v4
         with:
-          pattern: "openslide-bin-${{ needs.sdist.outputs.version }}*"
+          pattern: "openslide[-_]bin-${{ needs.sdist.outputs.version }}*"
           path: archives
           merge-multiple: true
       - name: Unpack source tarball
@@ -238,4 +258,7 @@ jobs:
               >> $GITHUB_STEP_SUMMARY
       - name: Windows smoke test
         shell: bash
-        run: ./bintool smoke "archives/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip"
+        run: |
+          ./bintool smoke \
+              "archives/openslide-bin-${{ needs.sdist.outputs.version }}-windows-x64.zip" \
+              "archives/openslide_bin-${{ needs.sdist.outputs.version }}-py3-none-win_amd64.whl"

@@ -31,7 +31,8 @@ import sys
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
 from common.argparse import TypedArgs  # noqa: E402
-from common.meson import meson_introspect  # noqa: E402
+from common.meson import meson_introspect, meson_source_root  # noqa: E402
+from common.python import pyproject_to_message  # noqa: E402
 
 
 class Args(TypedArgs):
@@ -46,6 +47,7 @@ args.add_arg(
 )
 args.parse()
 os.environ['MESONINTROSPECT'] = args.introspect
+src = meson_source_root()
 dest = Path(os.environ['MESON_DIST_ROOT'])
 
 # remove those parts of .github not ignored from .gitattributes
@@ -58,3 +60,12 @@ try:
 except IndexError:
     suffix = ''
 (dest / 'suffix').write_text(suffix + '\n')
+
+# create Python source distribution metadata
+pyproject = (
+    (src / 'artifacts' / 'python' / 'pyproject.in.toml')
+    .read_text()
+    .replace('@version@', version)
+)
+(dest / 'pyproject.toml').write_text(pyproject)
+(dest / 'PKG-INFO').write_bytes(pyproject_to_message(pyproject).as_bytes())
