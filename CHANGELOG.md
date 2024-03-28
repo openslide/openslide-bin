@@ -1,5 +1,23 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.2, 2024-03-29
+
+* Add Linux and macOS builds
+* Add [Python package][py] with compiled library for OpenSlide Python ≥ 1.4.0
+* Drop 32-bit Windows build
+* Update OpenSlide Java to 0.12.4
+* Update many dependencies
+* Add `CHANGELOG.md` to source and binary archives
+* Add `versions.json` to binary archives
+* Rename project from openslide-winbuild to openslide-bin
+* Change version number to OpenSlide version plus openslide-bin build number
+* Restructure filenames of source and binary archives
+* Switch source archive from Zip to `tar.gz`
+* Rewrite build scripts
+
+[py]: https://pypi.org/project/openslide-bin/
+
+
 ## Windows build 20231011
 
 * Update OpenSlide to 4.0.0
