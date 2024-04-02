@@ -1,4 +1,3 @@
-dev-java/openjdk-bin headless-awt
 dev-libs/glib -elf -mime
 dev-vcs/git -perl
 
