@@ -143,6 +143,5 @@ openslide = subproject(
     # We don't run tests, but we still check that they build
     'default_library=shared',
     'doc=disabled',
-    '_filter_external_symbols=true',
   ],
 )
