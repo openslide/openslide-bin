@@ -66,17 +66,10 @@ else:
 with arc:
     for path in args.artifacts:
         name = path.name
-        if re.search(
-            '\\.(lib|(dylib|jnilib)(\\.dSYM)?|so[.0-9]*(\\.debug)?)$', name
-        ):
+        if re.search('\\.(lib|dylib(\\.dSYM)?|so[.0-9]*(\\.debug)?)$', name):
             arcdir = arc.base / 'lib'
         elif name.endswith('.h'):
             arcdir = arc.base / 'include' / 'openslide'
-        elif name.endswith('.jar'):
-            if meson_host() == 'windows':
-                arcdir = arc.base / 'bin'
-            else:
-                arcdir = arc.base / 'lib'
         elif name in (
             'CHANGELOG.md',
             'VERSIONS.md',

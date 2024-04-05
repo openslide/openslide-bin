@@ -42,7 +42,6 @@ artifacts = [
     env : env,
   ),
   openslide.get_variable('openslide_headers'),
-  openslide_java.get_variable('openslide_jar'),
   meson.project_source_root() / 'CHANGELOG.md',
 ]
 
@@ -72,7 +71,6 @@ postprocess = find_program('postprocess-binary.py')
 foreach bin : [
   libopenslide,
   openslide.get_variable('slidetool'),
-  openslide_java.get_variable('openslide_jni'),
 ]
   name = fs.name(bin.full_path())
   artifacts += custom_target(

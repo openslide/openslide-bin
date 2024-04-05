@@ -146,9 +146,3 @@ openslide = subproject(
     '_filter_external_symbols=true',
   ],
 )
-openslide_java = subproject(
-  'openslide-java',
-  default_options : [
-    'embed_jni_path=disabled',
-  ],
-)

@@ -25,14 +25,6 @@ on:
         description: Override OpenSlide with this openslide_repo ref
         required: false
         type: string
-      openslide_java_repo:
-        description: Override OpenSlide Java with this repo
-        required: false
-        type: string
-      openslide_java_ref:
-        description: Override OpenSlide Java with this openslide_java_repo ref
-        required: false
-        type: string
       openslide_bin_repo:
         description: Use openslide-bin from this repo
         required: false
@@ -93,21 +85,11 @@ jobs:
           fetch-depth: 0
           path: override/openslide
           persist-credentials: false
-      - name: Check out OpenSlide Java
-        if: inputs.openslide_java_repo != ''
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.openslide_java_repo }}
-          ref: ${{ inputs.openslide_java_ref }}
-          # make sure "git describe" works
-          fetch-depth: 0
-          path: override/openslide-java
-          persist-credentials: false
       - name: Collect overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         run: tar cf overrides.tar override
       - name: Upload overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         uses: actions/upload-artifact@v4
         with:
           name: build-overrides
@@ -196,12 +178,12 @@ jobs:
           rm -r "${{ needs.sdist.outputs.archive_base }}" \
               "${{ needs.sdist.outputs.archive }}"
       - name: Download overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         uses: actions/download-artifact@v4
         with:
           name: build-overrides
       - name: Unpack overrides
-        if: inputs.openslide_repo != '' || inputs.openslide_java_repo != ''
+        if: inputs.openslide_repo != ''
         run: tar xf overrides.tar && rm overrides.tar
       - name: Build
         id: build

@@ -273,17 +273,6 @@ _PROJECTS = (
         update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
-        id='openslide-java',
-        display='OpenSlide Java',
-        primary=True,
-        licenses=['COPYING.LESSER'],
-        update_url='https://github.com/openslide/openslide-java/tags',
-        # Exclude old v1.0.0 tag
-        update_regex=re.compile(
-            'archive/refs/tags/v1\\.0\\.0\\.tar.*|.*archive/refs/tags/v([0-9.]+)\\.tar'  # noqa: E501
-        ),
-    ),
-    Project(
         id='pcre2',
         display='PCRE2',
         licenses=['LICENCE'],
