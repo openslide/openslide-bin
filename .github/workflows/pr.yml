@@ -67,8 +67,6 @@ jobs:
       macos_enable: true
       openslide_repo: openslide/openslide
       openslide_ref: main
-      openslide_java_repo: openslide/openslide-java
-      openslide_java_ref: main
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
       suffix: ${{ needs.setup.outputs.suffix }}.git
