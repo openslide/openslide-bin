@@ -343,6 +343,7 @@ class MesonPlatform(Platform):
         )
         dir = self._setup('sdist', ['-Dall_systems=true'])
         # avoid spurious complaints about a dirty work tree
+        # https://github.com/mesonbuild/meson/pull/13152
         subprocess.check_call(
             ['git', 'update-index', '-q', '--refresh'], cwd=self.params.root
         )
