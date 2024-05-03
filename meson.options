@@ -1,7 +1,6 @@
 # useful subproject options:
 # -Dopenslide:version_suffix=foo - append foo to OpenSlide version string
 # -Dopenslide:werror=true        - fail OpenSlide build on warnings
-# -Dopenslide-java:werror=true   - fail OpenSlide Java build on warnings
 
 option(
   'all_systems',

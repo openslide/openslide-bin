@@ -147,11 +147,11 @@ class BuildParams:
             return False
 
         with self.lock():
-            if has_api('winbuild', [1, 2]):
+            if has_api('winbuild', [1, 2, 3]):
                 plat: Platform = MesonPlatform(
                     self, 'windows', 'x64', cross=True
                 )
-            elif has_api('linux', [1]):
+            elif has_api('linux', [1, 2]):
                 plat = MesonPlatform(self, 'linux', 'x86_64', cross=False)
             elif sys.platform == 'darwin':
                 # no container image to check for
@@ -474,7 +474,6 @@ class SmokeTester(ABC):
 class BDistSmokeTester(SmokeTester):
     def _parse(self) -> str:
         self._name = BDistName(Path(self._fh.name).name)
-        self._java_libdir = 'bin' if self._name.system == 'windows' else 'lib'
         return self._name.system
 
     def _unpack(self, dir: Path) -> None:
@@ -493,22 +492,6 @@ class BDistSmokeTester(SmokeTester):
         )
         subprocess.check_call(
             cmd_prefix + [slidetool, 'prop', 'list', ''],
-            env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
-            stdout=subprocess.DEVNULL,
-        )
-
-        log(f'Checking {desc} Java TestCLI')
-        subprocess.check_call(
-            cmd_prefix
-            + [
-                'java',
-                '-cp',
-                'openslide.jar',
-                '-Djava.library.path=.',
-                'org.openslide.TestCLI',
-                '',
-            ],
-            cwd=dir / self._name.base / self._java_libdir,
             env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
             stdout=subprocess.DEVNULL,
         )
@@ -582,8 +565,7 @@ def do_sdist(args: Args) -> None:
 
 def do_bdist(args: Args) -> None:
     params = BuildParams(args.suffix)
-    for proj in 'openslide', 'openslide-java':
-        params.args.append(f'-D{proj}:werror={str(args.werror).lower()}')
+    params.args.append(f'-Dopenslide:werror={str(args.werror).lower()}')
     with params.platform(overrides=True) as platform:
         result = platform.bdist()
         if platform.system == 'windows':
@@ -707,7 +689,7 @@ def main() -> None:
         '-w',
         '--werror',
         action='store_true',
-        help='Treat OpenSlide and OpenSlide Java build warnings as errors.',
+        help='Treat OpenSlide build warnings as errors.',
         parser=bdist,
     )
     sdist.set_defaults(func=do_sdist)

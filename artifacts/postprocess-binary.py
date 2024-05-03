@@ -116,7 +116,7 @@ if re.search('\\.(dll|dylib|so[.0-9]*)$', args.file.name):
         # filter out acceptable symbols
         sym
         for sym in syms
-        if not sym.startswith('openslide_') and sym != 'JNI_OnLoad'
+        if not sym.startswith('openslide_')
     ]
     if syms:
         raise Exception(f'Unexpected exports in {args.file}: {syms}')
@@ -141,16 +141,12 @@ elif host == 'darwin' and not args.file.name.endswith('.dylib'):
                 break
     else:
         raise Exception("Couldn't read LC_RPATH")
-    if args.file.name.endswith('.jnilib'):
-        new_rpath = '@loader_path'
-    else:
-        new_rpath = '@loader_path/../lib'
     subprocess.check_call(
         [
             os.environ['INSTALL_NAME_TOOL'],
             '-rpath',
             old_rpath,
-            new_rpath,
+            '@loader_path/../lib',
             args.output,
         ]
     )

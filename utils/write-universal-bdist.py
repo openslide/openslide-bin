@@ -111,9 +111,6 @@ with ExitStack() as stack:
                         open(macho_path, 'rb'),
                     )
                 )
-            elif members[0].path.suffix == '.jar':
-                # non-reproducible build; pick one
-                out.add(members[0].with_base(out.base))
             elif all_equal(members.datas):
                 out.add(members[0].with_base(out.base))
             else:
