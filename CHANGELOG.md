@@ -1,5 +1,11 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.3, 2024-05-04
+
+* Remove OpenSlide Java, which no longer has a platform-dependent component
+* Update SQLite
+
+
 ## Version 4.0.0.2, 2024-03-29
 
 * Add Linux and macOS builds
