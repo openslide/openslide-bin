@@ -152,7 +152,9 @@ class BuildParams:
                     self, 'windows', 'x64', cross=True
                 )
             elif has_api('linux', [1, 2]):
-                plat = MesonPlatform(self, 'linux', 'x86_64', cross=False)
+                plat = MesonPlatform(
+                    self, 'linux', platform.machine(), cross=False
+                )
             elif sys.platform == 'darwin':
                 # no container image to check for
                 plat = MacPlatform(self, ['arm64', 'x86_64'])
