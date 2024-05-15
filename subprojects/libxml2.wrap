@@ -1,13 +1,13 @@
 [wrap-file]
-directory = libxml2-2.12.6
-source_url = https://download.gnome.org/sources/libxml2/2.12/libxml2-2.12.6.tar.xz
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libxml2_2.12.6-1/libxml2-2.12.6.tar.xz
-source_filename = libxml2-2.12.6.tar.xz
-source_hash = 889c593a881a3db5fdd96cc9318c87df34eb648edfc458272ad46fd607353fbb
-patch_filename = libxml2_2.12.6-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.12.6-1/get_patch
-patch_hash = 777be7ffdc4167e4d0b3f405e13492664cbdef2e6cf6f6a88cc55ec80112614c
-wrapdb_version = 2.12.6-1
+directory = libxml2-2.12.7
+source_url = https://download.gnome.org/sources/libxml2/2.12/libxml2-2.12.7.tar.xz
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libxml2_2.12.7-1/libxml2-2.12.7.tar.xz
+source_filename = libxml2-2.12.7.tar.xz
+source_hash = 24ae78ff1363a973e6d8beba941a7945da2ac056e19b53956aeb6927fd6cfb56
+patch_filename = libxml2_2.12.7-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.12.7-1/get_patch
+patch_hash = 2ca34e5bdffa395a8a499b453b9595a23433939b5683d1d4b6dfac0c51b2db65
+wrapdb_version = 2.12.7-1
 
 [provide]
 libxml-2.0 = libxml2_dep

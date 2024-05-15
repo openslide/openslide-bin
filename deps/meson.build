@@ -108,6 +108,8 @@ subproject(
     'png=disabled',
     'tiff=disabled',
     'jpeg=disabled',
+    'gif=disabled',
+    'others=enabled',
     'man=false',
     'builtin_loaders=bmp',
     'introspection=disabled',
