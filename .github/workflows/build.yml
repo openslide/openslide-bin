@@ -151,7 +151,7 @@ jobs:
     strategy:
       matrix:
         os: ${{ fromJson(needs.sdist.outputs.systems) }}
-    runs-on: ${{ matrix.os == 'macos' && 'macos-14' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.os == 'macos' && 'macos-latest' || 'ubuntu-latest' }}
     container: ${{ matrix.os == 'linux' && inputs.linux_builder_repo_and_digest || (matrix.os == 'windows' && inputs.windows_builder_repo_and_digest || null) }}
     steps:
       - name: Install dependencies (macOS)
