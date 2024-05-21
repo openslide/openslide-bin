@@ -5,10 +5,10 @@ name: Container - Linux
 on:
   push:
     branches: [main]
-    paths: [builder/linux/*]
+    paths: [.github/workflows/container-linux.yml, builder/linux/*]
   pull_request:
     branches: [main]
-    paths: [builder/linux/*]
+    paths: [.github/workflows/container-linux.yml, builder/linux/*]
   schedule:
     - cron: "40 14 1 * *"
   workflow_dispatch:
