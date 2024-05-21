@@ -1,6 +1,7 @@
 FROM docker.io/gentoo/stage3:latest
 # NOTE: try to keep the current container image compatible with the latest
-# stable source release, so people can conveniently build from the source zip
+# stable source release, so people can conveniently build from the source
+# tarball
 RUN touch /etc/openslide-winbuild-builder-v3
 RUN echo 'FEATURES="-sandbox -usersandbox -ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
 COPY package.accept_keywords /etc/portage/package.accept_keywords/cross
