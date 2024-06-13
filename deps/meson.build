@@ -54,6 +54,7 @@ else
     'libxml2',
     default_options : [
       'iconv=disabled',
+      'python=false',
     ],
   )
   subproject('sqlite3')
@@ -98,6 +99,7 @@ subproject(
 subproject(
   'glib',
   default_options : [
+    'introspection=disabled',
     'nls=disabled',
     'tests=false',
   ],

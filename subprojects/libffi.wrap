@@ -3,11 +3,11 @@ directory = libffi-3.4.4
 source_url = https://github.com/libffi/libffi/releases/download/v3.4.4/libffi-3.4.4.tar.gz
 source_filename = libffi-3.4.4.tar.gz
 source_hash = d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676
-patch_filename = libffi_3.4.4-3_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libffi_3.4.4-3/get_patch
-patch_hash = 7833f5cfb6501c859d6a71710cac74c5c7e0bf5280871e1ace34ebdc2cb56e2c
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libffi_3.4.4-3/libffi-3.4.4.tar.gz
-wrapdb_version = 3.4.4-3
+patch_filename = libffi_3.4.4-4_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libffi_3.4.4-4/get_patch
+patch_hash = 6babcedb6949383986f1b240a99cd2219a029d62421996d518865a2de855d35a
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libffi_3.4.4-4/libffi-3.4.4.tar.gz
+wrapdb_version = 3.4.4-4
 
 [provide]
 dependency_names = libffi
