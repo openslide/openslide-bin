@@ -54,6 +54,7 @@ else
     'libxml2',
     default_options : [
       'iconv=disabled',
+      'python=false',
     ],
   )
   subproject('sqlite3')
