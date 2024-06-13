@@ -98,6 +98,7 @@ subproject(
 subproject(
   'glib',
   default_options : [
+    'introspection=disabled',
     'nls=disabled',
     'tests=false',
   ],
