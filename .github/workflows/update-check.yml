@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: 3.12
       - name: Install dependencies
-        run: pip install --user meson packaging requests
+        run: pip install --user meson requests
       - name: Check out repo
         uses: actions/checkout@v4
         with:

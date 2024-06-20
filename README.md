@@ -89,8 +89,9 @@ To add a dependency to openslide-bin:
 1. Use `meson wrap install` to add the dependency's wrap file from wrapdb
    to the `subprojects` directory.
 2. Add the dependency to `_PROJECTS` in `common/software.py`.
-   - Test the `update_url` and `update_regex` by running `./bintool updates`.
-     A successful run will not produce an output line for the new dependency.
+   - Test update checking by running `./bintool updates`.  If this complains
+     that the project is missing from the Anitya database, ensure [Anitya][]
+     maps the project to Meson WrapDB.
 3. Modify `deps/meson.build` to invoke the build, in the correct order
    relative to the other dependencies.  Include any necessary build options,
    e.g. disable building command-line tools to reduce build time.
@@ -132,5 +133,6 @@ added to wrapdb before the first OpenSlide release that uses the library.
 Similarly, all `diff_files` directives in wrap files must have a comment
 linking to a wrapdb PR or upstream PR for the patch.
 
+[Anitya]: https://release-monitoring.org/
 [Meson]: https://mesonbuild.com/
 [wrapdb]: https://github.com/mesonbuild/wrapdb
