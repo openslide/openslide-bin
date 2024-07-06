@@ -89,19 +89,34 @@ subproject(
     'build_codec_apps=false',
   ],
 )
+
+
+host_system = host_machine.system()
+
+# When trying to do with wasm32,
+# this happen with pcre2, "Problem encountered: Your configuration is not supported"
+
+if host_system != 'emscripten'
 subproject(
   'pcre2',
-  default_options : [
+  default_options: [
     'grep=false',
     'test=false',
   ],
 )
+endif
+
 subproject(
   'glib',
   default_options : [
-    'introspection=disabled',
+    #'introspection=disabled',
     'nls=disabled',
     'tests=false',
+    'selinux=disabled',
+    'xattr=false',
+    'libmount=disabled',
+    'nls=disabled',
+    'force_fallback_for=pcr2, gvdb',
   ],
 )
 subproject(
