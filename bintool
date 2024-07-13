@@ -50,6 +50,9 @@ from common.meson import (
 )
 from common.software import Project
 
+# we have a higher minimum than the underlying meson.build
+MESON_MIN_VER = (1, 5, 0)
+
 CACHEDIR_TAG_CONTENTS = '''Signature: 8a477f597d28d172789f06886806bc55
 # This file is a cache directory tag created by openslide-bin.
 # For information about cache directory tags, see https://bford.info/cachedir/
@@ -147,16 +150,26 @@ class BuildParams:
             return False
 
         with self.lock():
-            if has_api('winbuild', [1, 2, 3]):
+            if has_api('winbuild', [4]):
                 plat: Platform = MesonPlatform(
                     self, 'windows', 'x64', cross=True
                 )
-            elif has_api('linux', [1, 2]):
+            elif has_api('linux', [3]):
                 plat = MesonPlatform(
                     self, 'linux', platform.machine(), cross=False
                 )
             elif sys.platform == 'darwin':
                 # no container image to check for
+                meson_ver = (
+                    subprocess.check_output(['meson', '--version'])
+                    .decode()
+                    .strip()
+                )
+                if tuple(int(c) for c in meson_ver.split('.')) < MESON_MIN_VER:
+                    raise Exception(
+                        f'Meson version {meson_ver} < '
+                        f'{".".join(str(c) for c in MESON_MIN_VER)}'
+                    )
                 plat = MacPlatform(self, ['arm64', 'x86_64'])
             else:
                 raise Exception(
@@ -344,11 +357,6 @@ class MesonPlatform(Platform):
             cwd=self.params.root,
         )
         dir = self._setup('sdist', ['-Dall_systems=true'])
-        # avoid spurious complaints about a dirty work tree
-        # https://github.com/mesonbuild/meson/pull/13152
-        subprocess.check_call(
-            ['git', 'update-index', '-q', '--refresh'], cwd=self.params.root
-        )
         subprocess.check_call(
             [
                 # xz compresses better, but PyPI requires tar.gz, and there's
