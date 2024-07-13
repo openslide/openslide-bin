@@ -3,7 +3,7 @@ FROM quay.io/almalinuxorg/almalinux:8
 # NOTE: try to keep the current container image compatible with the latest
 # stable source release, so people can conveniently build from the source
 # tarball
-RUN touch /etc/openslide-linux-builder-v2
+RUN touch /etc/openslide-linux-builder-v{2,3}
 RUN dnf -y upgrade && \
     dnf -y install 'dnf-command(config-manager)' epel-release && \
     dnf config-manager --set-enabled powertools && \
