@@ -50,6 +50,8 @@ from common.meson import (
 )
 from common.software import Project
 
+WINDOWS_API_VERS = (4,)
+LINUX_API_VERS = (3,)
 # we have a higher minimum than the underlying meson.build
 MESON_MIN_VER = (1, 5, 0)
 
@@ -150,11 +152,11 @@ class BuildParams:
             return False
 
         with self.lock():
-            if has_api('winbuild', [4]):
+            if has_api('winbuild', WINDOWS_API_VERS):
                 plat: Platform = MesonPlatform(
                     self, 'windows', 'x64', cross=True
                 )
-            elif has_api('linux', [3]):
+            elif has_api('linux', LINUX_API_VERS):
                 plat = MesonPlatform(
                     self, 'linux', platform.machine(), cross=False
                 )
