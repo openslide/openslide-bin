@@ -61,6 +61,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: meson-format
+        name: meson format
+        entry: meson format --configuration meson.format --inplace
+        types: [meson]
+        language: python
+        additional_dependencies: [meson==1.5.2]
+
       - id: annotations
         name: Require "from __future__ import annotations"
         language: pygrep
@@ -71,6 +78,7 @@ repos:
         # don't work because --multiline causes them to match at newlines.
         entry: "(?<!.)(?!.)|\nfrom __future__ import annotations"
         args: [--multiline, --negate]
+
       - id: argparse
         name: Require common.argparse wrapper
         language: pygrep
