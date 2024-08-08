@@ -120,7 +120,7 @@ class TarArchiveWriter(ArchiveWriter):
             fileobj=fh,
             mode='w:xz',
             format=tarfile.PAX_FORMAT,
-            preset=9,  # type: ignore[call-arg]
+            preset=9,
         )
         self._now = int(time.time())
 
