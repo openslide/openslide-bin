@@ -1,0 +1,10 @@
+{
+    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
+    "C_Cpp.default.compileCommands": "/home/yanovskyy/Documents/projects/openslide-bin/builddir/compile_commands.json",
+    "files.associations": {
+        "*.tsx": "typescriptreact",
+        "*.y": "yacc",
+        "*.sh": "jinja-shell",
+        "openslide-private.h": "c"
+    }
+}

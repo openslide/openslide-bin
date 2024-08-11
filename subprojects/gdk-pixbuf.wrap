@@ -7,7 +7,7 @@ source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/gdk
 wrapdb_version = 2.42.12-1
 
 # https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/merge_requests/158
-diff_files = gdk-pixbuf-intl.patch
+diff_files = gdk-pixbuf-intl.patch, gdk-pixbuf-gmodule.patch
 
 [provide]
 gdk-pixbuf-2.0 = gdkpixbuf_dep

@@ -106,19 +106,26 @@ subproject(
 )
 endif
 
-subproject(
-  'glib',
-  default_options : [
-    #'introspection=disabled',
-    'nls=disabled',
-    'tests=false',
+glib_options = [
+  'introspection=disabled',
+  'nls=disabled',
+  'tests=false',
+]
+if host_system == 'emscripten'
+  glib_options += [
     'selinux=disabled',
     'xattr=false',
     'libmount=disabled',
     'nls=disabled',
     'force_fallback_for=pcr2, gvdb',
-  ],
+  ]
+endif
+
+subproject(
+  'glib',
+  default_options : glib_options,
 )
+
 subproject(
   'gdk-pixbuf',
   default_options : [
