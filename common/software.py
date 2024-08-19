@@ -24,12 +24,13 @@ from abc import ABC
 from collections.abc import Callable, Iterable
 import configparser
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cache, cached_property
+from itertools import count
 from pathlib import Path
-import re
 import shutil
 import subprocess
-from typing import Literal, TextIO, TypedDict, cast
+import time
+from typing import Literal, TextIO, TypedDict
 
 from .meson import meson_introspect, meson_source_root, parse_ini_file
 
@@ -46,6 +47,36 @@ class Info(TypedDict):
 
 
 SoftwareType = Literal['primary', 'dependency', 'tool']
+
+
+class AnityaPackageList(TypedDict):
+    items: list[AnityaListedPackage]
+    items_per_page: int
+    page: int
+    total_items: int
+
+
+class AnityaListedPackage(TypedDict):
+    distribution: str
+    ecosystem: str
+    name: str
+    project: str
+    stable_version: str
+    version: str
+
+
+class AnityaIndividualPackage(TypedDict):
+    backend: str
+    created_on: float
+    ecosystem: str
+    homepage: str
+    id: int
+    name: str
+    stable_versions: list[str]
+    updated_on: float
+    version: str
+    version_url: str
+    versions: list[str]
 
 
 @dataclass
@@ -78,8 +109,10 @@ class Tool(Software):
 @dataclass
 class Project(Software):
     licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
-    update_url: str
-    update_regex: re.Pattern[str]
+    # Project ID on release-monitoring.org, for projects not in wrapdb.
+    # For projects in wrapdb, configure release-monitoring.org to associate
+    # the wrapdb package with the upstream project.
+    anitya_id: int | None = None
     primary: bool = False
 
     @staticmethod
@@ -166,18 +199,58 @@ class Project(Software):
                     self.source_dir / license, dir / Path(license).name
                 )
 
-    def get_upstream_version(self) -> str | None:
-        from packaging.version import Version
+    @staticmethod
+    @cache
+    def _get_anitya_versions() -> dict[str, str]:
         import requests
 
-        resp = requests.get(self.update_url)
-        if resp.status_code != 200:
-            return None
-        assert self.update_regex.groups == 1
-        version_strings = cast(list[str], self.update_regex.findall(resp.text))
-        if not version_strings:
-            return None
-        return sorted(set(version_strings), key=Version)[-1]
+        versions = {}
+        items_per_page = 250
+        for page in count(1):
+            for attempt in range(3):
+                if attempt > 0:
+                    time.sleep(5)
+                resp = requests.get(
+                    f'https://release-monitoring.org/api/v2/packages/'
+                    f'?distribution=Meson%20WrapDB'
+                    f'&items_per_page={items_per_page}'
+                    f'&page={page}'
+                )
+                # retry on gateway timeout
+                if resp.status_code != 504:
+                    resp.raise_for_status()
+                    break
+            else:
+                raise Exception(
+                    'Repeated gateway timeouts when querying Anitya'
+                )
+            packages: AnityaPackageList = resp.json()
+            versions.update(
+                {
+                    package['name']: package['stable_version']
+                    for package in packages['items']
+                }
+            )
+            if len(packages['items']) < items_per_page:
+                break
+        return versions
+
+    def get_upstream_version(self) -> str:
+        import requests
+
+        if self.anitya_id is not None:
+            resp = requests.get(
+                f'https://release-monitoring.org/api/project/{self.anitya_id}'
+            )
+            resp.raise_for_status()
+            package: AnityaIndividualPackage = resp.json()
+            return package['stable_versions'][0]
+        else:
+            versions = self._get_anitya_versions()
+            try:
+                return versions[self.id]
+            except KeyError:
+                raise Exception(f'{self.id} not found in Anitya database')
 
 
 def _sqlite3_license(proj: Project) -> tuple[str, str]:
@@ -198,129 +271,94 @@ _PROJECTS = (
         id='cairo',
         display='cairo',
         licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
-        update_url='https://cairographics.org/releases/',
-        update_regex=re.compile('\"cairo-([0-9.]+)\\.tar'),
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
         licenses=['COPYING'],
-        update_url='https://gitlab.gnome.org/GNOME/gdk-pixbuf/tags',
-        update_regex=re.compile('archive/([0-9]+\\.[0-9]*[02468]\\.[0-9]+)/'),
     ),
     Project(
         id='glib',
         display='glib',
         licenses=['COPYING'],
-        update_url='https://gitlab.gnome.org/GNOME/glib/tags',
-        update_regex=re.compile('archive/([0-9]+\\.[0-9]*[02468]\\.[0-9]+)/'),
     ),
     Project(
         id='libdicom',
         display='libdicom',
         licenses=['LICENSE'],
-        update_url='https://github.com/ImagingDataCommons/libdicom/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libffi',
         display='libffi',
         licenses=['LICENSE'],
-        update_url='https://github.com/libffi/libffi/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
         licenses=['LICENSE.md', 'README.ijg'],
-        update_url='https://github.com/libjpeg-turbo/libjpeg-turbo/tags',
-        update_regex=re.compile('archive/refs/tags/([0-9.]+)\\.tar'),
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
         licenses=['LICENSE'],
-        update_url='https://github.com/uclouvain/openjpeg/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='libpng',
         display='libpng',
         licenses=['LICENSE'],
-        update_url='http://www.libpng.org/pub/png/libpng.html',
-        update_regex=re.compile('libpng-([0-9.]+)-README.txt'),
     ),
     Project(
         id='libtiff',
         display='libtiff',
         licenses=['LICENSE.md'],
-        update_url='https://download.osgeo.org/libtiff/',
-        update_regex=re.compile('tiff-([0-9.]+)\\.tar'),
     ),
     Project(
         id='libxml2',
         display='libxml2',
         licenses=['Copyright'],
-        update_url='https://gitlab.gnome.org/GNOME/libxml2/tags',
-        update_regex=re.compile('archive/v([0-9.]+)/'),
     ),
     Project(
         id='openslide',
         display='OpenSlide',
         primary=True,
         licenses=['COPYING.LESSER'],
-        update_url='https://github.com/openslide/openslide/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
+        anitya_id=5600,
     ),
     Project(
         id='pcre2',
         display='PCRE2',
         licenses=['LICENCE'],
-        update_url='https://github.com/PCRE2Project/pcre2/tags',
-        update_regex=re.compile('archive/refs/tags/pcre2-([0-9.]+)\\.tar'),
     ),
     Project(
         id='pixman',
         display='pixman',
         licenses=['COPYING'],
-        update_url='https://cairographics.org/releases/',
-        update_regex=re.compile('pixman-([0-9.]+)\\.tar'),
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
         licenses=['COPYING'],
-        update_url='https://github.com/frida/proxy-libintl/tags',
-        update_regex=re.compile('archive/refs/tags/([0-9.]+)\\.tar'),
     ),
     Project(
         id='sqlite3',
         display='SQLite',
         licenses=[_sqlite3_license],
-        update_url='https://sqlite.org/changes.html',
-        update_regex=re.compile('[0-9]{4}-[0-9]{2}-[0-9]{2} \\(([0-9.]+)\\)'),
     ),
     Project(
         id='uthash',
         display='uthash',
         licenses=['LICENSE'],
-        update_url='https://github.com/troydhanson/uthash/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
     Project(
         id='zlib',
         display='zlib',
         licenses=['README'],
-        update_url='https://zlib.net/',
-        update_regex=re.compile('source code, version ([0-9.]+)'),
     ),
     Project(
         id='zstd',
         display='Zstandard',
         # Dual-licensed BSD or GPLv2.  Elect BSD.
         licenses=['LICENSE'],
-        update_url='https://github.com/facebook/zstd/tags',
-        update_regex=re.compile('archive/refs/tags/v([0-9.]+)\\.tar'),
     ),
 )
 

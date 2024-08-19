@@ -636,20 +636,13 @@ def do_clean(args: Args) -> None:
 
 
 def do_updates(args: Args) -> None:
-    def progress(s: str = '') -> None:
-        # if we're not in a pipeline, write progress to stderr
-        if sys.stdout.isatty():
-            log(f'{s:79}', end='\r', stderr=True)
-
     # reset overrides before reading package versions
     with BuildParams().lock():
         for proj in Project.get_all():
-            progress(f'Checking {proj.id}...')
             cur = proj.version.split('-')[0]
-            new = proj.get_upstream_version() or 'unknown'
+            new = proj.get_upstream_version()
             if cur != new:
                 print(f'{proj.id:15} {cur:>10}  => {new:>10}')
-        progress()
 
 
 def do_projects(args: Args) -> None:
