@@ -89,21 +89,43 @@ subproject(
     'build_codec_apps=false',
   ],
 )
+
+
+host_system = host_machine.system()
+
+# When trying to do with wasm32,
+# this happen with pcre2, "Problem encountered: Your configuration is not supported"
+
+if host_system != 'emscripten'
 subproject(
   'pcre2',
-  default_options : [
+  default_options: [
     'grep=false',
     'test=false',
   ],
 )
+endif
+
+glib_options = [
+  'introspection=disabled',
+  'nls=disabled',
+  'tests=false',
+]
+if host_system == 'emscripten'
+  glib_options += [
+    'selinux=disabled',
+    'xattr=false',
+    'libmount=disabled',
+    'nls=disabled',
+    'force_fallback_for=pcr2, gvdb',
+  ]
+endif
+
 subproject(
   'glib',
-  default_options : [
-    'introspection=disabled',
-    'nls=disabled',
-    'tests=false',
-  ],
+  default_options : glib_options,
 )
+
 subproject(
   'gdk-pixbuf',
   default_options : [

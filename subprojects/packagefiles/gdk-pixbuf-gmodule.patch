@@ -1,0 +1,14 @@
+diff --git a/meson.build b/meson.build
+index 3eb3fcc..c69e4ac 100644
+--- a/meson.build
++++ b/meson.build
+@@ -235,6 +235,9 @@ if gmodule_dep.type_name() == 'pkgconfig'
+ else
+   build_modules = subproject('glib').get_variable('g_module_impl') != '0'
+ endif
++if host_system == 'emscripten'
++  build_modules = false
++endif
+ gdk_pixbuf_conf.set('USE_GMODULE', build_modules)
+ 
+ # Check which loaders should be built into gdk-pixbuf

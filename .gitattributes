@@ -8,3 +8,4 @@
 /.github/workflows		export-ignore
 /.pre-commit-config.yaml	export-ignore
 /pyproject.toml			export-ignore
+/.vscode			export-ignore
