@@ -32,10 +32,8 @@ artifacts = [
   custom_target(
     command : [
       find_program('write-project-versions.py'),
-      '-j',
-      '@OUTPUT0@',
-      '-m',
-      '@OUTPUT1@',
+      '--json', '@OUTPUT0@',
+      '--markdown', '@OUTPUT1@',
     ],
     output : ['versions.json', 'VERSIONS.md'],
     # ensure we regenerate after dependency updates
@@ -70,7 +68,12 @@ postprocess = find_program('postprocess-binary.py')
 foreach bin : [libopenslide, openslide.get_variable('slidetool')]
   name = fs.name(bin.full_path())
   artifacts += custom_target(
-    command : [postprocess, '@INPUT@', '-o', '@OUTPUT0@', '-d', '@OUTPUT1@'],
+    command : [
+      postprocess,
+      '@INPUT@',
+      '--output', '@OUTPUT0@',
+      '--debuginfo', '@OUTPUT1@',
+    ],
     input : bin,
     output : [name, name + (system == 'darwin' ? '.dSYM' : '.debug')],
     env : env,
@@ -81,7 +84,7 @@ foreach bin : [libopenslide, openslide.get_variable('slidetool')]
 endforeach
 
 custom_target(
-  command : [find_program('write-bdist.py'), '-o', '@OUTPUT@', '@INPUT@'],
+  command : [find_program('write-bdist.py'), '--output', '@OUTPUT@', '@INPUT@'],
   input : artifacts,
   output : '@0@-@1@-@2@.@3@'.format(
     meson.project_name(),
@@ -96,7 +99,7 @@ custom_target(
 subdir('python')
 
 custom_target(
-  command : [find_program('write-wheel.py'), '-o', '@OUTPUT@', '@INPUT@'],
+  command : [find_program('write-wheel.py'), '--output', '@OUTPUT@', '@INPUT@'],
   input : py_artifacts,
   output : 'openslide_bin-@0@-py3-none-@1@.whl'.format(
     meson.project_version(),
