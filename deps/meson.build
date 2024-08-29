@@ -102,6 +102,7 @@ subproject(
     'introspection=disabled',
     'nls=disabled',
     'tests=false',
+    'glib_debug=disabled',
   ],
 )
 subproject(
