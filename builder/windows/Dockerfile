@@ -10,7 +10,7 @@ RUN mkdir -p /var/db/repos/crossdev/{profiles,metadata} && echo crossdev > /var/
 COPY repos.conf /etc/portage/repos.conf/crossdev.conf
 COPY --from=docker.io/gentoo/portage:latest /var/db/repos/gentoo /var/db/repos/gentoo
 RUN emerge -u dev-build/meson && \
-    rm /var/cache/distfiles/*
+    rm -f /var/cache/distfiles/*
 RUN emerge app-portage/gentoolkit dev-lang/nasm dev-libs/glib \
     dev-python/tomli dev-util/glib-utils dev-vcs/git sys-devel/crossdev && \
     rm /var/cache/distfiles/*
