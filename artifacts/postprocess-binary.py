@@ -55,7 +55,9 @@ def library_symbols(file: Path) -> list[str]:
             if active:
                 if not line.strip():
                     return syms
-                syms.append(line.split()[2])
+                sym = line.split()[-1]
+                if sym != 'Name':
+                    syms.append(sym)
             elif 'Ordinal/Name Pointer' in line:
                 active = True
         raise Exception("Couldn't parse objdump output")
