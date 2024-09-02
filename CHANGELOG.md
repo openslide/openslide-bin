@@ -1,5 +1,10 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.4, 2024-09-01
+
+* Update many dependencies
+
+
 ## Version 4.0.0.3, 2024-05-04
 
 * Remove OpenSlide Java, which no longer has a platform-dependent component
