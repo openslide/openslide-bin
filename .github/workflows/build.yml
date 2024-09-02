@@ -163,9 +163,9 @@ jobs:
               brew link --overwrite $formula
           done
           brew update
-          # python-packaging needed by glib
-          brew install meson python-packaging
-          python3 -m pip install --break-system-packages tomli
+          brew install meson
+          # packaging needed by glib
+          python3 -m pip install --break-system-packages packaging tomli
       - name: Download source tarball
         uses: actions/download-artifact@v4
         with:
