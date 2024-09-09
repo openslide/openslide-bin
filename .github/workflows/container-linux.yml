@@ -28,14 +28,21 @@ jobs:
     name: Build
     runs-on: ubuntu-24.04
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install qemu-user-static
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Build container
+        # Cross-build the arm64 container from amd64 for simplicity
         run: |
-          podman build -t $CONTAINER_IMAGE builder/linux
+          podman build --manifest $CONTAINER_IMAGE \
+              --platform "linux/amd64,linux/arm64" \
+              builder/linux
       - name: Push container
         if: github.event_name != 'pull_request'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" |
               podman login ghcr.io -u $ --password-stdin
-          podman push $CONTAINER_IMAGE
+          podman manifest push $CONTAINER_IMAGE
