@@ -22,7 +22,8 @@ automatically find openslide-bin and use it.
 
 openslide-bin is available for Python 3.8+ on the following platforms:
 
-- Linux x86_64 with glibc 2.28+ (Debian, Fedora, RHEL 8+, Ubuntu, many others)
+- Linux aarch64 and x86_64 with glibc 2.28+ (Debian, Fedora, RHEL 8+,
+  Ubuntu, many others)
 - macOS 11+ (arm64 and x86_64)
 - Windows 10+ and Windows Server 2016+ (x64)
 
