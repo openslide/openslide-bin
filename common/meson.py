@@ -34,7 +34,7 @@ from typing import Any
 # A.B.C = OpenSlide version
 # D = ordinal of the openslide-bin release with this A.B.C, starting from 1
 # Update the version when releasing openslide-bin.
-_PROJECT_VERSION = '4.0.0.4'
+_PROJECT_VERSION = '4.0.0.5'
 
 
 def meson_source_root() -> Path:
