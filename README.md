@@ -10,13 +10,13 @@ SDK libraries on macOS, and glibc on Linux.
 ## Building
 
 For Windows and Linux, the build runs in a container image that includes the
-necessary tools.  To build for Windows, pull the container image on Linux or
-in Windows PowerShell with WSL 2 and use it to run a build:
+necessary tools.  To build for Windows on x64, pull the container image on
+Linux or in Windows PowerShell with WSL 2 and use it to run a build:
 
     docker run -ti --rm -v ${PWD}:/work -w /work \
         ghcr.io/openslide/winbuild-builder ./bintool bdist
 
-Similarly, to build for Linux:
+Similarly, to build for Linux on aarch64 or x86_64:
 
     docker run -ti --rm -v ${PWD}:/work -w /work \
         ghcr.io/openslide/linux-builder ./bintool bdist
