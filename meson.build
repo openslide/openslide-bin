@@ -4,7 +4,7 @@ project(
   version : run_command(
     files('utils/get-version.py'),
     capture : true,
-    check : true
+    check : true,
   ).stdout().strip(),
   license : 'LGPL-2.1-only',
   meson_version : '>=1.2',
@@ -41,7 +41,9 @@ if get_option('pep517')
   # If `pip install openslide-bin` doesn't find a wheel, either the OS is
   # too old or it isn't supported (e.g. FreeBSD), and openslide-bin can't
   # help.
-  error('No openslide-bin wheel is available for your platform. Install OpenSlide from source.')
+  error(
+    'No openslide-bin wheel is available for your platform. Install OpenSlide from source.',
+  )
 endif
 
 system = host_machine.system()

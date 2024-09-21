@@ -1,5 +1,5 @@
 py_config = {
-  'version': meson.project_version(),
+  'version' : meson.project_version(),
 }
 
 py_artifacts = [

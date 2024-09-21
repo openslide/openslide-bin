@@ -6,7 +6,7 @@ dev_deps = get_option('dev_deps')
 
 add_global_arguments(
   '-I' + meson.current_source_dir(),
-  language: ['c', 'cpp']
+  language : ['c', 'cpp'],
 )
 
 if not all_systems and system == 'darwin'
@@ -24,7 +24,7 @@ if not all_systems and system == 'darwin'
     if o.length() > 3
       version = cc.get_define(
         o[3],
-        prefix : '#include <@0@>'.format(o[2])
+        prefix : '#include <@0@>'.format(o[2]),
       ).strip('"')
     else
       version = o[2]
@@ -34,28 +34,23 @@ if not all_systems and system == 'darwin'
       declare_dependency(
         version : version,
         dependencies : cc.find_library(o[1]),
-      )
+      ),
     )
   endforeach
   # libffi headers are in a subdirectory
   add_global_arguments(
     '-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/ffi',
-    language : ['c', 'cpp']
+    language : ['c', 'cpp'],
   )
 else
   subproject('zlib')
   subproject(
     'libffi',
-    default_options : [
-      'tests=false',
-    ],
+    default_options : ['tests=false'],
   )
   subproject(
     'libxml2',
-    default_options : [
-      'iconv=disabled',
-      'python=false',
-    ],
+    default_options : ['iconv=disabled', 'python=false'],
   )
   subproject('sqlite3')
 endif
@@ -67,9 +62,7 @@ endif
 if dev_deps
   subproject(
     'zstd',
-    default_options : [
-      'bin_programs=false',
-    ],
+    default_options : ['bin_programs=false'],
   )
 endif
 
@@ -85,16 +78,11 @@ subproject(
 subproject('libtiff')
 subproject(
   'libopenjp2',
-  default_options : [
-    'build_codec_apps=false',
-  ],
+  default_options : ['build_codec_apps=false'],
 )
 subproject(
   'pcre2',
-  default_options : [
-    'grep=false',
-    'test=false',
-  ],
+  default_options : ['grep=false', 'test=false'],
 )
 subproject(
   'glib',
@@ -122,25 +110,16 @@ subproject(
 )
 subproject(
   'pixman',
-  default_options : [
-    'openmp=disabled',
-    'tests=disabled',
-  ],
+  default_options : ['openmp=disabled', 'tests=disabled'],
 )
 subproject(
   'cairo',
-  default_options : [
-    'dwrite=disabled',
-    'quartz=disabled',
-    'tests=disabled',
-  ],
+  default_options : ['dwrite=disabled', 'quartz=disabled', 'tests=disabled'],
 )
 subproject('uthash')
 subproject(
   'libdicom',
-  default_options : [
-    'tests=false',
-  ],
+  default_options : ['tests=false'],
 )
 openslide = subproject(
   'openslide',

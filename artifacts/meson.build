@@ -26,15 +26,14 @@ else
   env.set('OBJDUMP', find_program('objdump').full_path())
 endif
 
-meson.add_dist_script(
-  files('postprocess-sdist.py'), '-i', mesonintrospect
-)
+meson.add_dist_script(files('postprocess-sdist.py'), '-i', mesonintrospect)
 
 artifacts = [
   custom_target(
     command : [
-      find_program('write-project-versions.py'), '-j', '@OUTPUT0@',
-      '-m', '@OUTPUT1@',
+      find_program('write-project-versions.py'),
+      '--json', '@OUTPUT0@',
+      '--markdown', '@OUTPUT1@',
     ],
     output : ['versions.json', 'VERSIONS.md'],
     # ensure we regenerate after dependency updates
@@ -57,9 +56,7 @@ artifacts += licenses
 libopenslide = openslide.get_variable('libopenslide')
 if system == 'windows'
   artifacts += custom_target(
-    command : [
-      find_program('write-import-library.py'), '@INPUT@', '@OUTPUT@'
-    ],
+    command : [find_program('write-import-library.py'), '@INPUT@', '@OUTPUT@'],
     input : libopenslide,
     output : 'libopenslide.lib',
     env : env,
@@ -68,13 +65,15 @@ endif
 
 fs = import('fs')
 postprocess = find_program('postprocess-binary.py')
-foreach bin : [
-  libopenslide,
-  openslide.get_variable('slidetool'),
-]
+foreach bin : [libopenslide, openslide.get_variable('slidetool')]
   name = fs.name(bin.full_path())
   artifacts += custom_target(
-    command : [postprocess, '@INPUT@', '-o', '@OUTPUT0@', '-d', '@OUTPUT1@'],
+    command : [
+      postprocess,
+      '@INPUT@',
+      '--output', '@OUTPUT0@',
+      '--debuginfo', '@OUTPUT1@',
+    ],
     input : bin,
     output : [name, name + (system == 'darwin' ? '.dSYM' : '.debug')],
     env : env,
@@ -85,15 +84,13 @@ foreach bin : [
 endforeach
 
 custom_target(
-  command : [
-    find_program('write-bdist.py'), '-o', '@OUTPUT@', '@INPUT@'
-  ],
+  command : [find_program('write-bdist.py'), '--output', '@OUTPUT@', '@INPUT@'],
   input : artifacts,
   output : '@0@-@1@-@2@.@3@'.format(
     meson.project_name(),
     meson.project_version(),
     meson.get_external_property('openslide_bin_platform'),
-    system == 'windows' ? 'zip' : 'tar.xz'
+    system == 'windows' ? 'zip' : 'tar.xz',
   ),
   env : env,
   build_by_default : true,
@@ -102,13 +99,11 @@ custom_target(
 subdir('python')
 
 custom_target(
-  command : [
-    find_program('write-wheel.py'), '-o', '@OUTPUT@', '@INPUT@'
-  ],
+  command : [find_program('write-wheel.py'), '--output', '@OUTPUT@', '@INPUT@'],
   input : py_artifacts,
   output : 'openslide_bin-@0@-py3-none-@1@.whl'.format(
     meson.project_version(),
-    meson.get_external_property('python_platform_tag')
+    meson.get_external_property('python_platform_tag'),
   ),
   env : env,
   build_by_default : true,
