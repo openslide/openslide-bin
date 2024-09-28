@@ -150,13 +150,17 @@ class Project(Software):
         return meson_source_root() / 'override' / self.id
 
     @cached_property
+    def wrap_dir_name(self) -> str:
+        return self.wrap.get('wrap-file', 'directory')
+
+    @cached_property
     def version(self) -> str:
         try:
             # get the wrapdb_version, including the package revision
             ver = self.wrap.get('wrap-file', 'wrapdb_version', fallback=None)
             if not ver:
                 # older or non-wrapdb wrap; parse the directory name
-                ver = self.wrap.get('wrap-file', 'directory').split('-')[-1]
+                ver = self.wrap_dir_name.split('-')[-1]
             return ver
         except FileNotFoundError:
             # overridden source directory
@@ -178,10 +182,10 @@ class Project(Software):
                     return version
             raise Exception(f'Missing project info for {self.id}')
 
-    @cached_property
+    @property
     def source_dir(self) -> Path:
         try:
-            dirname = self.wrap.get('wrap-file', 'directory')
+            dirname = self.wrap_dir_name
         except FileNotFoundError:
             # overridden source directory
             dirname = self.id
