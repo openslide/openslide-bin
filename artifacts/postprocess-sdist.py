@@ -33,6 +33,7 @@ sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 from common.argparse import TypedArgs  # noqa: E402
 from common.meson import meson_introspect, meson_source_root  # noqa: E402
 from common.python import pyproject_to_message  # noqa: E402
+from common.software import Project  # noqa: E402
 
 
 class Args(TypedArgs):
@@ -52,6 +53,10 @@ dest = Path(os.environ['MESON_DIST_ROOT'])
 
 # remove those parts of .github not ignored from .gitattributes
 shutil.rmtree(dest / '.github')
+
+# prune subproject directories to reduce tarball size
+for proj in Project.get_all():
+    proj.prune_dist(dest)
 
 # pin openslide-bin version suffix
 version: str = meson_introspect('projectinfo')['version']

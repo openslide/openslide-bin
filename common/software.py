@@ -114,6 +114,20 @@ class Project(Software):
     # the wrapdb package with the upstream project.
     anitya_id: int | None = None
     primary: bool = False
+    remove_dirs: Iterable[str] = ()
+    # overrides for default file removals
+    keep_files: Iterable[str] = ()
+
+    DIST_REMOVE_FILENAMES = {
+        'CMakeLists.txt',
+        'configure',
+        'configure.ac',
+        'ltmain.sh',
+        'Makefile',
+        'Makefile.am',
+        'Makefile.in',
+    }
+    DIST_REMOVE_SUFFIXES = {'.cmake', '.m4'}
 
     @staticmethod
     def get(id: str) -> Project:
@@ -150,13 +164,17 @@ class Project(Software):
         return meson_source_root() / 'override' / self.id
 
     @cached_property
+    def wrap_dir_name(self) -> str:
+        return self.wrap.get('wrap-file', 'directory')
+
+    @cached_property
     def version(self) -> str:
         try:
             # get the wrapdb_version, including the package revision
             ver = self.wrap.get('wrap-file', 'wrapdb_version', fallback=None)
             if not ver:
                 # older or non-wrapdb wrap; parse the directory name
-                ver = self.wrap.get('wrap-file', 'directory').split('-')[-1]
+                ver = self.wrap_dir_name.split('-')[-1]
             return ver
         except FileNotFoundError:
             # overridden source directory
@@ -178,10 +196,10 @@ class Project(Software):
                     return version
             raise Exception(f'Missing project info for {self.id}')
 
-    @cached_property
+    @property
     def source_dir(self) -> Path:
         try:
-            dirname = self.wrap.get('wrap-file', 'directory')
+            dirname = self.wrap_dir_name
         except FileNotFoundError:
             # overridden source directory
             dirname = self.id
@@ -198,6 +216,27 @@ class Project(Software):
                 shutil.copy2(
                     self.source_dir / license, dir / Path(license).name
                 )
+
+    def prune_dist(self, root: Path) -> None:
+        def walkerr(e: OSError) -> None:
+            raise e
+
+        projdir = root / 'subprojects' / self.wrap_dir_name
+        if not projdir.exists():
+            # dev dep omitted from the dist
+            return
+        for subdir in self.remove_dirs:
+            shutil.rmtree(projdir / subdir)
+        for dirpath, _, filenames in projdir.walk(on_error=walkerr):
+            for filename in filenames:
+                path = dirpath / filename
+                if path.relative_to(projdir).as_posix() in self.keep_files:
+                    continue
+                if (
+                    path.name in self.DIST_REMOVE_FILENAMES
+                    or path.suffix in self.DIST_REMOVE_SUFFIXES
+                ):
+                    path.unlink()
 
     @staticmethod
     @cache
@@ -271,51 +310,85 @@ _PROJECTS = (
         id='cairo',
         display='cairo',
         licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
         licenses=['COPYING'],
+        remove_dirs=['tests'],
     ),
     Project(
         id='glib',
         display='glib',
         licenses=['COPYING'],
+        remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
+        keep_files=[
+            'm4macros/glib-2.0.m4',
+            'm4macros/glib-gettext.m4',
+            'm4macros/gsettings.m4',
+        ],
     ),
     Project(
         id='libdicom',
         display='libdicom',
         licenses=['LICENSE'],
+        remove_dirs=['doc/html'],
     ),
     Project(
         id='libffi',
         display='libffi',
         licenses=['LICENSE'],
+        remove_dirs=['doc', 'testsuite'],
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
         licenses=['LICENSE.md', 'README.ijg'],
+        remove_dirs=['doc', 'java', 'testimages'],
+        keep_files=['simd/CMakeLists.txt'],
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
         licenses=['LICENSE'],
+        remove_dirs=[
+            'cmake',
+            'doc',
+            'src/bin',
+            'src/lib/openjpip',
+            'tests',
+            'thirdparty',
+            'tools',
+            'wrapping',
+        ],
     ),
     Project(
         id='libpng',
         display='libpng',
         licenses=['LICENSE'],
+        remove_dirs=['ci', 'contrib', 'projects'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
         licenses=['LICENSE.md'],
+        remove_dirs=[
+            'cmake',
+            'config',
+            'contrib',
+            'doc',
+            'test/images',
+            'test/refs',
+            'tools',
+        ],
     ),
     Project(
         id='libxml2',
         display='libxml2',
         licenses=['Copyright'],
+        remove_dirs=['fuzz', 'os400', 'python', 'result', 'test'],
+        keep_files=['libxml.m4'],
     ),
     Project(
         id='openslide',
@@ -323,16 +396,19 @@ _PROJECTS = (
         primary=True,
         licenses=['COPYING.LESSER'],
         anitya_id=5600,
+        remove_dirs=['doc'],
     ),
     Project(
         id='pcre2',
         display='PCRE2',
         licenses=['LICENCE'],
+        remove_dirs=['doc', 'testdata'],
     ),
     Project(
         id='pixman',
         display='pixman',
         licenses=['COPYING'],
+        remove_dirs=['demos', 'test'],
     ),
     Project(
         id='proxy-libintl',
@@ -348,17 +424,20 @@ _PROJECTS = (
         id='uthash',
         display='uthash',
         licenses=['LICENSE'],
+        remove_dirs=['doc', 'tests'],
     ),
     Project(
         id='zlib',
         display='zlib',
         licenses=['README'],
+        remove_dirs=['contrib', 'doc', 'examples'],
     ),
     Project(
         id='zstd',
         display='Zstandard',
         # Dual-licensed BSD or GPLv2.  Elect BSD.
         licenses=['LICENSE'],
+        remove_dirs=['contrib', 'doc', 'programs', 'tests', 'zlibWrapper'],
     ),
 )
 
