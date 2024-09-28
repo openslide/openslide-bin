@@ -427,10 +427,10 @@ _PROJECTS = (
         remove_dirs=['doc', 'tests'],
     ),
     Project(
-        id='zlib',
-        display='zlib',
-        licenses=['README'],
-        remove_dirs=['contrib', 'doc', 'examples'],
+        id='zlib-ng',
+        display='zlib-ng',
+        licenses=['LICENSE.md'],
+        remove_dirs=['doc', 'test'],
     ),
     Project(
         id='zstd',

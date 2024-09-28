@@ -14,7 +14,6 @@ if not all_systems and system == 'darwin'
   # [dependency name, library name, version] or
   # [dependency name, library name, header with version, version define]
   overrides = [
-    # zlib is handled automatically by dependency()
     # no define for libffi version; pick a value that will pass the checks
     ['libffi', 'ffi', '3.0.0'],
     ['libxml-2.0', 'xml2', 'libxml/xmlversion.h', 'LIBXML_DOTTED_VERSION'],
@@ -42,8 +41,18 @@ if not all_systems and system == 'darwin'
     '-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/ffi',
     language : ['c', 'cpp'],
   )
-else
-  subproject('zlib')
+endif
+
+# ignore SDK zlib on macOS (except as a dependency of the other SDK libs)
+meson.override_dependency(
+  'zlib',
+  subproject(
+    'zlib-ng',
+    default_options : ['tests=disabled', 'zlib-compat=true'],
+  ).get_variable('zlib_ng_dep'),
+)
+
+if all_systems or system != 'darwin'
   subproject(
     'libffi',
     default_options : ['tests=false'],
