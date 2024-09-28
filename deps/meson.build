@@ -105,12 +105,12 @@ subproject(
     'builtin_loaders=bmp',
     'introspection=disabled',
     'gio_sniffing=false',
-    'installed_tests=false',
+    'tests=false',
   ],
 )
 subproject(
   'pixman',
-  default_options : ['openmp=disabled', 'tests=disabled'],
+  default_options : ['demos=disabled', 'openmp=disabled', 'tests=disabled'],
 )
 subproject(
   'cairo',

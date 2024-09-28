@@ -126,7 +126,8 @@ jobs:
           if [ $size -gt 104857600 ]; then
               # https://github.com/pypi/warehouse/blob/cf94b41/warehouse/forklift/legacy.py#L77
               echo "Source tarball is $size bytes, which is larger than 100 MiB."
-              echo "Maintainers will need to request a larger PyPI file size limit."
+              echo "Reduce the source tarball size, or if needed, maintainers will need to"
+              echo "request a larger PyPI file size limit."
               echo "https://pypi.org/help/#file-size-limit"
               exit 1
           fi
