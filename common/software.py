@@ -430,6 +430,7 @@ _PROJECTS = (
         id='zlib-ng',
         display='zlib-ng',
         licenses=['LICENSE.md'],
+        anitya_id=115592,
         remove_dirs=['doc', 'test'],
     ),
     Project(

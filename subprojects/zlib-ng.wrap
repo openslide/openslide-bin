@@ -7,5 +7,7 @@ source_hash = fcb41dd59a3f17002aeb1bb21f04696c9b721404890bb945c5ab39d2cb69654c
 # https://github.com/mesonbuild/wrapdb/pull/1710
 diff_files = zlib-ng-meson.patch
 
+# FIXME: remove anitya_id from software.py after zlib-ng lands in wrapdb
+
 [provide]
 dependency_names = zlib-ng
