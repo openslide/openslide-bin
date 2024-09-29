@@ -13,6 +13,7 @@ py_artifacts = [
     input : '__init__.in.py',
     output : '__init__.py',
   ),
+  files('py.typed'),
   libopenslide_postprocessed,
   licenses,
 ]
