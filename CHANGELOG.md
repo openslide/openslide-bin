@@ -1,5 +1,13 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.6, 2024-09-29
+
+* Switch from zlib to zlib-ng
+* Export type hints from Python package
+* Reduce size of source archive
+* Update various dependencies
+
+
 ## Version 4.0.0.5, 2024-09-10
 
 * Add Linux aarch64 build
