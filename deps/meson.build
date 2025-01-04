@@ -61,7 +61,10 @@ if all_systems or system != 'darwin'
     'libxml2',
     default_options : ['iconv=disabled', 'python=false'],
   )
-  subproject('sqlite3')
+  subproject(
+    'sqlite3',
+    default_options : ['all-extensions=disabled'],
+  )
 endif
 
 if all_systems or system != 'linux'
