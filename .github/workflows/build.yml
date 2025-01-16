@@ -162,7 +162,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.sdist.outputs.systems) }}
-    runs-on: ${{ matrix.os == 'macos' && 'macos-latest' || (matrix.os == 'linux' && matrix.arch == 'aarch64') && 'ubuntu-24.04-aarch64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.os == 'macos' && 'macos-latest' || (matrix.os == 'linux' && matrix.arch == 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container: ${{ matrix.os == 'linux' && inputs.linux_builder_repo_and_digest || (matrix.os == 'windows' && inputs.windows_builder_repo_and_digest || null) }}
     steps:
       - name: Install dependencies (macOS)
