@@ -402,7 +402,7 @@ _PROJECTS = (
     Project(
         id='pcre2',
         display='PCRE2',
-        licenses=['LICENCE'],
+        licenses=['LICENCE.md'],
         remove_dirs=['doc', 'testdata'],
     ),
     Project(
