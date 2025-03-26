@@ -26,8 +26,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shlex
-import subprocess
 from typing import Any
 
 # A.B.C.D
@@ -43,8 +41,8 @@ def meson_source_root() -> Path:
 
 @lru_cache
 def meson_introspect(keyword: str) -> Any:
-    cmd = shlex.split(os.environ['MESONINTROSPECT']) + [f'--{keyword}']
-    return json.loads(subprocess.check_output(cmd))
+    with open(Path('meson-info') / f'intro-{keyword}.json') as fh:
+        return json.load(fh)
 
 
 def meson_host() -> str:

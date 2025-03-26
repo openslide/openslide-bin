@@ -1,14 +1,6 @@
 env = environment()
 env.prepend('PYTHONPATH', meson.project_source_root())
-# Meson doesn't pass MESONINTROSPECT to custom targets
-# https://github.com/mesonbuild/meson/issues/12492
-mesonintrospect = run_command(
-  files('get-introspect-command.py'),
-  capture : true,
-  check : true,
-).stdout().strip()
-env.set('MESONINTROSPECT', mesonintrospect)
-# nor MESON_SOURCE_ROOT
+# Meson doesn't pass MESON_SOURCE_ROOT to custom targets
 env.set('MESON_SOURCE_ROOT', meson.project_source_root())
 env.set('LD', find_program('ld').full_path())
 if system == 'linux'
@@ -26,7 +18,7 @@ else
   env.set('OBJDUMP', find_program('objdump').full_path())
 endif
 
-meson.add_dist_script(files('postprocess-sdist.py'), '-i', mesonintrospect)
+meson.add_dist_script(files('postprocess-sdist.py'))
 
 artifacts = [
   custom_target(

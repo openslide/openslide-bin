@@ -30,24 +30,10 @@ import sys
 # flake8 isn't happy about this
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
-from common.argparse import TypedArgs  # noqa: E402
 from common.meson import meson_introspect, meson_source_root  # noqa: E402
 from common.python import pyproject_to_message  # noqa: E402
 from common.software import Project  # noqa: E402
 
-
-class Args(TypedArgs):
-    introspect: str
-
-
-args = Args(
-    'postprocess-sdist', description='Modify sdist directory before packing.'
-)
-args.add_arg(
-    '-i', '--introspect', required=True, help='Meson introspect command'
-)
-args.parse()
-os.environ['MESONINTROSPECT'] = args.introspect
 src = meson_source_root()
 dest = Path(os.environ['MESON_DIST_ROOT'])
 
