@@ -388,7 +388,7 @@ _PROJECTS = (
         id='libxml2',
         display='libxml2',
         licenses=['Copyright'],
-        remove_dirs=['fuzz', 'os400', 'python', 'result', 'test'],
+        remove_dirs=['fuzz', 'python', 'result', 'test'],
         keep_files=['libxml.m4'],
     ),
     Project(

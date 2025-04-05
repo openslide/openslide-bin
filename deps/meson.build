@@ -59,7 +59,7 @@ if all_systems or system != 'darwin'
   )
   subproject(
     'libxml2',
-    default_options : ['iconv=disabled', 'python=false'],
+    default_options : ['iconv=disabled', 'python=disabled'],
   )
   subproject(
     'sqlite3',
