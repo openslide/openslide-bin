@@ -1,0 +1,22 @@
+commit ef73541a5a0d470fc8debc5c0fceea93d3d2b72a
+Author: Benjamin Gilbert <bgilbert@backtick.net>
+Date:   Sat Apr 5 15:35:21 2025 -0400
+
+    meson: don't link with pthreads on Windows
+    
+    dependency('threads') always produces '-pthread' on GNU-like linkers, even
+    on Windows where we use Win32 thread primitives instead.
+
+diff --git a/meson.build b/meson.build
+index 9b937b4c8410..3e5f25d3b92c 100644
+--- a/meson.build
++++ b/meson.build
+@@ -335,7 +335,7 @@ if want_modules and host_machine.system() != 'windows'
+ endif
+ 
+ ### threads
+-if want_threads
++if want_threads and host_os != 'windows'
+     threads_dep = dependency('threads')
+     xml_deps += threads_dep
+ else
