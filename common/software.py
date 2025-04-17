@@ -26,7 +26,6 @@ import configparser
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import count
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -228,9 +227,9 @@ class Project(Software):
             return
         for subdir in self.remove_dirs:
             shutil.rmtree(projdir / subdir)
-        for dirpath, _, filenames in os.walk(projdir, onerror=walkerr):
+        for dirpath, _, filenames in projdir.walk(on_error=walkerr):
             for filename in filenames:
-                path = Path(dirpath) / filename
+                path = dirpath / filename
                 if path.relative_to(projdir).as_posix() in self.keep_files:
                     continue
                 if (

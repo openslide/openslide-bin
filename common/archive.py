@@ -266,8 +266,7 @@ class TarArchiveReader(ArchiveReader):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
         self._tar = tarfile.open(fileobj=fh)
-        if hasattr(tarfile, 'data_filter'):
-            self._tar.extraction_filter = tarfile.data_filter
+        self._tar.extraction_filter = tarfile.data_filter
 
     def close(self) -> None:
         self._tar.close()

@@ -51,7 +51,7 @@ from common.meson import (
 from common.software import Project
 
 WINDOWS_API_VERS = (4, 5)
-LINUX_API_VERS = (3,)
+LINUX_API_VERS = (4,)
 # we have a higher minimum than the underlying meson.build
 MESON_MIN_VER = (1, 5, 0)
 
@@ -494,7 +494,7 @@ class BDistSmokeTester(SmokeTester):
                 zip.extractall(dir)
         else:
             with tarfile.open(fileobj=self._fh) as tar:
-                tar.extraction_filter = getattr(tarfile, 'tar_filter', None)
+                tar.extraction_filter = tarfile.tar_filter
                 tar.extractall(dir)
 
     def _invoke(self, desc: str, dir: Path, cmd_prefix: list[str]) -> None:
