@@ -29,7 +29,6 @@ from functools import cached_property
 from hashlib import sha256
 from io import BytesIO
 from itertools import zip_longest
-import os
 from pathlib import Path, PurePath
 import re
 import tarfile
@@ -102,8 +101,7 @@ class ArchiveWriter(ABC):
         def walkerr(e: OSError) -> None:
             raise e
 
-        for dpath_str, _, fnames in os.walk(path, onerror=walkerr):
-            dpath = Path(dpath_str)
+        for dpath, _, fnames in path.walk(on_error=walkerr):
             for fname in fnames:
                 self.add(
                     FileMember(
