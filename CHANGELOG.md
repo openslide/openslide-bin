@@ -1,5 +1,10 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.7, 2025-04-26
+
+* Update many dependencies
+
+
 ## Version 4.0.0.6, 2024-09-29
 
 * Switch from zlib to zlib-ng
