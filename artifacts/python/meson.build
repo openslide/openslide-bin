@@ -16,7 +16,7 @@ py_artifacts = [
     build_always_stale : true,
     env : env,
   ),
-  files('py.typed'),
+  files(meson.project_source_root() / 'COPYING.LESSER', 'py.typed'),
   libopenslide_postprocessed,
   licenses,
 ]
