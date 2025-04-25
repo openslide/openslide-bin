@@ -31,7 +31,10 @@ import sys
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
 from common.meson import meson_introspect, meson_source_root  # noqa: E402
-from common.python import pyproject_to_message  # noqa: E402
+from common.python import (  # noqa: E402
+    pyproject_fill_template,
+    pyproject_to_message,
+)
 from common.software import Project  # noqa: E402
 
 src = meson_source_root()
@@ -53,10 +56,8 @@ except IndexError:
 (dest / 'suffix').write_text(suffix + '\n')
 
 # create Python source distribution metadata
-pyproject = (
-    (src / 'artifacts' / 'python' / 'pyproject.in.toml')
-    .read_text()
-    .replace('@version@', version)
+pyproject = pyproject_fill_template(
+    (src / 'artifacts' / 'python' / 'pyproject.in.toml').read_text()
 )
 (dest / 'pyproject.toml').write_text(pyproject)
 (dest / 'PKG-INFO').write_bytes(pyproject_to_message(pyproject).as_bytes())
