@@ -23,7 +23,12 @@ from email.message import Message
 from email.policy import Compat32
 import tomllib
 
-from .meson import meson_source_root
+from .meson import meson_introspect, meson_source_root
+
+
+def pyproject_fill_template(tmpl: str) -> str:
+    version: str = meson_introspect('projectinfo')['version']
+    return tmpl.replace('@version@', version)
 
 
 def pyproject_to_message(pyproject: str) -> Message:
