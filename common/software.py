@@ -2,7 +2,7 @@
 # Tools for building OpenSlide and its dependencies
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
-# Copyright (c) 2022-2023 Benjamin Gilbert
+# Copyright (c) 2022-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -26,7 +26,10 @@ import configparser
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import count
+import json
+import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import time
@@ -109,6 +112,8 @@ class Tool(Software):
 @dataclass
 class Project(Software):
     license_files: Iterable[str | Callable[[Project], tuple[str, str]]]
+    # SPDX license expression, overriding the subproject's project() call
+    spdx_override: str | None = None
     # Project ID on release-monitoring.org, for projects not in wrapdb.
     # For projects in wrapdb, configure release-monitoring.org to associate
     # the wrapdb package with the upstream project.
@@ -228,6 +233,35 @@ class Project(Software):
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
 
+    @cached_property
+    def spdx(self) -> str:
+        try:
+            meson_spdx: str | list[str] | None = json.loads(
+                subprocess.check_output(
+                    shlex.split(os.environ['MESONREWRITE'])
+                    + ['kwargs', 'info', 'project', '/'],
+                    cwd=self.source_dir,
+                    stderr=subprocess.DEVNULL,
+                )
+            )['kwargs']['project#/'].get('license')
+        except subprocess.CalledProcessError:
+            # 'meson rewrite' sometimes fails parsing build scripts
+            meson_spdx = None
+        if self.spdx_override is not None:
+            if meson_spdx == self.spdx_override:
+                raise ValueError(
+                    f'SPDX override for {self.id} matches Meson config and '
+                    'is no longer needed'
+                )
+            return self.spdx_override
+        elif type(meson_spdx) is str:
+            return meson_spdx
+        else:
+            raise ValueError(
+                f'Cannot read {self.id} license from Meson config; '
+                'override needed'
+            )
+
     def write_license_files(self, dir: Path) -> None:
         dir.mkdir(parents=True)
         for f in self.license_files:
@@ -335,6 +369,7 @@ _PROJECTS = (
         id='cairo',
         display='cairo',
         license_files=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        spdx_override='LGPL-2.1-only OR MPL-1.1',
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
@@ -347,6 +382,7 @@ _PROJECTS = (
         id='glib',
         display='glib',
         license_files=['COPYING'],
+        spdx_override='LGPL-2.1-or-later',
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
         keep_dirs=['.gitlab-ci'],
         keep_files=[
@@ -365,6 +401,7 @@ _PROJECTS = (
         id='libffi',
         display='libffi',
         license_files=['LICENSE'],
+        spdx_override='MIT',
         remove_dirs=['doc', 'testsuite'],
     ),
     Project(
@@ -440,6 +477,7 @@ _PROJECTS = (
         id='proxy-libintl',
         display='proxy-libintl',
         license_files=['COPYING'],
+        spdx_override='LGPL-2.0-or-later',
     ),
     Project(
         id='sqlite3',
@@ -497,3 +535,26 @@ def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     typ_map = {'primary': '**', 'dependency': '', 'tool': '_'}
     for info in _sorted_infos(infos['versions']):
         line(info['display'], info['version'], typ_map[info['type']])
+
+
+def get_spdx(projects: Iterable[Project]) -> str:
+    from license_expression import get_spdx_licensing
+
+    spdx = get_spdx_licensing()
+    unordered = spdx.dedup(
+        spdx.AND(
+            *[
+                spdx.parse(proj.spdx, strict=True, validate=True)
+                for proj in projects
+            ]
+        ).flatten()
+    )
+    primary_then_alphabetical = spdx.dedup(
+        spdx.AND(
+            *(
+                [spdx.parse(proj.spdx) for proj in projects if proj.primary]
+                + sorted(unordered.args, key=lambda arg: str(arg).lower())
+            )
+        )
+    )
+    return str(primary_then_alphabetical)
