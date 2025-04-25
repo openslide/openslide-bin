@@ -55,6 +55,11 @@ except IndexError:
     suffix = ''
 (dest / 'suffix').write_text(suffix + '\n')
 
+# write licenses directory for Python source distribution
+licensedir = dest / 'licenses'
+for proj in Project.get_enabled():
+    proj.write_license_files(licensedir)
+
 # create Python source distribution metadata
 pyproject = pyproject_fill_template(
     (src / 'artifacts' / 'python' / 'pyproject.in.toml').read_text()
