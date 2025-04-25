@@ -26,7 +26,7 @@ import configparser
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import count
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import subprocess
 import time
@@ -206,6 +206,14 @@ class Project(Software):
             # overridden source directory
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
+
+    @property
+    def license_relpaths(self) -> list[PurePath]:
+        base = PurePath(self.display)
+        return [
+            base / (f(self)[0] if callable(f) else Path(f).name)
+            for f in self.license_files
+        ]
 
     def write_license_files(self, base: Path) -> None:
         dir = base / self.display
