@@ -24,17 +24,20 @@ from email.policy import Compat32
 import tomllib
 
 from .meson import meson_introspect, meson_source_root
+from .software import Project, get_spdx
 
 
 def pyproject_fill_template(tmpl: str) -> str:
     version: str = meson_introspect('projectinfo')['version']
-    return tmpl.replace('@version@', version)
+    return tmpl.replace('@version@', version).replace(
+        '@spdx@', get_spdx(Project.get_enabled())
+    )
 
 
 def pyproject_to_message(pyproject: str) -> Message:
     meta = tomllib.loads(pyproject)
     out = Message(policy=Compat32(max_line_length=None))
-    out['Metadata-Version'] = '2.3'
+    out['Metadata-Version'] = '2.4'
     for k, v in meta['project'].items():
         k = k.lower()
         if k == 'name':
@@ -67,8 +70,7 @@ def pyproject_to_message(pyproject: str) -> Message:
             for item in v:
                 out['Maintainer-Email'] = f'{item["name"]} <{item["email"]}>'
         elif k == 'license':
-            out['License'] = v.pop('text')
-            assert not v
+            out['License-Expression'] = v
         elif k == 'classifiers':
             for vv in v:
                 out['Classifier'] = vv

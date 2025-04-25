@@ -2,7 +2,7 @@
 # Tools for building OpenSlide and its dependencies
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
-# Copyright (c) 2022-2023 Benjamin Gilbert
+# Copyright (c) 2022-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -108,6 +108,8 @@ class Tool(Software):
 
 @dataclass
 class Project(Software):
+    # SPDX expression terms that should be ANDed together
+    spdx: Iterable[str]
     license_files: Iterable[str | Callable[[Project], tuple[str, str]]]
     # Project ID on release-monitoring.org, for projects not in wrapdb.
     # For projects in wrapdb, configure release-monitoring.org to associate
@@ -304,18 +306,21 @@ _PROJECTS = (
     Project(
         id='cairo',
         display='cairo',
+        spdx=['LGPL-2.1-only OR MPL-1.1'],
         license_files=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
+        spdx=['LGPL-2.1-or-later'],
         license_files=['COPYING'],
         remove_dirs=['tests'],
     ),
     Project(
         id='glib',
         display='glib',
+        spdx=['LGPL-2.1-or-later'],
         license_files=['COPYING'],
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
         keep_files=[
@@ -327,18 +332,21 @@ _PROJECTS = (
     Project(
         id='libdicom',
         display='libdicom',
+        spdx=['MIT'],
         license_files=['LICENSE'],
         remove_dirs=['doc/html'],
     ),
     Project(
         id='libffi',
         display='libffi',
+        spdx=['MIT'],
         license_files=['LICENSE'],
         remove_dirs=['doc', 'testsuite'],
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
+        spdx=['BSD-3-Clause', 'IJG'],
         license_files=['LICENSE.md', 'README.ijg'],
         remove_dirs=['doc', 'java', 'testimages'],
         keep_files=['simd/CMakeLists.txt'],
@@ -346,6 +354,7 @@ _PROJECTS = (
     Project(
         id='libopenjp2',
         display='OpenJPEG',
+        spdx=['BSD-2-Clause'],
         license_files=['LICENSE'],
         remove_dirs=[
             'cmake',
@@ -361,12 +370,14 @@ _PROJECTS = (
     Project(
         id='libpng',
         display='libpng',
+        spdx=['libpng-2.0'],
         license_files=['LICENSE'],
         remove_dirs=['ci', 'contrib', 'projects'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
+        spdx=['libtiff'],
         license_files=['LICENSE.md'],
         remove_dirs=[
             'cmake',
@@ -381,6 +392,7 @@ _PROJECTS = (
     Project(
         id='libxml2',
         display='libxml2',
+        spdx=['MIT'],
         license_files=['Copyright'],
         remove_dirs=['fuzz', 'python', 'result', 'test'],
         keep_files=['libxml.m4'],
@@ -389,6 +401,7 @@ _PROJECTS = (
         id='openslide',
         display='OpenSlide',
         primary=True,
+        spdx=['LGPL-2.1-only'],
         license_files=['COPYING.LESSER'],
         anitya_id=5600,
         remove_dirs=['doc'],
@@ -396,40 +409,47 @@ _PROJECTS = (
     Project(
         id='pcre2',
         display='PCRE2',
+        spdx=['BSD-3-Clause WITH PCRE2-exception'],
         license_files=['LICENCE.md'],
         remove_dirs=['doc', 'testdata'],
     ),
     Project(
         id='pixman',
         display='pixman',
+        spdx=['MIT'],
         license_files=['COPYING'],
         remove_dirs=['demos', 'test'],
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
+        spdx=['LGPL-2.0-or-later'],
         license_files=['COPYING'],
     ),
     Project(
         id='sqlite3',
         display='SQLite',
+        spdx=['blessing'],
         license_files=[_sqlite3_license],
     ),
     Project(
         id='uthash',
         display='uthash',
+        spdx=['BSD-1-Clause'],
         license_files=['LICENSE'],
         remove_dirs=['doc', 'tests'],
     ),
     Project(
         id='zlib-ng',
         display='zlib-ng',
+        spdx=['Zlib'],
         license_files=['LICENSE.md'],
         remove_dirs=['doc', 'test'],
     ),
     Project(
         id='zstd',
         display='Zstandard',
+        spdx=['BSD-3-Clause OR GPL-2.0-only'],
         # Dual-licensed BSD or GPLv2.  Elect BSD.
         license_files=['LICENSE'],
         remove_dirs=['contrib', 'doc', 'programs', 'tests', 'zlibWrapper'],
@@ -466,3 +486,18 @@ def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     typ_map = {'primary': '**', 'dependency': '', 'tool': '_'}
     for info in _sorted_infos(infos['versions']):
         line(info['display'], info['version'], typ_map[info['type']])
+
+
+def get_spdx(projects: Iterable[Project]) -> str:
+    primary = {term for proj in projects if proj.primary for term in proj.spdx}
+    deps = {
+        term for proj in projects if not proj.primary for term in proj.spdx
+    } - primary
+    ordered = [
+        spdx
+        for spdxes in (primary, deps)
+        for spdx in sorted(spdxes, key=lambda spdx: spdx.lower())
+    ]
+    return ' AND '.join(
+        f'({spdx})' if ' OR ' in spdx else spdx for spdx in ordered
+    )
