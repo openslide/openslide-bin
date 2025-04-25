@@ -38,4 +38,4 @@ args.parse()
 if args.dir.exists():
     shutil.rmtree(args.dir)
 for proj in Project.get_enabled():
-    proj.write_license_files(args.dir / proj.display)
+    proj.write_license_files(args.dir)
