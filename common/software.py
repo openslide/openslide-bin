@@ -2,7 +2,7 @@
 # Tools for building OpenSlide and its dependencies
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
-# Copyright (c) 2022-2023 Benjamin Gilbert
+# Copyright (c) 2022-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -26,7 +26,10 @@ import configparser
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import count
+import json
+import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import time
@@ -109,6 +112,8 @@ class Tool(Software):
 @dataclass
 class Project(Software):
     license_files: Iterable[str | Callable[[Project], tuple[str, str]]]
+    # SPDX license expression, overriding the subproject's project() call
+    spdx_override: str | None = None
     # Project ID on release-monitoring.org, for projects not in wrapdb.
     # For projects in wrapdb, configure release-monitoring.org to associate
     # the wrapdb package with the upstream project.
@@ -204,6 +209,31 @@ class Project(Software):
             # overridden source directory
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
+
+    @cached_property
+    def spdx(self) -> str:
+        try:
+            meson_spdx: str | list[str] | None = json.loads(
+                subprocess.check_output(
+                    shlex.split(os.environ['MESONREWRITE'])
+                    + ['kwargs', 'info', 'project', '/'],
+                    cwd=self.source_dir,
+                    stderr=subprocess.DEVNULL,
+                )
+            )['kwargs']['project#/'].get('license')
+        except subprocess.CalledProcessError:
+            # 'meson rewrite' sometimes fails parsing build scripts
+            meson_spdx = None
+        if self.spdx_override is not None:
+            if meson_spdx == self.spdx_override:
+                raise ValueError(
+                    f'SPDX override for {self.id} is no longer needed'
+                )
+            return self.spdx_override
+        elif type(meson_spdx) is str:
+            return meson_spdx
+        else:
+            raise ValueError(f'SPDX override needed for {self.id}')
 
     def write_license_files(self, dir: Path) -> None:
         dir.mkdir(parents=True)
@@ -305,6 +335,7 @@ _PROJECTS = (
         id='cairo',
         display='cairo',
         license_files=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        spdx_override='LGPL-2.1-only OR MPL-1.1',
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
@@ -317,6 +348,7 @@ _PROJECTS = (
         id='glib',
         display='glib',
         license_files=['COPYING'],
+        spdx_override='LGPL-2.1-or-later',
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
         keep_files=[
             'm4macros/glib-2.0.m4',
@@ -334,6 +366,7 @@ _PROJECTS = (
         id='libffi',
         display='libffi',
         license_files=['LICENSE'],
+        spdx_override='MIT',
         remove_dirs=['doc', 'testsuite'],
     ),
     Project(
@@ -347,6 +380,7 @@ _PROJECTS = (
         id='libopenjp2',
         display='OpenJPEG',
         license_files=['LICENSE'],
+        spdx_override='BSD-2-Clause',
         remove_dirs=[
             'cmake',
             'doc',
@@ -362,12 +396,14 @@ _PROJECTS = (
         id='libpng',
         display='libpng',
         license_files=['LICENSE'],
+        spdx_override='libpng-2.0',
         remove_dirs=['ci', 'contrib', 'projects'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
         license_files=['LICENSE.md'],
+        spdx_override='libtiff',
         remove_dirs=[
             'cmake',
             'config',
@@ -397,6 +433,7 @@ _PROJECTS = (
         id='pcre2',
         display='PCRE2',
         license_files=['LICENCE.md'],
+        spdx_override='BSD-3-Clause WITH PCRE2-exception',
         remove_dirs=['doc', 'testdata'],
     ),
     Project(
@@ -409,22 +446,26 @@ _PROJECTS = (
         id='proxy-libintl',
         display='proxy-libintl',
         license_files=['COPYING'],
+        spdx_override='LGPL-2.0-or-later',
     ),
     Project(
         id='sqlite3',
         display='SQLite',
         license_files=[_sqlite3_license],
+        spdx_override='blessing',
     ),
     Project(
         id='uthash',
         display='uthash',
         license_files=['LICENSE'],
+        spdx_override='BSD-1-Clause',
         remove_dirs=['doc', 'tests'],
     ),
     Project(
         id='zlib-ng',
         display='zlib-ng',
         license_files=['LICENSE.md'],
+        spdx_override='Zlib',
         remove_dirs=['doc', 'test'],
     ),
     Project(
@@ -432,6 +473,7 @@ _PROJECTS = (
         display='Zstandard',
         # Dual-licensed BSD or GPLv2.  Elect BSD.
         license_files=['LICENSE'],
+        spdx_override='BSD-3-Clause OR GPL-2.0-only',
         remove_dirs=['contrib', 'doc', 'programs', 'tests', 'zlibWrapper'],
     ),
 )
@@ -466,3 +508,26 @@ def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     typ_map = {'primary': '**', 'dependency': '', 'tool': '_'}
     for info in _sorted_infos(infos['versions']):
         line(info['display'], info['version'], typ_map[info['type']])
+
+
+def get_spdx(projects: Iterable[Project]) -> str:
+    from license_expression import get_spdx_licensing
+
+    spdx = get_spdx_licensing()
+    unordered = spdx.dedup(
+        spdx.AND(
+            *[
+                spdx.parse(proj.spdx, strict=True, validate=True)
+                for proj in projects
+            ]
+        ).flatten()
+    )
+    primary_then_alphabetical = spdx.dedup(
+        spdx.AND(
+            *(
+                [spdx.parse(proj.spdx) for proj in projects if proj.primary]
+                + sorted(unordered.args, key=lambda arg: str(arg).lower())
+            )
+        )
+    )
+    return str(primary_then_alphabetical)
