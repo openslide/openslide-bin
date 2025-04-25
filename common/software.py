@@ -108,7 +108,7 @@ class Tool(Software):
 
 @dataclass
 class Project(Software):
-    licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
+    license_files: Iterable[str | Callable[[Project], tuple[str, str]]]
     # Project ID on release-monitoring.org, for projects not in wrapdb.
     # For projects in wrapdb, configure release-monitoring.org to associate
     # the wrapdb package with the upstream project.
@@ -228,17 +228,15 @@ class Project(Software):
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
 
-    def write_licenses(self, dir: Path) -> None:
+    def write_license_files(self, dir: Path) -> None:
         dir.mkdir(parents=True)
-        for license in self.licenses:
-            if callable(license):
-                name, contents = license(self)
+        for f in self.license_files:
+            if callable(f):
+                name, contents = f(self)
                 with open(dir / name, 'w') as fh:
                     fh.write(contents)
             else:
-                shutil.copy2(
-                    self.source_dir / license, dir / Path(license).name
-                )
+                shutil.copy2(self.source_dir / f, dir / Path(f).name)
 
     def prune_dist(self, root: Path) -> None:
         def walkerr(e: OSError) -> None:
@@ -336,19 +334,19 @@ _PROJECTS = (
     Project(
         id='cairo',
         display='cairo',
-        licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        license_files=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
-        licenses=['COPYING'],
+        license_files=['COPYING'],
         remove_dirs=['tests'],
     ),
     Project(
         id='glib',
         display='glib',
-        licenses=['COPYING'],
+        license_files=['COPYING'],
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
         keep_dirs=['.gitlab-ci'],
         keep_files=[
@@ -360,26 +358,26 @@ _PROJECTS = (
     Project(
         id='libdicom',
         display='libdicom',
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['doc/html'],
     ),
     Project(
         id='libffi',
         display='libffi',
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['doc', 'testsuite'],
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
-        licenses=['LICENSE.md', 'README.ijg'],
+        license_files=['LICENSE.md', 'README.ijg'],
         remove_dirs=['doc', 'java', 'testimages'],
         keep_files=['simd/CMakeLists.txt'],
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=[
             'cmake',
             'doc',
@@ -394,13 +392,13 @@ _PROJECTS = (
     Project(
         id='libpng',
         display='libpng',
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['ci', 'contrib', 'projects'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
-        licenses=['LICENSE.md'],
+        license_files=['LICENSE.md'],
         remove_dirs=[
             'cmake',
             'config',
@@ -414,7 +412,7 @@ _PROJECTS = (
     Project(
         id='libxml2',
         display='libxml2',
-        licenses=['Copyright'],
+        license_files=['Copyright'],
         remove_dirs=['fuzz', 'python', 'result', 'test'],
         keep_files=['libxml.m4'],
     ),
@@ -422,49 +420,49 @@ _PROJECTS = (
         id='openslide',
         display='OpenSlide',
         primary=True,
-        licenses=['COPYING.LESSER'],
+        license_files=['COPYING.LESSER'],
         anitya_id=5600,
         remove_dirs=['doc'],
     ),
     Project(
         id='pcre2',
         display='PCRE2',
-        licenses=['LICENCE.md'],
+        license_files=['LICENCE.md'],
         remove_dirs=['doc', 'testdata'],
     ),
     Project(
         id='pixman',
         display='pixman',
-        licenses=['COPYING'],
+        license_files=['COPYING'],
         remove_dirs=['demos', 'test'],
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
-        licenses=['COPYING'],
+        license_files=['COPYING'],
     ),
     Project(
         id='sqlite3',
         display='SQLite',
-        licenses=[_sqlite3_license],
+        license_files=[_sqlite3_license],
     ),
     Project(
         id='uthash',
         display='uthash',
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['doc', 'tests'],
     ),
     Project(
         id='zlib-ng',
         display='zlib-ng',
-        licenses=['LICENSE.md'],
+        license_files=['LICENSE.md'],
         remove_dirs=['doc', 'test'],
     ),
     Project(
         id='zstd',
         display='Zstandard',
         # Dual-licensed BSD or GPLv2.  Elect BSD.
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['contrib', 'doc', 'programs', 'tests', 'zlibWrapper'],
     ),
 )
