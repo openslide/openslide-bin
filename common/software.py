@@ -207,7 +207,8 @@ class Project(Software):
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
 
-    def write_license_files(self, dir: Path) -> None:
+    def write_license_files(self, base: Path) -> None:
+        dir = base / self.display
         dir.mkdir(parents=True)
         for f in self.license_files:
             if callable(f):
