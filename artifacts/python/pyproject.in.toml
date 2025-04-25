@@ -7,6 +7,7 @@ maintainers = [
 description = "Binary build of OpenSlide"
 readme = "artifacts/python/README.md"
 license = "@spdx@"
+license-files = "@license-files@"
 keywords = ["OpenSlide", "whole-slide image", "virtual slide", "library"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

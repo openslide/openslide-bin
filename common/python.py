@@ -1,7 +1,7 @@
 #
 # Tools for building OpenSlide and its dependencies
 #
-# Copyright (c) 2023 Benjamin Gilbert
+# Copyright (c) 2023-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -21,6 +21,8 @@ from __future__ import annotations
 
 from email.message import Message
 from email.policy import Compat32
+from pathlib import PurePath
+import re
 import tomllib
 
 from .meson import meson_introspect, meson_source_root
@@ -29,8 +31,30 @@ from .software import Project, get_spdx
 
 def pyproject_fill_template(tmpl: str) -> str:
     version: str = meson_introspect('projectinfo')['version']
-    return tmpl.replace('@version@', version).replace(
-        '@spdx@', get_spdx(Project.get_enabled())
+    projs = Project.get_enabled()
+    license_relpaths = [PurePath('COPYING.LESSER')] + [
+        PurePath('licenses') / relpath
+        for proj in projs
+        for relpath in proj.license_relpaths
+    ]
+    for relpath in license_relpaths:
+        # we don't do proper toml assembly
+        if '"' in relpath.as_posix():
+            raise ValueError(f'Invalid license file path: {relpath}')
+    return (
+        tmpl.replace('@version@', version)
+        .replace('@spdx@', get_spdx(projs))
+        .replace(
+            '"@license-files@"',
+            '["'
+            + '", "'.join(
+                sorted(
+                    (relpath.as_posix() for relpath in license_relpaths),
+                    key=lambda s: s.lower(),
+                )
+            )
+            + '"]',
+        )
     )
 
 
@@ -71,6 +95,13 @@ def pyproject_to_message(pyproject: str) -> Message:
                 out['Maintainer-Email'] = f'{item["name"]} <{item["email"]}>'
         elif k == 'license':
             out['License-Expression'] = v
+        elif k == 'license-files':
+            for vv in v:
+                if re.search(r'\*|\?|\[|\.\.', vv):
+                    raise ValueError(
+                        f'Glob or path traversal in license file path: {vv}'
+                    )
+                out['License-File'] = vv
         elif k == 'classifiers':
             for vv in v:
                 out['Classifier'] = vv
