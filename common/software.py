@@ -262,7 +262,8 @@ class Project(Software):
                 'override needed'
             )
 
-    def write_license_files(self, dir: Path) -> None:
+    def write_license_files(self, base: Path) -> None:
+        dir = base / self.display
         dir.mkdir(parents=True)
         for f in self.license_files:
             if callable(f):
