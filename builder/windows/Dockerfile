@@ -2,10 +2,11 @@ FROM docker.io/gentoo/stage3:latest
 # NOTE: try to keep the current container image compatible with the latest
 # stable source release, so people can conveniently build from the source
 # tarball
-RUN touch /etc/openslide-winbuild-builder-v5
+RUN touch /etc/openslide-winbuild-builder-v{5,6}
 RUN echo 'FEATURES="-sandbox -usersandbox -ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
 COPY package.accept_keywords /etc/portage/package.accept_keywords/openslide
 COPY package.use /etc/portage/package.use/openslide
+COPY python-exec.conf /etc/python-exec/python-exec.conf
 RUN mkdir -p /var/db/repos/crossdev/{profiles,metadata} && echo crossdev > /var/db/repos/crossdev/profiles/repo_name && echo 'masters = gentoo' > /var/db/repos/crossdev/metadata/layout.conf && chown -R portage:portage /var/db/repos/crossdev
 COPY repos.conf /etc/portage/repos.conf/crossdev.conf
 COPY --from=docker.io/gentoo/portage:latest /var/db/repos/gentoo /var/db/repos/gentoo
