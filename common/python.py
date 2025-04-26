@@ -20,14 +20,13 @@
 from __future__ import annotations
 
 from email.message import Message
+import tomllib
 
 from .meson import meson_source_root
 
 
 def pyproject_to_message(pyproject: str) -> Message:
-    import tomli
-
-    meta = tomli.loads(pyproject)
+    meta = tomllib.loads(pyproject)
     out = Message()
     out['Metadata-Version'] = '2.3'
     for k, v in meta['project'].items():
