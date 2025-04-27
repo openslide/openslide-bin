@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 from email.message import Message
+from email.policy import Compat32
 import tomllib
 
 from .meson import meson_source_root
@@ -27,7 +28,7 @@ from .meson import meson_source_root
 
 def pyproject_to_message(pyproject: str) -> Message:
     meta = tomllib.loads(pyproject)
-    out = Message()
+    out = Message(policy=Compat32(max_line_length=None))
     out['Metadata-Version'] = '2.3'
     for k, v in meta['project'].items():
         k = k.lower()
