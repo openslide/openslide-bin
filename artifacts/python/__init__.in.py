@@ -30,13 +30,8 @@ def _load_openslide() -> CDLL:
         name = 'libopenslide.1.dylib'
     else:
         name = 'libopenslide.so.1'
-    try:
-        # Python >= 3.9
-        with res.as_file(res.files(__name__).joinpath(name)) as path:
-            return cdll.LoadLibrary(path.as_posix())
-    except AttributeError:
-        with res.path(__name__, name) as path:
-            return cdll.LoadLibrary(path.as_posix())
+    with res.as_file(res.files(__name__).joinpath(name)) as path:
+        return cdll.LoadLibrary(path.as_posix())
 
 
 libopenslide1 = _load_openslide()
