@@ -1,6 +1,6 @@
 # Notable Changes in openslide-bin
 
-## Version 4.0.0.7, 2025-04-26
+## Version 4.0.0.8, 2025-04-27
 
 * Update many dependencies
 
