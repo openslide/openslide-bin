@@ -245,9 +245,6 @@ class Project(Software):
             raise e
 
         projdir = root / 'subprojects' / self.wrap_dir_name
-        if not projdir.exists():
-            # dev dep omitted from the dist
-            return
         for subdir in self.remove_dirs:
             shutil.rmtree(projdir / subdir)
         for dirpath, dirnames, filenames in projdir.walk(on_error=walkerr):

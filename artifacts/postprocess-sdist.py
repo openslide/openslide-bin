@@ -41,7 +41,7 @@ dest = Path(os.environ['MESON_DIST_ROOT'])
 shutil.rmtree(dest / '.github')
 
 # prune subproject directories to reduce tarball size
-for proj in Project.get_all():
+for proj in Project.get_enabled():
     proj.prune_dist(dest)
 
 # pin openslide-bin version suffix
