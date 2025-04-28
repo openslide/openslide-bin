@@ -624,6 +624,11 @@ def do_clean(args: Args) -> None:
         for child in params.work.iterdir():
             if child.is_dir():
                 remove(child)
+        # do this first to prevent purge from failing if glib's copy of gvdb
+        # is missing
+        gvdb = params.root / 'subprojects' / 'gvdb'
+        for child in gvdb, gvdb.with_suffix('.wrap'):
+            remove(child)
         # if we're running in an unpacked sdist, skip removing subproject
         # sources, since they're part of the official source distribution
         # and aren't expected to change
@@ -633,9 +638,6 @@ def do_clean(args: Args) -> None:
                 stdout=subprocess.DEVNULL,
                 cwd=params.root,
             )
-        gvdb = params.root / 'subprojects' / 'gvdb'
-        for child in gvdb, gvdb.with_suffix('.wrap'):
-            remove(child)
         for child in params.root.iterdir():
             if child.name.replace('_', '-').startswith('openslide-bin-'):
                 remove(child)
