@@ -2,7 +2,7 @@
 # Tools for building OpenSlide and its dependencies
 #
 # Copyright (c) 2011-2015 Carnegie Mellon University
-# Copyright (c) 2022-2023 Benjamin Gilbert
+# Copyright (c) 2022-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -26,7 +26,7 @@ import configparser
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import count
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import subprocess
 import time
@@ -108,7 +108,9 @@ class Tool(Software):
 
 @dataclass
 class Project(Software):
-    licenses: Iterable[str | Callable[[Project], tuple[str, str]]]
+    # SPDX expression terms that should be ANDed together
+    spdx: Iterable[str]
+    license_files: Iterable[str | Callable[[Project], tuple[str, str]]]
     # Project ID on release-monitoring.org, for projects not in wrapdb.
     # For projects in wrapdb, configure release-monitoring.org to associate
     # the wrapdb package with the upstream project.
@@ -205,26 +207,30 @@ class Project(Software):
             dirname = self.id
         return meson_source_root() / 'subprojects' / dirname
 
-    def write_licenses(self, dir: Path) -> None:
+    @property
+    def license_relpaths(self) -> list[PurePath]:
+        base = PurePath(self.display)
+        return [
+            base / (f(self)[0] if callable(f) else Path(f).name)
+            for f in self.license_files
+        ]
+
+    def write_license_files(self, base: Path) -> None:
+        dir = base / self.display
         dir.mkdir(parents=True)
-        for license in self.licenses:
-            if callable(license):
-                name, contents = license(self)
+        for f in self.license_files:
+            if callable(f):
+                name, contents = f(self)
                 with open(dir / name, 'w') as fh:
                     fh.write(contents)
             else:
-                shutil.copy2(
-                    self.source_dir / license, dir / Path(license).name
-                )
+                shutil.copy2(self.source_dir / f, dir / Path(f).name)
 
     def prune_dist(self, root: Path) -> None:
         def walkerr(e: OSError) -> None:
             raise e
 
         projdir = root / 'subprojects' / self.wrap_dir_name
-        if not projdir.exists():
-            # dev dep omitted from the dist
-            return
         for subdir in self.remove_dirs:
             shutil.rmtree(projdir / subdir)
         for dirpath, _, filenames in projdir.walk(on_error=walkerr):
@@ -309,19 +315,22 @@ _PROJECTS = (
     Project(
         id='cairo',
         display='cairo',
-        licenses=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
+        spdx=['LGPL-2.1-only OR MPL-1.1'],
+        license_files=['COPYING', 'COPYING-LGPL-2.1', 'COPYING-MPL-1.1'],
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
         id='gdk-pixbuf',
         display='gdk-pixbuf',
-        licenses=['COPYING'],
+        spdx=['LGPL-2.1-or-later'],
+        license_files=['COPYING'],
         remove_dirs=['tests'],
     ),
     Project(
         id='glib',
         display='glib',
-        licenses=['COPYING'],
+        spdx=['LGPL-2.1-or-later'],
+        license_files=['COPYING'],
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
         keep_files=[
             'm4macros/glib-2.0.m4',
@@ -332,26 +341,30 @@ _PROJECTS = (
     Project(
         id='libdicom',
         display='libdicom',
-        licenses=['LICENSE'],
+        spdx=['MIT'],
+        license_files=['LICENSE'],
         remove_dirs=['doc/html'],
     ),
     Project(
         id='libffi',
         display='libffi',
-        licenses=['LICENSE'],
+        spdx=['MIT'],
+        license_files=['LICENSE'],
         remove_dirs=['doc', 'testsuite'],
     ),
     Project(
         id='libjpeg-turbo',
         display='libjpeg-turbo',
-        licenses=['LICENSE.md', 'README.ijg'],
+        spdx=['BSD-3-Clause', 'IJG'],
+        license_files=['LICENSE.md', 'README.ijg'],
         remove_dirs=['doc', 'java', 'testimages'],
         keep_files=['simd/CMakeLists.txt'],
     ),
     Project(
         id='libopenjp2',
         display='OpenJPEG',
-        licenses=['LICENSE'],
+        spdx=['BSD-2-Clause'],
+        license_files=['LICENSE'],
         remove_dirs=[
             'cmake',
             'doc',
@@ -366,13 +379,15 @@ _PROJECTS = (
     Project(
         id='libpng',
         display='libpng',
-        licenses=['LICENSE'],
+        spdx=['libpng-2.0'],
+        license_files=['LICENSE'],
         remove_dirs=['ci', 'contrib', 'projects'],
     ),
     Project(
         id='libtiff',
         display='libtiff',
-        licenses=['LICENSE.md'],
+        spdx=['libtiff'],
+        license_files=['LICENSE.md'],
         remove_dirs=[
             'cmake',
             'config',
@@ -386,7 +401,8 @@ _PROJECTS = (
     Project(
         id='libxml2',
         display='libxml2',
-        licenses=['Copyright'],
+        spdx=['MIT'],
+        license_files=['Copyright'],
         remove_dirs=['fuzz', 'python', 'result', 'test'],
         keep_files=['libxml.m4'],
     ),
@@ -394,49 +410,57 @@ _PROJECTS = (
         id='openslide',
         display='OpenSlide',
         primary=True,
-        licenses=['COPYING.LESSER'],
+        spdx=['LGPL-2.1-only'],
+        license_files=['COPYING.LESSER'],
         anitya_id=5600,
         remove_dirs=['doc'],
     ),
     Project(
         id='pcre2',
         display='PCRE2',
-        licenses=['LICENCE.md'],
+        spdx=['BSD-3-Clause WITH PCRE2-exception'],
+        license_files=['LICENCE.md'],
         remove_dirs=['doc', 'testdata'],
     ),
     Project(
         id='pixman',
         display='pixman',
-        licenses=['COPYING'],
+        spdx=['MIT'],
+        license_files=['COPYING'],
         remove_dirs=['demos', 'test'],
     ),
     Project(
         id='proxy-libintl',
         display='proxy-libintl',
-        licenses=['COPYING'],
+        spdx=['LGPL-2.0-or-later'],
+        license_files=['COPYING'],
     ),
     Project(
         id='sqlite3',
         display='SQLite',
-        licenses=[_sqlite3_license],
+        spdx=['blessing'],
+        license_files=[_sqlite3_license],
     ),
     Project(
         id='uthash',
         display='uthash',
-        licenses=['LICENSE'],
+        spdx=['BSD-1-Clause'],
+        license_files=['LICENSE'],
         remove_dirs=['doc', 'tests'],
     ),
     Project(
         id='zlib-ng',
         display='zlib-ng',
-        licenses=['LICENSE.md'],
+        spdx=['Zlib'],
+        license_files=['LICENSE.md'],
         remove_dirs=['doc', 'test'],
     ),
     Project(
         id='zstd',
         display='Zstandard',
+        spdx=['BSD-3-Clause OR GPL-2.0-only'],
         # Dual-licensed BSD or GPLv2.  Elect BSD.
-        licenses=['LICENSE'],
+        license_files=['LICENSE'],
         remove_dirs=['contrib', 'doc', 'programs', 'tests', 'zlibWrapper'],
     ),
 )
@@ -471,3 +495,18 @@ def write_version_markdown(fh: TextIO, infos: Infos) -> None:
     typ_map = {'primary': '**', 'dependency': '', 'tool': '_'}
     for info in _sorted_infos(infos['versions']):
         line(info['display'], info['version'], typ_map[info['type']])
+
+
+def get_spdx(projects: Iterable[Project]) -> str:
+    primary = {term for proj in projects if proj.primary for term in proj.spdx}
+    deps = {
+        term for proj in projects if not proj.primary for term in proj.spdx
+    } - primary
+    ordered = [
+        spdx
+        for spdxes in (primary, deps)
+        for spdx in sorted(spdxes, key=lambda spdx: spdx.lower())
+    ]
+    return ' AND '.join(
+        f'({spdx})' if ' OR ' in spdx else spdx for spdx in ordered
+    )
