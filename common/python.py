@@ -1,7 +1,7 @@
 #
 # Tools for building OpenSlide and its dependencies
 #
-# Copyright (c) 2023 Benjamin Gilbert
+# Copyright (c) 2023-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -21,15 +21,47 @@ from __future__ import annotations
 
 from email.message import Message
 from email.policy import Compat32
+from pathlib import PurePath
+import re
 import tomllib
 
-from .meson import meson_source_root
+from .meson import meson_introspect, meson_source_root
+from .software import Project, get_spdx
+
+
+def pyproject_fill_template(tmpl: str) -> str:
+    version: str = meson_introspect('projectinfo')['version']
+    projs = Project.get_enabled()
+    license_relpaths = [PurePath('COPYING.LESSER')] + [
+        PurePath('licenses') / relpath
+        for proj in projs
+        for relpath in proj.license_relpaths
+    ]
+    for relpath in license_relpaths:
+        # we don't do proper toml assembly
+        if '"' in relpath.as_posix():
+            raise ValueError(f'Invalid license file path: {relpath}')
+    return (
+        tmpl.replace('@version@', version)
+        .replace('@spdx@', get_spdx(projs))
+        .replace(
+            '"@license-files@"',
+            '["'
+            + '", "'.join(
+                sorted(
+                    (relpath.as_posix() for relpath in license_relpaths),
+                    key=lambda s: s.lower(),
+                )
+            )
+            + '"]',
+        )
+    )
 
 
 def pyproject_to_message(pyproject: str) -> Message:
     meta = tomllib.loads(pyproject)
     out = Message(policy=Compat32(max_line_length=None))
-    out['Metadata-Version'] = '2.3'
+    out['Metadata-Version'] = '2.4'
     for k, v in meta['project'].items():
         k = k.lower()
         if k == 'name':
@@ -62,8 +94,14 @@ def pyproject_to_message(pyproject: str) -> Message:
             for item in v:
                 out['Maintainer-Email'] = f'{item["name"]} <{item["email"]}>'
         elif k == 'license':
-            out['License'] = v.pop('text')
-            assert not v
+            out['License-Expression'] = v
+        elif k == 'license-files':
+            for vv in v:
+                if re.search(r'\*|\?|\[|\.\.', vv):
+                    raise ValueError(
+                        f'Glob or path traversal in license file path: {vv}'
+                    )
+                out['License-File'] = vv
         elif k == 'classifiers':
             for vv in v:
                 out['Classifier'] = vv
