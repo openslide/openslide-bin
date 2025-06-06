@@ -95,10 +95,19 @@ jobs:
           name: build-overrides
           path: overrides.tar
 
+      - name: Calculate cache key
+        id: cache-key
+        run: |
+          # glob results are sorted
+          sha256=$(cat subprojects/*.wrap | sha256sum - | cut -c1-20)
+          echo "sha256=${sha256}" >> $GITHUB_OUTPUT
+          # use a fresh cache every year to flush out old sources
+          echo "year=$(date +%Y)" >> $GITHUB_OUTPUT
       - name: Cache sources
         uses: actions/cache@v4
         with:
-          key: build-packagecache
+          key: build-packagecache-${{ steps.cache-key.outputs.year }}-${{ steps.cache-key.outputs.sha256 }}
+          restore-keys: build-packagecache-${{ steps.cache-key.outputs.year }}-
           path: subprojects/packagecache
       - name: Build source tarball
         run: |
