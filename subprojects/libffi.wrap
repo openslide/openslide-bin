@@ -1,13 +1,13 @@
 [wrap-file]
-directory = libffi-3.4.8
-source_url = https://github.com/libffi/libffi/releases/download/v3.4.8/libffi-3.4.8.tar.gz
-source_filename = libffi-3.4.8.tar.gz
-source_hash = bc9842a18898bfacb0ed1252c4febcc7e78fa139fd27fdc7a3e30d9d9356119b
-patch_filename = libffi_3.4.8-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libffi_3.4.8-1/get_patch
-patch_hash = 4d2593454d870ade0ce603b8b66feba08ee58a9b9c0489be695fc98e60fa90ca
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libffi_3.4.8-1/libffi-3.4.8.tar.gz
-wrapdb_version = 3.4.8-1
+directory = libffi-3.5.1
+source_url = https://github.com/libffi/libffi/releases/download/v3.5.1/libffi-3.5.1.tar.gz
+source_filename = libffi-3.5.1.tar.gz
+source_hash = f99eb68a67c7d54866b7706af245e87ba060d419a062474b456d3bc8d4abdbd1
+patch_filename = libffi_3.5.1-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libffi_3.5.1-1/get_patch
+patch_hash = 89bb151876d468eeef10930b3c7a77295991d71302ea3d134357d4a27c580a73
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libffi_3.5.1-1/libffi-3.5.1.tar.gz
+wrapdb_version = 3.5.1-1
 
 [provide]
 dependency_names = libffi
