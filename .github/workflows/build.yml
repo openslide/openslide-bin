@@ -185,8 +185,9 @@ jobs:
           done
           brew update
           brew install meson
-          # needed by glib
-          python3 -m pip install --break-system-packages packaging
+          # packaging needed by glib
+          python3 -m pip install --break-system-packages license-expression \
+              packaging
       - name: Download source tarball
         uses: actions/download-artifact@v4
         with:
