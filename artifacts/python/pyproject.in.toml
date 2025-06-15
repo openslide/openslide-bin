@@ -6,14 +6,14 @@ maintainers = [
 ]
 description = "Binary build of OpenSlide"
 readme = "artifacts/python/README.md"
-license = {text = "GNU Lesser General Public License, version 2.1"}
+license = "@spdx@"
+license-files = "@license-files@"
 keywords = ["OpenSlide", "whole-slide image", "virtual slide", "library"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
