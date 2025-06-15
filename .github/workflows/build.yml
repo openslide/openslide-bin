@@ -184,7 +184,7 @@ jobs:
               brew link --overwrite $formula
           done
           brew update
-          brew install meson
+          brew install meson nasm
           # packaging needed by glib
           python3 -m pip install --break-system-packages license-expression \
               packaging
