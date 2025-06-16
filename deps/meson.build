@@ -105,21 +105,25 @@ subproject(
     'glib_debug=disabled',
   ],
 )
-subproject(
-  'gdk-pixbuf',
-  default_options : [
-    'png=disabled',
-    'tiff=disabled',
-    'jpeg=disabled',
-    'gif=disabled',
-    'others=enabled',
-    'man=false',
-    'builtin_loaders=bmp',
-    'introspection=disabled',
-    'gio_sniffing=false',
-    'tests=false',
-  ],
-)
+
+if not dev_deps
+  subproject(
+    'gdk-pixbuf',
+    default_options : [
+      'png=disabled',
+      'tiff=disabled',
+      'jpeg=disabled',
+      'gif=disabled',
+      'others=enabled',
+      'man=false',
+      'builtin_loaders=bmp',
+      'introspection=disabled',
+      'gio_sniffing=false',
+      'tests=false',
+    ],
+  )
+endif
+
 subproject(
   'pixman',
   default_options : ['demos=disabled', 'openmp=disabled', 'tests=disabled'],
