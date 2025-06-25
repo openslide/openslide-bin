@@ -2,7 +2,7 @@
 #
 # Tools for building OpenSlide and its dependencies
 #
-# Copyright (c) 2023 Benjamin Gilbert
+# Copyright (c) 2023-2025 Benjamin Gilbert
 # All rights reserved.
 #
 # This script is free software: you can redistribute it and/or modify it
@@ -20,22 +20,32 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-import shutil
+import argparse
+from typing import TextIO
 
 from common.argparse import TypedArgs
-from common.software import Project
+from common.python import pyproject_fill_template
 
 
 class Args(TypedArgs):
-    dir: Path
+    input: TextIO
+    output: TextIO
 
 
-args = Args('write-licenses', description='Write licenses directory.')
-args.add_arg('dir', type=Path, help='output directory')
+args = Args('write-pyproject', description='Write pyproject.toml.')
+args.add_arg(
+    'input',
+    type=argparse.FileType('r'),
+    help='input template file',
+)
+args.add_arg(
+    'output',
+    type=argparse.FileType('w'),
+    help='output file',
+)
 args.parse()
 
-if args.dir.exists():
-    shutil.rmtree(args.dir)
-for proj in Project.get_enabled():
-    proj.write_license_files(args.dir)
+with args.input:
+    pyproject = pyproject_fill_template(args.input.read())
+with args.output:
+    args.output.write(pyproject)
