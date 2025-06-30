@@ -3,11 +3,11 @@ directory = openjpeg-2.5.3
 source_url = https://github.com/uclouvain/openjpeg/archive/v2.5.3.tar.gz
 source_filename = openjpeg-2.5.3.tar.gz
 source_hash = 368fe0468228e767433c9ebdea82ad9d801a3ad1e4234421f352c8b06e7aa707
-patch_filename = libopenjp2_2.5.3-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libopenjp2_2.5.3-1/get_patch
-patch_hash = a35f99dfa4cfe254fe0db21563c57a6fb2a3879403123abbb251f48d9f46c4a8
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libopenjp2_2.5.3-1/openjpeg-2.5.3.tar.gz
-wrapdb_version = 2.5.3-1
+patch_filename = libopenjp2_2.5.3-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libopenjp2_2.5.3-2/get_patch
+patch_hash = 2fb50e57d67441a47ab761dd8141e6b72e32ab0672666583d4502637edcfaaf1
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libopenjp2_2.5.3-2/openjpeg-2.5.3.tar.gz
+wrapdb_version = 2.5.3-2
 
 [provide]
 libopenjp2 = libopenjp2_dep
