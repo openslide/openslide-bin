@@ -70,8 +70,16 @@ with ExitStack() as inputs:
                         whl.metadir / 'METADATA', BytesIO(meta.as_bytes())
                     )
                 )
-            elif path.name == 'licenses':
-                whl.add_tree(whl.metadir, path)
+            elif path.name in ('COPYING.LESSER', 'licenses'):
+                # Assume the file or dir is in the root of the sdist.
+                # Write licenses directory to {metadir}/licenses/licenses,
+                # as required by PEP 639.
+                if path.is_dir():
+                    whl.add_tree(whl.metadir / 'licenses', path)
+                else:
+                    whl.add(
+                        FileMember(whl.metadir / 'licenses' / path.name, fh)
+                    )
             else:
                 name = re.sub('(\\.so\\.[0-9]+)\\.[0-9.]+', '\\1', path.name)
                 whl.add(FileMember(whl.datadir / name, fh))
