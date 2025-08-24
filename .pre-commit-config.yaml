@@ -52,7 +52,7 @@ repos:
     hooks:
       - id: mypy
         name: Check Python types
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-PyYAML, types-requests]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
@@ -73,6 +73,13 @@ repos:
         types: [meson]
         language: python
         additional_dependencies: [meson==1.5.2]
+
+      - id: mkmaintainer
+        name: Sync maintainer issue templates
+        entry: .github/maintainer/mkmaintainer.py
+        files: .github/maintainer/
+        language: python
+        additional_dependencies: [PyYAML]
 
       - id: annotations
         name: Require "from __future__ import annotations"
