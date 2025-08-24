@@ -3,7 +3,7 @@ exclude: '^(COPYING\.LESSER|subprojects/.*)$'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -16,7 +16,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.20.0
     hooks:
       - id: pyupgrade
         name: Modernize python code
@@ -41,18 +41,18 @@ repos:
         additional_dependencies: [flake8-bugbear, Flake8-pyproject]
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         name: Lint python code with flake8
         additional_dependencies: [flake8-bugbear, Flake8-pyproject]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v1.17.1
     hooks:
       - id: mypy
         name: Check Python types
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-PyYAML, types-requests]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
@@ -73,6 +73,13 @@ repos:
         types: [meson]
         language: python
         additional_dependencies: [meson==1.5.2]
+
+      - id: mkmaintainer
+        name: Sync maintainer issue templates
+        entry: .github/maintainer/mkmaintainer.py
+        files: .github/maintainer/
+        language: python
+        additional_dependencies: [PyYAML]
 
       - id: annotations
         name: Require "from __future__ import annotations"

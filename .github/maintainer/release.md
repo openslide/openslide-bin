@@ -1,3 +1,10 @@
+---
+link-text: Release checklist
+repo: openslide/openslide-bin
+title: Release X.Y.Z.A
+labels: [release]
+---
+
 # openslide-bin release process
 
 - [ ] If there's a new OpenSlide release, remove `dev_deps` condition from any subprojects used by the new release
