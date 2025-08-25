@@ -115,10 +115,33 @@ class Project(Software):
     anitya_id: int | None = None
     primary: bool = False
     remove_dirs: Iterable[str] = ()
-    # overrides for default file removals
+    # overrides for default dir/file removals
+    keep_dirs: Iterable[str] = ()
     keep_files: Iterable[str] = ()
 
+    DIST_REMOVE_DIRNAMES = {
+        '.github',
+        '.gitlab',
+        '.gitlab-ci',
+        '.gitlab-ci.d',
+    }
     DIST_REMOVE_FILENAMES = {
+        '.appveyor.yml',
+        '.cirrus.yml',
+        '.clang-format',
+        '.cmake-format.yaml',
+        '.codecov.yaml',
+        '.codespellrc',
+        '.editorconfig',
+        '.flake8',
+        '.gitattributes',
+        '.gitignore',
+        '.gitlab-ci.yml',
+        '.gitmodules',
+        '.lcovrc',
+        '.readthedocs.yaml',
+        '.shellcheckrc',
+        '.travis.yml',
         'CMakeLists.txt',
         'configure',
         'configure.ac',
@@ -227,7 +250,14 @@ class Project(Software):
             return
         for subdir in self.remove_dirs:
             shutil.rmtree(projdir / subdir)
-        for dirpath, _, filenames in projdir.walk(on_error=walkerr):
+        for dirpath, dirnames, filenames in projdir.walk(on_error=walkerr):
+            for dirname in dirnames:
+                path = dirpath / dirname
+                if path.relative_to(projdir).as_posix() in self.keep_dirs:
+                    continue
+                if path.name in self.DIST_REMOVE_DIRNAMES:
+                    dirnames.remove(path.name)
+                    shutil.rmtree(path)
             for filename in filenames:
                 path = dirpath / filename
                 if path.relative_to(projdir).as_posix() in self.keep_files:
@@ -323,6 +353,7 @@ _PROJECTS = (
         display='glib',
         licenses=['COPYING'],
         remove_dirs=['gio/tests', 'glib/tests', 'gobject/tests', 'po'],
+        keep_dirs=['.gitlab-ci'],
         keep_files=[
             'm4macros/glib-2.0.m4',
             'm4macros/glib-gettext.m4',
