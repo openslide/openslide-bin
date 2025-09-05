@@ -81,11 +81,7 @@ endif
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
-  default_options : [
-    # skip the TurboJPEG wrapper
-    'jpeg-turbo=disabled',
-    'tests=disabled',
-  ],
+  default_options : ['tests=disabled', 'turbojpeg=disabled'],
 )
 subproject('libtiff')
 subproject(
