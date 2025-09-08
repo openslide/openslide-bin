@@ -108,6 +108,7 @@ subproject(
     'tiff=disabled',
     'jpeg=disabled',
     'gif=disabled',
+    'glycin=disabled',
     'others=enabled',
     'man=false',
     'builtin_loaders=bmp',
