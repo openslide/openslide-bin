@@ -20,7 +20,7 @@ jobs:
       windows_builder_repo_and_digest: ${{ steps.find-windows.outputs.builder_repo_and_digest }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Find Linux builder container digest
         id: find-linux
         uses: ./.github/find-container-digest
@@ -56,11 +56,11 @@ jobs:
       id-token: write
     steps:
       - name: Update Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: "openslide[-_]bin-*"
           path: upload
