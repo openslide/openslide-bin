@@ -70,14 +70,14 @@ jobs:
       version: ${{ steps.prep.outputs.version }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.openslide_bin_repo }}
           ref: ${{ inputs.openslide_bin_ref }}
 
       - name: Check out OpenSlide
         if: inputs.openslide_repo != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.openslide_repo }}
           ref: ${{ inputs.openslide_ref }}
@@ -189,7 +189,7 @@ jobs:
           python3 -m pip install --break-system-packages license-expression \
               packaging
       - name: Download source tarball
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ needs.sdist.outputs.archive }}
       - name: Unpack source tarball
@@ -200,7 +200,7 @@ jobs:
               "${{ needs.sdist.outputs.archive }}"
       - name: Download overrides
         if: inputs.openslide_repo != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-overrides
       - name: Unpack overrides
@@ -237,11 +237,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Update Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Download archives
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: "openslide[-_]bin-${{ needs.sdist.outputs.version }}*"
           path: archives

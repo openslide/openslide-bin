@@ -33,7 +33,7 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install qemu-user-static
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build container
         # Cross-build the arm64 container from amd64 for simplicity
         run: |
