@@ -2,6 +2,10 @@ env = environment()
 env.prepend('PYTHONPATH', meson.project_source_root())
 # Meson doesn't pass MESON_SOURCE_ROOT to custom targets
 env.set('MESON_SOURCE_ROOT', meson.project_source_root())
+env.set(
+  'MESONREWRITE',
+  '"@0@" rewrite'.format(find_program('meson').full_path()),
+)
 env.set('LD', find_program('ld').full_path())
 if system == 'linux'
   env.set('AUDITWHEEL', find_program('auditwheel').full_path())
