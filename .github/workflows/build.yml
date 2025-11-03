@@ -90,7 +90,7 @@ jobs:
         run: tar cf overrides.tar override
       - name: Upload overrides
         if: inputs.openslide_repo != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-overrides
           path: overrides.tar
@@ -122,7 +122,7 @@ jobs:
           echo "archive_base=$archive_base" >> $GITHUB_OUTPUT
           echo "archive=${archive_base}.tar.gz" >> $GITHUB_OUTPUT
       - name: Upload archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.prep.outputs.archive }}
           path: ${{ steps.prep.outputs.archive }}
@@ -189,7 +189,7 @@ jobs:
           python3 -m pip install --break-system-packages license-expression \
               packaging
       - name: Download source tarball
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.sdist.outputs.archive }}
       - name: Unpack source tarball
@@ -200,7 +200,7 @@ jobs:
               "${{ needs.sdist.outputs.archive }}"
       - name: Download overrides
         if: inputs.openslide_repo != ''
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: build-overrides
       - name: Unpack overrides
@@ -219,13 +219,13 @@ jobs:
           wheel=$(echo openslide_bin-"${{ needs.sdist.outputs.version }}"-*-*-*.whl)
           echo "wheel=$wheel" >> $GITHUB_OUTPUT
       - name: Upload archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.build.outputs.archive }}
           path: ${{ steps.build.outputs.archive }}
           compression-level: 0
       - name: Upload wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.build.outputs.wheel }}
           path: ${{ steps.build.outputs.wheel }}
@@ -239,9 +239,9 @@ jobs:
       - name: Update Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: 3.14
       - name: Download archives
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: "openslide[-_]bin-${{ needs.sdist.outputs.version }}*"
           path: archives

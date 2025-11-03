@@ -58,9 +58,9 @@ jobs:
       - name: Update Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: 3.14
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: "openslide[-_]bin-*"
           path: upload
