@@ -6,5 +6,8 @@ source_hash = 93a1aac3f1427ae73457397582a2c38d049638a801788ccbd5f48ca607bdbd17
 source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/gdk-pixbuf_2.44.4-1/gdk-pixbuf-2.44.4.tar.xz
 wrapdb_version = 2.44.4-1
 
+# https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/merge_requests/158
+diff_files = gdk-pixbuf-intl.patch
+
 [provide]
 dependency_names = gdk-pixbuf-2.0
