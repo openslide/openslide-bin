@@ -20,16 +20,12 @@ of OpenSlide.
 Install with `pip install openslide-bin`.  OpenSlide Python ≥ 1.4.0 will
 automatically find openslide-bin and use it.
 
-openslide-bin is available for Python 3.9+ on the following platforms:
+openslide-bin is available for Python 3.10+ on the following platforms:
 
 - Linux aarch64 and x86_64 with glibc 2.28+ (Debian, Fedora, RHEL 8+,
   Ubuntu, many others)
 - macOS 11+ (arm64 and x86_64)
 - Windows 10+ and Windows Server 2016+ (x64)
-
-pip older than 20.3 cannot install openslide-bin, claiming that it `is not a
-supported wheel on this platform`.  On platforms with these versions of pip
-(RHEL 8), upgrade pip first with `pip install --upgrade pip`.
 
 ## Using
 
