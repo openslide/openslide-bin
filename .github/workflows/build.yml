@@ -196,6 +196,11 @@ jobs:
           # packaging needed by glib
           python3 -m pip install --break-system-packages license-expression \
               packaging
+      - name: Install Python (macOS)
+        if: matrix.os == 'macos'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
       - name: Download source tarball
         uses: actions/download-artifact@v6
         with:
