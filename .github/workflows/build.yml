@@ -147,32 +147,40 @@ jobs:
           import json, os
           systems = []
           if '${{ inputs.linux_builder_repo_and_digest }}':
-              for arch in 'aarch64', 'x86_64':
+              for (arch, runner) in (
+                  ('aarch64', 'ubuntu-24.04-arm'),
+                  ('x86_64', 'ubuntu-latest')
+              ):
                   systems.append({
                       'os': 'linux',
                       'arch': arch,
+                      'runner': runner,
+                      'container': '${{ inputs.linux_builder_repo_and_digest }}',
                   })
           if ${{ inputs.macos_enable && 1 || 0 }}:
               systems.append({
                   'os': 'macos',
                   'arch': 'arm64-x86_64',
+                  'runner': 'macos-latest',
               })
           if '${{ inputs.windows_builder_repo_and_digest }}':
               systems.append({
                   'os': 'windows',
                   'arch': 'x64',
+                  'runner': 'ubuntu-latest',
+                  'container': '${{ inputs.windows_builder_repo_and_digest }}',
               })
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
               fh.write(f'systems={json.dumps(systems)}\n')
 
   bdist:
-    name: Binaries
+    name: Binaries (${{ matrix.os }}, ${{ matrix.arch }})
     needs: sdist
     strategy:
       matrix:
         include: ${{ fromJson(needs.sdist.outputs.systems) }}
-    runs-on: ${{ matrix.os == 'macos' && 'macos-latest' || (matrix.os == 'linux' && matrix.arch == 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
-    container: ${{ matrix.os == 'linux' && inputs.linux_builder_repo_and_digest || (matrix.os == 'windows' && inputs.windows_builder_repo_and_digest || null) }}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
     steps:
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos'
