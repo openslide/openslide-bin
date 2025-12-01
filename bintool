@@ -35,6 +35,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tarfile
 from tempfile import TemporaryDirectory
 from typing import Any, BinaryIO, Self
@@ -534,14 +535,17 @@ class WheelSmokeTester(SmokeTester):
 
     def _unpack(self, dir: Path) -> None:
         log('Creating virtualenv')
-        # /usr/bin/python3 on macOS because sys.executable may not be a
-        # universal binary
-        python = (
-            '/usr/bin/python3' if self._system == 'macos' else sys.executable
-        )
+        if (
+            self._system == 'macos'
+            and '-universal2' not in sysconfig.get_platform()
+        ):
+            raise Exception(
+                'Testing macOS wheels requires bintool to be run with a '
+                'Python built as a universal binary'
+            )
         # resolve 8.3 shortname of tempdir to avoid venv warning on Windows
         # https://github.com/python/cpython/issues/90329
-        subprocess.check_call([python, '-m', 'venv', dir.resolve()])
+        subprocess.check_call([sys.executable, '-m', 'venv', dir.resolve()])
         if self._update_pip:
             subprocess.check_call(
                 [
