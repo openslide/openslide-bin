@@ -116,22 +116,6 @@ subproject(
   ],
 )
 subproject(
-  'gdk-pixbuf',
-  default_options : [
-    'png=disabled',
-    'tiff=disabled',
-    'jpeg=disabled',
-    'gif=disabled',
-    'glycin=disabled',
-    'others=enabled',
-    'man=false',
-    'builtin_loaders=bmp',
-    'introspection=disabled',
-    'gio_sniffing=false',
-    'tests=false',
-  ],
-)
-subproject(
   'pixman',
   default_options : [
     'demos=disabled',
