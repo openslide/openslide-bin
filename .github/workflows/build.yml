@@ -193,9 +193,7 @@ jobs:
           done
           brew update
           brew install meson nasm
-          # packaging needed by glib
-          python3 -m pip install --break-system-packages license-expression \
-              packaging
+          python3 -m pip install --break-system-packages license-expression
       - name: Download source tarball
         uses: actions/download-artifact@v6
         with:
