@@ -23,9 +23,12 @@ Similarly, to build for Linux on aarch64 or x86_64:
 
 macOS builds run directly on a macOS system, which can be either Intel or
 Apple silicon.  The build will produce a universal binary in either case.
-The macOS SDK must be installed.
+The build machine must have the macOS SDK, Command Line Tools for Xcode,
+Python ≥ 3.12, Meson, Ninja, NASM, and the Python `license-expression`
+package.  If the build machine is Intel silicon, it must also have
+`glib-compile-resources` from GLib2.
 
-    ./bintool bdist
+    python3.12 bintool bdist
 
 ## Substitute sources
 
