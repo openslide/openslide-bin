@@ -1,5 +1,15 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.9, 2025-12-03
+
+* Drop Python 3.8 support in Python package
+* Enable SIMD JPEG decoding on macOS x86_64
+* Add [PEP 639][pep-639] license metadata to source archive and Python wheels
+* Update many dependencies
+
+[pep-639]: https://peps.python.org/pep-0639/
+
+
 ## Version 4.0.0.8, 2025-04-27
 
 * Update many dependencies
