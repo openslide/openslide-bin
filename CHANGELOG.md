@@ -1,6 +1,6 @@
 # Notable Changes in openslide-bin
 
-## Version 4.0.0.9, 2025-12-03
+## Version 4.0.0.10, 2025-12-03
 
 * Drop Python 3.8 support in Python package
 * Enable SIMD JPEG decoding on macOS x86_64
