@@ -75,7 +75,8 @@ jobs:
           mkdir pypi
           cp -a \
               "upload/openslide-bin-${{ needs.stable.outputs.version }}.tar.gz" \
-              upload/*.whl pypi/
+              "pypi/openslide_bin-${{ needs.stable.outputs.version }}.tar.gz"
+          cp -a upload/*.whl pypi/
       - name: Release to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
