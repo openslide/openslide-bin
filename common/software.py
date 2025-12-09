@@ -249,10 +249,14 @@ class Project(Software):
             meson_spdx = None
         if self.spdx_override is not None:
             if meson_spdx == self.spdx_override:
-                raise ValueError(
-                    f'SPDX override for {self.id} matches Meson config and '
-                    'is no longer needed'
-                )
+                # temporary special case to avoid requiring all builders to
+                # use, or not use, Meson 1.10.0
+                # https://github.com/mesonbuild/meson/issues/15361
+                if self.id != 'libjpeg-turbo':
+                    raise ValueError(
+                        f'SPDX override for {self.id} matches Meson config '
+                        'and is no longer needed'
+                    )
             return self.spdx_override
         elif type(meson_spdx) is str:
             return meson_spdx
@@ -417,6 +421,8 @@ _PROJECTS = (
         id='libjpeg-turbo',
         display='libjpeg-turbo',
         license_files=['LICENSE.md', 'README.ijg'],
+        # see spdx property implementation
+        spdx_override='BSD-3-Clause AND IJG',
         remove_dirs=['doc', 'java', 'testimages'],
         keep_files=['simd/CMakeLists.txt'],
     ),
