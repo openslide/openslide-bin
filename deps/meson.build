@@ -48,22 +48,32 @@ meson.override_dependency(
   'zlib',
   subproject(
     'zlib-ng',
-    default_options : ['tests=disabled', 'zlib-compat=true'],
+    default_options : [
+      'tests=disabled',
+      'zlib-compat=true',
+    ],
   ).get_variable('zlib_ng_dep'),
 )
 
 if all_systems or system != 'darwin'
   subproject(
     'libffi',
-    default_options : ['tests=false'],
+    default_options : [
+      'tests=false',
+    ],
   )
   subproject(
     'libxml2',
-    default_options : ['iconv=disabled', 'python=disabled'],
+    default_options : [
+      'iconv=disabled',
+      'python=disabled',
+    ],
   )
   subproject(
     'sqlite3',
-    default_options : ['all-extensions=disabled'],
+    default_options : [
+      'all-extensions=disabled',
+    ],
   )
 endif
 
@@ -74,23 +84,33 @@ endif
 if dev_deps
   subproject(
     'zstd',
-    default_options : ['bin_programs=false'],
+    default_options : [
+      'bin_programs=false',
+    ],
   )
 endif
 
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
-  default_options : ['tests=disabled', 'turbojpeg=disabled'],
+  default_options : [
+    'tests=disabled',
+    'turbojpeg=disabled',
+  ],
 )
 subproject('libtiff')
 subproject(
   'libopenjp2',
-  default_options : ['build_codec_apps=false'],
+  default_options : [
+    'build_codec_apps=false',
+  ],
 )
 subproject(
   'pcre2',
-  default_options : ['grep=false', 'test=false'],
+  default_options : [
+    'grep=false',
+    'test=false',
+  ],
 )
 subproject(
   'glib',
@@ -119,16 +139,26 @@ subproject(
 )
 subproject(
   'pixman',
-  default_options : ['demos=disabled', 'openmp=disabled', 'tests=disabled'],
+  default_options : [
+    'demos=disabled',
+    'openmp=disabled',
+    'tests=disabled',
+  ],
 )
 subproject(
   'cairo',
-  default_options : ['dwrite=disabled', 'quartz=disabled', 'tests=disabled'],
+  default_options : [
+    'dwrite=disabled',
+    'quartz=disabled',
+    'tests=disabled',
+  ],
 )
 subproject('uthash')
 subproject(
   'libdicom',
-  default_options : ['tests=false'],
+  default_options : [
+    'tests=false',
+  ],
 )
 openslide = subproject(
   'openslide',
