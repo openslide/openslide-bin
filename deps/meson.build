@@ -44,15 +44,12 @@ if not all_systems and system == 'darwin'
 endif
 
 # ignore SDK zlib on macOS (except as a dependency of the other SDK libs)
-meson.override_dependency(
-  'zlib',
-  subproject(
-    'zlib-ng',
-    default_options : [
-      'tests=disabled',
-      'zlib-compat=true',
-    ],
-  ).get_variable('zlib_ng_dep'),
+subproject(
+  'zlib-ng',
+  default_options : [
+    'tests=disabled',
+    'zlib-compat=true',
+  ],
 )
 
 if all_systems or system != 'darwin'
