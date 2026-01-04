@@ -1,5 +1,11 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.11, 2026-01-04
+
+* Fix build with Meson 1.10.0
+* Update several dependencies
+
+
 ## Version 4.0.0.10, 2025-12-03
 
 * Drop Python 3.8 support in Python package
