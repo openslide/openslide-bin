@@ -15,7 +15,7 @@ env:
 jobs:
   issue-event:
     name: Process
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       bot-user: ${{ steps.bot-user.outputs.username }}
     steps:

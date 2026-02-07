@@ -16,7 +16,7 @@ env:
 jobs:
   pr-event:
     name: Process
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Get bot username
         id: bot-user

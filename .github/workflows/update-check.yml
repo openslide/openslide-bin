@@ -24,7 +24,7 @@ env:
 jobs:
   update:
     name: Update
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Update Python
         uses: actions/setup-python@v6
