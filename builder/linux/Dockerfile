@@ -8,6 +8,6 @@ RUN dnf -y upgrade && \
     dnf -y install 'dnf-command(config-manager)' epel-release && \
     dnf config-manager --set-enabled powertools && \
     dnf -y install gcc-c++ git-core nasm ninja-build patchelf \
-    python3.12-pip && \
+    python3.12-pip zstd && \
     dnf clean all
 RUN pip3 install auditwheel license-expression meson
