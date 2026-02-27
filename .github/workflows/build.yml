@@ -87,13 +87,13 @@ jobs:
           persist-credentials: false
       - name: Collect overrides
         if: inputs.openslide_repo != ''
-        run: tar cf overrides.tar override
+        run: tar cf build-overrides.tar.zst --zstd override
       - name: Upload overrides
         if: inputs.openslide_repo != ''
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: build-overrides
-          path: overrides.tar
+          path: build-overrides.tar.zst
+          archive: false
 
       - name: Calculate cache key
         id: cache-key
@@ -122,11 +122,10 @@ jobs:
           echo "archive_base=$archive_base" >> $GITHUB_OUTPUT
           echo "archive=${archive_base}.tar.gz" >> $GITHUB_OUTPUT
       - name: Upload archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.prep.outputs.archive }}
           path: ${{ steps.prep.outputs.archive }}
-          compression-level: 0
+          archive: false
 
       - name: Check source tarball size
         # check after uploading, to aid debugging
@@ -195,7 +194,7 @@ jobs:
           brew install meson nasm
           python3 -m pip install --break-system-packages license-expression
       - name: Download source tarball
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.sdist.outputs.archive }}
       - name: Unpack source tarball
@@ -206,12 +205,17 @@ jobs:
               "${{ needs.sdist.outputs.archive }}"
       - name: Download overrides
         if: inputs.openslide_repo != ''
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
-          name: build-overrides
+          name: build-overrides.tar.zst
       - name: Unpack overrides
         if: inputs.openslide_repo != ''
-        run: tar xf overrides.tar && rm overrides.tar
+        run: |
+          if [ "${{ matrix.os }}" = linux ]; then
+              # EL 8 tar can't autodetect zstd compression
+              zstd="-I zstd"
+          fi
+          tar xf build-overrides.tar.zst $zstd && rm build-overrides.tar.zst
       - name: Build
         id: build
         run: |
@@ -225,17 +229,15 @@ jobs:
           wheel=$(echo openslide_bin-"${{ needs.sdist.outputs.version }}"-*-*-*.whl)
           echo "wheel=$wheel" >> $GITHUB_OUTPUT
       - name: Upload archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.build.outputs.archive }}
           path: ${{ steps.build.outputs.archive }}
-          compression-level: 0
+          archive: false
       - name: Upload wheel
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.build.outputs.wheel }}
           path: ${{ steps.build.outputs.wheel }}
-          compression-level: 0
+          archive: false
 
   finalize:
     name: Finalize
@@ -247,11 +249,12 @@ jobs:
         with:
           python-version: 3.14
       - name: Download archives
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           pattern: "openslide[-_]bin-${{ needs.sdist.outputs.version }}*"
           path: archives
           merge-multiple: true
+          skip-decompress: true
       - name: Unpack source tarball
         shell: bash
         run: |

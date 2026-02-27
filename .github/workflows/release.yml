@@ -60,11 +60,12 @@ jobs:
         with:
           python-version: 3.14
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           pattern: "openslide[-_]bin-*"
           path: upload
           merge-multiple: true
+          skip-decompress: true
       - name: Unpack source tarball
         run: |
           tar xf "upload/openslide-bin-${{ needs.stable.outputs.version }}.tar.gz"
