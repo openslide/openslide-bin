@@ -50,8 +50,8 @@ from common.meson import (
 )
 from common.software import Project
 
-WINDOWS_API_VERS = (7, 8)
-LINUX_API_VERS = (6, 7)
+WINDOWS_API_VERS = (7,)
+LINUX_API_VERS = (6,)
 # we have a higher minimum than the underlying meson.build
 MESON_MIN_VER = (1, 5, 0)
 
