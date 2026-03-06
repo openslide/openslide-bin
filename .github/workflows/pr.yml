@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install pre-commit
       - name: Cache pre-commit environments
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
@@ -39,7 +39,7 @@ jobs:
       windows_builder_repo_and_digest: ${{ steps.find-windows.outputs.builder_repo_and_digest }}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Find Linux builder container digest
         id: find-linux
         uses: ./.github/find-container-digest

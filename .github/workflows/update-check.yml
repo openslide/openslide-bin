@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: pip install --user meson requests
       - name: Check out repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.OPENSLIDE_BOT_TOKEN }}
       - name: Get bot username
