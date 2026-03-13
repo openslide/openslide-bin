@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 env:
-  GH_LABEL: update
+  GH_LABEL: dependencies
 
 jobs:
   pr-event:
