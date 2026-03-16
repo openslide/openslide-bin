@@ -1,5 +1,11 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.13, 2026-03-18
+
+* Fix build with Meson 1.10.2
+* Update glib
+
+
 ## Version 4.0.0.12, 2026-03-08
 
 * Don't return uninitialized data in bottom tiles of non-JPEG/JP2K TIFF levels
