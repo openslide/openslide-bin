@@ -12,11 +12,8 @@ COPY --from=docker.io/gentoo/portage:latest /var/db/repos/gentoo /var/db/repos/g
 RUN emerge -u dev-build/meson && \
     rm -f /var/cache/distfiles/*
 RUN emerge app-portage/gentoolkit dev-lang/nasm dev-libs/glib \
-    dev-python/license-expression dev-python/pip dev-util/glib-utils \
-    dev-vcs/git sys-devel/crossdev && \
+    dev-python/license-expression dev-util/glib-utils dev-vcs/git \
+    sys-devel/crossdev && \
     rm /var/cache/distfiles/*
-# Pending 1.10.2 in Gentoo
-RUN pip install --break-system-packages --root-user-action ignore --upgrade \
-    --ignore-installed meson
 RUN crossdev -t x86_64-w64-mingw32 && \
     rm /var/cache/distfiles/*
