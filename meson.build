@@ -7,7 +7,8 @@ project(
     check : true,
   ).stdout().strip(),
   license : 'LGPL-2.1-only',
-  meson_version : '>=1.2',
+  # for license extraction from libffi and libjpeg-turbo
+  meson_version : '>=1.10.2',
   default_options : [
     'buildtype=plain',
     'default_library=static',
