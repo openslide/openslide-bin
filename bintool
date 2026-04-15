@@ -381,7 +381,7 @@ class MesonPlatform(Platform):
             / f'openslide-bin-{self.params.version}-{self.id}.{ext}',
             wheel=dir
             / 'artifacts'
-            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl',  # noqa: E501
+            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl',
         )
 
 
@@ -407,7 +407,7 @@ class MacPlatform(Platform):
         bdist = dir / f'openslide-bin-{self.params.version}-{self.id}.tar.xz'
         wheel = (
             dir
-            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl'  # noqa: E501
+            / f'openslide_bin-{self.params.version}-py3-none-{self.python_platform_tag}.whl'
         )
         env = get_python_env()
 
@@ -683,7 +683,7 @@ def main() -> None:
             '-x',
             '--suffix',
             metavar='suffix',
-            help='Set package version suffix in archive filenames and Python wheel.',  # noqa: E501
+            help='Set package version suffix in archive filenames and Python wheel.',
             parser=sp,
         )
     args.add_arg(

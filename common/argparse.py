@@ -103,11 +103,11 @@ class TypedArgs:
         # do checks
         if anno_type != expected_type:
             raise TypeError(
-                f'TypedArgs field "{field}" type "{anno_type}" != "{expected_type}"'  # noqa: E501
+                f'TypedArgs field "{field}" type "{anno_type}" != "{expected_type}"'
             )
         if anno_none_forbidden != expected_none_forbidden:
             raise TypeError(
-                f'TypedArgs field "{field}" forbids None "{anno_none_forbidden}" != "{expected_none_forbidden}"'  # noqa: E501
+                f'TypedArgs field "{field}" forbids None "{anno_none_forbidden}" != "{expected_none_forbidden}"'
             )
 
         # mark the field processed.  allow a field to be processed multiple

@@ -25,7 +25,7 @@ import os
 
 os.environ['OPENSLIDE_DEBUG'] = 'synthetic'
 
-import openslide_bin  # noqa: E402
+import openslide_bin
 
 openslide_open = openslide_bin.libopenslide1.openslide_open
 openslide_open.argtypes = [c_char_p]
