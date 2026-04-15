@@ -53,10 +53,10 @@ from common.software import Project
 WINDOWS_API_VERS = (9,)
 LINUX_API_VERS = (8,)
 
-CACHEDIR_TAG_CONTENTS = '''Signature: 8a477f597d28d172789f06886806bc55
+CACHEDIR_TAG_CONTENTS = """Signature: 8a477f597d28d172789f06886806bc55
 # This file is a cache directory tag created by openslide-bin.
 # For information about cache directory tags, see https://bford.info/cachedir/
-'''
+"""
 
 
 def log(msg: str, stderr: bool = False, **kwargs: Any) -> None:
@@ -88,9 +88,9 @@ class BuildParams:
 
     @contextmanager
     def lock(self) -> Iterator[Self]:
-        '''Acquire exclusive lock on the source directory.  Overrides and
+        """Acquire exclusive lock on the source directory.  Overrides and
         unpacking of subproject source trees affect the source dir, not just
-        the build dir.'''
+        the build dir."""
         assert not self.locked
         self.work.mkdir(exist_ok=True)
 
@@ -117,7 +117,7 @@ class BuildParams:
 
     @staticmethod
     def _lock(fh: BinaryIO, blocking: bool) -> None:
-        '''Acquire a file lock.'''
+        """Acquire a file lock."""
         if sys.platform == 'win32':
             import msvcrt
 
@@ -137,13 +137,13 @@ class BuildParams:
 
     @contextmanager
     def platform(self, overrides: bool = False) -> Iterator[Platform]:
-        '''Acquire source directory lock, configure subproject overrides as
+        """Acquire source directory lock, configure subproject overrides as
         requested, purge stale subproject source dirs, and return the
-        current Platform.'''
+        current Platform."""
 
         def has_api(name: str, versions: Iterable[int]) -> bool:
-            '''Check for builder container API stamps with any of the
-            specified versions.'''
+            """Check for builder container API stamps with any of the
+            specified versions."""
             for ver in versions:
                 if Path(f'/etc/openslide-{name}-builder-v{ver}').exists():
                     return True
@@ -175,8 +175,8 @@ class BuildParams:
             yield plat
 
     def _set_overrides(self, enable: bool) -> None:
-        '''Add/remove symlinks to activate/deactivate subprojects from
-        overrides directory.'''
+        """Add/remove symlinks to activate/deactivate subprojects from
+        overrides directory."""
         assert self.locked
         for proj in Project.get_all():
             override = proj.override_path
@@ -198,9 +198,9 @@ class BuildParams:
                     overridden.rename(wrap)
 
     def _sync_subprojects(self) -> None:
-        '''If a wrap has already been unpacked, Meson will reuse the unpacked
+        """If a wrap has already been unpacked, Meson will reuse the unpacked
         source even if the wrap was subsequently updated.  Detect updated
-        wrap files or patches and purge their subproject.'''
+        wrap files or patches and purge their subproject."""
         # https://github.com/mesonbuild/meson/issues/10348
 
         assert self.locked
@@ -282,8 +282,8 @@ class MesonPlatform(Platform):
     def _setup(
         self, prefix: str, extra_args: Iterable[str] | None = None
     ) -> Path:
-        '''Configure the build directory with 'meson setup' and return its
-        path.'''
+        """Configure the build directory with 'meson setup' and return its
+        path."""
         assert self.params.locked
         dir = self.params.work / f'{prefix}-{self.id}'
         # always reconfigure the build dir, to pick up version number and

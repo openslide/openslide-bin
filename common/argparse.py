@@ -25,7 +25,7 @@ from typing import Any
 
 
 class TypedArgs:
-    '''Simple argparse wrapper to give us type annotations on the parsed
+    """Simple argparse wrapper to give us type annotations on the parsed
     arguments.  The caller subclasses this class, defines fields on it, then
     configures and runs argparse.ArgumentParser via instance methods.  The
     methods cross-check the field types with the configuration given to
@@ -34,7 +34,7 @@ class TypedArgs:
     types to argparse (which could cause subtle problems if buggy).
 
     The implementation doesn't try to be comprehensive.  If you start using
-    a new argparse feature, you'll probably have to extend this.'''
+    a new argparse feature, you'll probably have to extend this."""
 
     def __init__(self, *args: Any, **kwargs: Any):
         self.parser = argparse.ArgumentParser(*args, **kwargs)

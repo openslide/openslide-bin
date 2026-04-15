@@ -361,7 +361,7 @@ class Project(Software):
 
 
 def _sqlite3_license(proj: Project) -> tuple[str, str]:
-    '''Extract public-domain dedication from the top of sqlite3.h'''
+    """Extract public-domain dedication from the top of sqlite3.h"""
     with open(proj.source_dir / 'sqlite3.h') as fh:
         ret: list[str] = []
         for line in fh:

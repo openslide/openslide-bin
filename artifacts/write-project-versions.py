@@ -37,12 +37,12 @@ from common.software import (
     write_version_markdown,
 )
 
-MINGW_VERSION_CHECK_HDR = b'''
+MINGW_VERSION_CHECK_HDR = b"""
 #include <_mingw_mac.h>
 #define s(v) #v
 #define ss(v) s(v)
 ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
-'''
+"""
 
 
 class Args(TypedArgs):
