@@ -38,7 +38,7 @@ class TypedArgs:
 
     def __init__(self, *args: Any, **kwargs: Any):
         self.parser = argparse.ArgumentParser(*args, **kwargs)
-        self._unprocessed_fields = {k for k in self.__annotations__.keys()}
+        self._unprocessed_fields = set(self.__annotations__.keys())
 
     def add_arg(
         self,

@@ -235,7 +235,7 @@ class BuildParams:
 
         if purge:
             subprocess.check_call(
-                ['meson', 'subprojects', 'purge', '--confirm'] + purge,
+                ['meson', 'subprojects', 'purge', '--confirm', *purge],
                 cwd=self.root,
             )
             with stamp.open('w') as fh:
@@ -497,7 +497,7 @@ class BDistSmokeTester(SmokeTester):
             dir / self._name.base / 'bin' / f'slidetool{self._exe_suffix}'
         )
         subprocess.check_call(
-            cmd_prefix + [slidetool, 'prop', 'list', ''],
+            [*cmd_prefix, slidetool, 'prop', 'list', ''],
             env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
             stdout=subprocess.DEVNULL,
         )
@@ -553,8 +553,8 @@ class WheelSmokeTester(SmokeTester):
     def _invoke(self, desc: str, dir: Path, cmd_prefix: list[str]) -> None:
         log(f'Checking {desc} wheel')
         subprocess.check_call(
-            cmd_prefix
-            + [
+            [
+                *cmd_prefix,
                 dir / self._venv_bindir / f'python{self._exe_suffix}',
                 meson_source_root() / 'utils' / 'test-wheel.py',
             ],

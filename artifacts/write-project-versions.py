@@ -77,11 +77,11 @@ if meson_host() == 'windows':
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     ).communicate(MINGW_VERSION_CHECK_HDR)[0]
-    ver = [
+    ver = next(
         line
         for line in out.decode().split('\n')
         if line.strip() and not line.startswith('#')
-    ][0].replace('"', '')
+    ).replace('"', '')
     sw.append(Tool(id='mingw-w64', display='MinGW-w64', version=ver))
 if compiler['id'] == 'gcc':
     ver = compiler['full_version']
