@@ -37,12 +37,12 @@ from common.software import (
     write_version_markdown,
 )
 
-MINGW_VERSION_CHECK_HDR = b'''
+MINGW_VERSION_CHECK_HDR = b"""
 #include <_mingw_mac.h>
 #define s(v) #v
 #define ss(v) s(v)
 ss(__MINGW64_VERSION_MAJOR).ss(__MINGW64_VERSION_MINOR).ss(__MINGW64_VERSION_BUGFIX)
-'''
+"""
 
 
 class Args(TypedArgs):
@@ -77,11 +77,11 @@ if meson_host() == 'windows':
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     ).communicate(MINGW_VERSION_CHECK_HDR)[0]
-    ver = [
+    ver = next(
         line
         for line in out.decode().split('\n')
         if line.strip() and not line.startswith('#')
-    ][0].replace('"', '')
+    ).replace('"', '')
     sw.append(Tool(id='mingw-w64', display='MinGW-w64', version=ver))
 if compiler['id'] == 'gcc':
     ver = compiler['full_version']

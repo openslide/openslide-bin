@@ -30,12 +30,9 @@ import sys
 # flake8 isn't happy about this
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
-from common.meson import meson_introspect, meson_source_root  # noqa: E402
-from common.python import (  # noqa: E402
-    pyproject_fill_template,
-    pyproject_to_message,
-)
-from common.software import Project  # noqa: E402
+from common.meson import meson_introspect, meson_source_root
+from common.python import pyproject_fill_template, pyproject_to_message
+from common.software import Project
 
 src = meson_source_root()
 dest = Path(os.environ['MESON_DIST_ROOT'])

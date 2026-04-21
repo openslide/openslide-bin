@@ -27,7 +27,7 @@ import sys
 # flake8 isn't happy about this
 sys.path.insert(0, os.environ['MESON_SOURCE_ROOT'])
 
-from common.meson import default_suffix, project_version  # noqa: E402
+from common.meson import default_suffix, project_version
 
 suffix = os.environ.get('OPENSLIDE_BIN_SUFFIX', default_suffix())
 print(project_version(suffix))

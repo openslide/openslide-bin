@@ -36,7 +36,7 @@ from common.archive import (
 from common.argparse import TypedArgs
 from common.macos import all_equal, merge_macho
 
-DSYM_ARCHES = {'aarch64', 'x86_64'}
+DSYM_ARCHES = frozenset(('aarch64', 'x86_64'))
 
 
 class Args(TypedArgs):

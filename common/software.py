@@ -124,38 +124,42 @@ class Project(Software):
     keep_dirs: Iterable[str] = ()
     keep_files: Iterable[str] = ()
 
-    DIST_REMOVE_DIRNAMES = {
-        '.github',
-        '.gitlab',
-        '.gitlab-ci',
-        '.gitlab-ci.d',
-    }
-    DIST_REMOVE_FILENAMES = {
-        '.appveyor.yml',
-        '.cirrus.yml',
-        '.clang-format',
-        '.cmake-format.yaml',
-        '.codecov.yaml',
-        '.codespellrc',
-        '.editorconfig',
-        '.flake8',
-        '.gitattributes',
-        '.gitignore',
-        '.gitlab-ci.yml',
-        '.gitmodules',
-        '.lcovrc',
-        '.readthedocs.yaml',
-        '.shellcheckrc',
-        '.travis.yml',
-        'CMakeLists.txt',
-        'configure',
-        'configure.ac',
-        'ltmain.sh',
-        'Makefile',
-        'Makefile.am',
-        'Makefile.in',
-    }
-    DIST_REMOVE_SUFFIXES = {'.cmake', '.m4'}
+    DIST_REMOVE_DIRNAMES = frozenset(
+        (
+            '.github',
+            '.gitlab',
+            '.gitlab-ci',
+            '.gitlab-ci.d',
+        )
+    )
+    DIST_REMOVE_FILENAMES = frozenset(
+        (
+            '.appveyor.yml',
+            '.cirrus.yml',
+            '.clang-format',
+            '.cmake-format.yaml',
+            '.codecov.yaml',
+            '.codespellrc',
+            '.editorconfig',
+            '.flake8',
+            '.gitattributes',
+            '.gitignore',
+            '.gitlab-ci.yml',
+            '.gitmodules',
+            '.lcovrc',
+            '.readthedocs.yaml',
+            '.shellcheckrc',
+            '.travis.yml',
+            'CMakeLists.txt',
+            'configure',
+            'configure.ac',
+            'ltmain.sh',
+            'Makefile',
+            'Makefile.am',
+            'Makefile.in',
+        )
+    )
+    DIST_REMOVE_SUFFIXES = frozenset(('.cmake', '.m4'))
 
     @staticmethod
     def get(id: str) -> Project:
@@ -222,7 +226,7 @@ class Project(Software):
                     version = sub['version']
                     assert isinstance(version, str)
                     return version
-            raise Exception(f'Missing project info for {self.id}')
+            raise Exception(f'Missing project info for {self.id}') from None
 
     @property
     def source_dir(self) -> Path:
@@ -238,8 +242,13 @@ class Project(Software):
         try:
             meson_spdx: str | list[str] | None = json.loads(
                 subprocess.check_output(
-                    shlex.split(os.environ['MESONREWRITE'])
-                    + ['kwargs', 'info', 'project', '/'],
+                    [
+                        *shlex.split(os.environ['MESONREWRITE']),
+                        'kwargs',
+                        'info',
+                        'project',
+                        '/',
+                    ],
                     cwd=self.source_dir,
                     stderr=subprocess.DEVNULL,
                 )
@@ -357,11 +366,13 @@ class Project(Software):
             try:
                 return versions[self.id]
             except KeyError:
-                raise Exception(f'{self.id} not found in Anitya database')
+                raise Exception(
+                    f'{self.id} not found in Anitya database'
+                ) from None
 
 
 def _sqlite3_license(proj: Project) -> tuple[str, str]:
-    '''Extract public-domain dedication from the top of sqlite3.h'''
+    """Extract public-domain dedication from the top of sqlite3.h"""
     with open(proj.source_dir / 'sqlite3.h') as fh:
         ret: list[str] = []
         for line in fh:
@@ -514,7 +525,7 @@ _PROJECTS = (
 )
 
 # gvdb is a copylib bundled with glib, without a stable API
-_PROJECTS_IGNORE = {'gvdb'}
+_PROJECTS_IGNORE = frozenset(('gvdb',))
 
 
 def _sorted_infos(infos: list[Info]) -> list[Info]:

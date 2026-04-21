@@ -25,7 +25,7 @@ from typing import Any
 
 
 class TypedArgs:
-    '''Simple argparse wrapper to give us type annotations on the parsed
+    """Simple argparse wrapper to give us type annotations on the parsed
     arguments.  The caller subclasses this class, defines fields on it, then
     configures and runs argparse.ArgumentParser via instance methods.  The
     methods cross-check the field types with the configuration given to
@@ -34,11 +34,11 @@ class TypedArgs:
     types to argparse (which could cause subtle problems if buggy).
 
     The implementation doesn't try to be comprehensive.  If you start using
-    a new argparse feature, you'll probably have to extend this.'''
+    a new argparse feature, you'll probably have to extend this."""
 
     def __init__(self, *args: Any, **kwargs: Any):
         self.parser = argparse.ArgumentParser(*args, **kwargs)
-        self._unprocessed_fields = {k for k in self.__annotations__.keys()}
+        self._unprocessed_fields = set(self.__annotations__.keys())
 
     def add_arg(
         self,
@@ -103,11 +103,11 @@ class TypedArgs:
         # do checks
         if anno_type != expected_type:
             raise TypeError(
-                f'TypedArgs field "{field}" type "{anno_type}" != "{expected_type}"'  # noqa: E501
+                f'TypedArgs field "{field}" type "{anno_type}" != "{expected_type}"'
             )
         if anno_none_forbidden != expected_none_forbidden:
             raise TypeError(
-                f'TypedArgs field "{field}" forbids None "{anno_none_forbidden}" != "{expected_none_forbidden}"'  # noqa: E501
+                f'TypedArgs field "{field}" forbids None "{anno_none_forbidden}" != "{expected_none_forbidden}"'
             )
 
         # mark the field processed.  allow a field to be processed multiple
