@@ -6,5 +6,8 @@ source_hash = 7a448d295b179a4c0b311c09f5253655446a44bf66b3b7d2aa4c09d15f02f1f8
 source_fallback_url = https://wrapdb.mesonbuild.com/v2/libdicom_1.2.1-1/get_source/libdicom-1.2.1.tar.xz
 wrapdb_version = 1.2.1-1
 
+# https://github.com/ImagingDataCommons/libdicom/pull/116
+diff_files = libdicom-preallocated-error.patch
+
 [provide]
 dependency_names = libdicom
