@@ -1,5 +1,10 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.1.1, 2026-06-07
+
+* Update OpenSlide to 4.0.1
+
+
 ## Version 4.0.0.14, 2026-06-07
 
 * Fix arbitrary memory write with crafted Ventana BIF file (CVE-2026-48977)
