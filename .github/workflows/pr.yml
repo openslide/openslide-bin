@@ -78,5 +78,5 @@ jobs:
       openslide_bin_repo: ${{ github.repository }}
       openslide_bin_ref: ${{ github.ref }}
       suffix: ${{ needs.setup.outputs.suffix }}.git
-      werror: false
+      werror: true
       windows_builder_repo_and_digest: ${{ needs.setup.outputs.windows_builder_repo_and_digest }}
