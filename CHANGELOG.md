@@ -1,5 +1,11 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.0.14, 2026-06-07
+
+* Fix arbitrary memory write with crafted Ventana BIF file (CVE-2026-48977)
+* Update various dependencies
+
+
 ## Version 4.0.0.13, 2026-03-18
 
 * Fix build with Meson 1.10.2
