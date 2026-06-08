@@ -17,6 +17,6 @@ labels: [release]
   - [ ] Once the build finishes, approve deployment to PyPI
 - [ ] Verify that CI creates a [PyPI release](https://pypi.org/p/openslide-bin) with a description, source tarball, and wheels
 - [ ] Verify that CI creates a [GitHub release](https://github.com/openslide/openslide-bin/releases/) with release notes, software versions, and artifacts
-- [ ] Update website: `_data/releases.yaml`, maybe `_includes/news.md`
+- [ ] `cd` into website checkout; `_scripts/sync-releases.py`; update `_includes/news.md`
 - [ ] Possibly send mail to -announce and -users
 - [ ] Possibly post to [forum.image.sc](https://forum.image.sc/c/announcements/10)
