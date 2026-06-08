@@ -78,15 +78,12 @@ if all_systems or system != 'linux'
   subproject('proxy-libintl')
 endif
 
-if dev_deps
-  subproject(
-    'zstd',
-    default_options : [
-      'bin_programs=false',
-    ],
-  )
-endif
-
+subproject(
+  'zstd',
+  default_options : [
+    'bin_programs=false',
+  ],
+)
 subproject('libpng')
 subproject(
   'libjpeg-turbo',
@@ -116,22 +113,6 @@ subproject(
     'nls=disabled',
     'tests=false',
     'glib_debug=disabled',
-  ],
-)
-subproject(
-  'gdk-pixbuf',
-  default_options : [
-    'png=disabled',
-    'tiff=disabled',
-    'jpeg=disabled',
-    'gif=disabled',
-    'glycin=disabled',
-    'others=enabled',
-    'man=false',
-    'builtin_loaders=bmp',
-    'introspection=disabled',
-    'gio_sniffing=false',
-    'tests=false',
   ],
 )
 subproject(

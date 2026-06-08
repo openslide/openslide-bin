@@ -393,12 +393,6 @@ _PROJECTS = (
         remove_dirs=['doc', 'perf', 'test'],
     ),
     Project(
-        id='gdk-pixbuf',
-        display='gdk-pixbuf',
-        license_files=['COPYING'],
-        remove_dirs=['tests'],
-    ),
-    Project(
         id='glib',
         display='glib',
         license_files=['COPYING'],
