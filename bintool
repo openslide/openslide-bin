@@ -497,8 +497,7 @@ class BDistSmokeTester(SmokeTester):
             dir / self._name.base / 'bin' / f'slidetool{self._exe_suffix}'
         )
         subprocess.check_call(
-            [*cmd_prefix, slidetool, 'prop', 'list', ''],
-            env={**os.environ, 'OPENSLIDE_DEBUG': 'synthetic'},
+            [*cmd_prefix, slidetool, 'test', 'deps'],
             stdout=subprocess.DEVNULL,
         )
 
