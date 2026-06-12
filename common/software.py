@@ -475,12 +475,6 @@ _PROJECTS = (
         remove_dirs=['doc'],
     ),
     Project(
-        id='pcre2',
-        display='PCRE2',
-        license_files=['LICENCE.md'],
-        remove_dirs=['doc', 'testdata'],
-    ),
-    Project(
         id='pixman',
         display='pixman',
         license_files=['COPYING'],
