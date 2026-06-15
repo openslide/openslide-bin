@@ -20,7 +20,7 @@
 ## Version 4.0.0.12, 2026-03-08
 
 * Don't return uninitialized data in bottom tiles of non-JPEG/JP2K TIFF levels
-  (4.0.0.10 regression)
+  (CVE-2026-54604, 4.0.0.10 regression)
 * Update various dependencies
 
 
