@@ -100,13 +100,6 @@ subproject(
   ],
 )
 subproject(
-  'pcre2',
-  default_options : [
-    'grep=false',
-    'test=false',
-  ],
-)
-subproject(
   'glib',
   default_options : [
     'introspection=disabled',
