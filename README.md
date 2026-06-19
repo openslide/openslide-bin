@@ -65,6 +65,10 @@ Delete build and binary directories, but not downloaded tarballs.
 
 Check for new releases of component projects.
 
+#### `autoupdate`
+
+Update component projects from WrapDB, preserving downstream patches.
+
 #### `version`
 
 Report the version number that will be used in archive file names.

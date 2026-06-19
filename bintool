@@ -640,6 +640,51 @@ def do_updates(args: Args) -> None:
                 print(f'{proj.id:15} {cur:>10}  => {new:>10}')
 
 
+def do_autoupdate(args: Args) -> None:
+    with BuildParams().lock() as params:
+        patches = []
+        for proj in Project.get_all():
+            with proj.wrap_path.open() as fh:
+                iter = reversed(fh.readlines())
+            patch_lines: list[str] = []
+            # save diff_files
+            for line in iter:
+                if line.startswith('diff_files'):
+                    patch_lines.insert(0, line)
+                    break
+            # save any preceding comments and blank lines
+            for line in iter:
+                if line.startswith('#') or not line.strip():
+                    patch_lines.insert(0, line)
+                else:
+                    break
+            if patch_lines:
+                patches.append(
+                    (
+                        proj.wrap_path,
+                        proj.wrap_path.stat().st_mtime,
+                        ''.join(patch_lines),
+                    )
+                )
+        subprocess.check_call(
+            ['meson', 'wrap', 'update'],
+            cwd=params.root,
+        )
+        for path, mtime, patch in patches:
+            if path.stat().st_mtime != mtime:
+                with path.open('r+') as fh:
+                    file_lines = fh.readlines()
+                    fh.seek(0)
+                    fh.truncate()
+                    for file_line in file_lines:
+                        # insert patch before first blank line,
+                        # i.e. before [provide]
+                        if patch and not file_line.strip():
+                            fh.write(patch)
+                            patch = ''
+                        fh.write(file_line)
+
+
 def do_projects(args: Args) -> None:
     id_len = max(len(proj.id) for proj in Project.get_all())
     for proj in Project.get_all():
@@ -712,6 +757,11 @@ def main() -> None:
 
     updates = sub.add_parser('updates', help='Check for project updates')
     updates.set_defaults(func=do_updates)
+
+    updates = sub.add_parser(
+        'autoupdate', help='Update projects from WrapDB, preserving patches'
+    )
+    updates.set_defaults(func=do_autoupdate)
 
     projects = sub.add_parser('projects', help='List component projects')
     projects.set_defaults(func=do_projects)

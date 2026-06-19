@@ -44,7 +44,7 @@ jobs:
       - name: Update wraps
         id: modified
         run: |
-          meson wrap update
+          ./bintool autoupdate
           modified=$(git status --porcelain "subprojects/*.wrap" |
                   sed -e 's:.*/::' -e 's/\.wrap$//')
           modified=$(echo $modified | sed -e 's/ /, /g')
