@@ -1,5 +1,12 @@
 # Notable Changes in openslide-bin
 
+## Version 4.0.1.2, 2026-06-19
+
+* Reduce library size by 25% on Linux and macOS
+* Remove PCRE2 dependency
+* Fix `slidetool test deps` on Windows
+
+
 ## Version 4.0.1.1, 2026-06-07
 
 * Update OpenSlide to 4.0.1
