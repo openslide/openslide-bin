@@ -82,13 +82,13 @@ configure openslide-bin to build that library itself.
 
 All dependencies must be built with [Meson][], even those that don't natively
 support Meson.  For many common libraries, a Meson port is available from
-Meson's [wrapdb][].  Otherwise, you'll need to port the library's build
-system to Meson and submit the port to wrapdb (or to the upstream project if
+Meson's [WrapDB][].  Otherwise, you'll need to port the library's build
+system to Meson and submit the port to WrapDB (or to the upstream project if
 its maintainers are interested).
 
 To add a dependency to openslide-bin:
 
-1. Use `meson wrap install` to add the dependency's wrap file from wrapdb
+1. Use `meson wrap install` to add the dependency's wrap file from WrapDB
    to the `subprojects` directory.
 2. Add the dependency to `_PROJECTS` in `common/software.py`.
    - Test update checking by running `./bintool updates`.  If this complains
@@ -100,7 +100,7 @@ To add a dependency to openslide-bin:
 
 ### Common problems
 
-New dependencies sometimes have build bugs that need to be fixed in wrapdb
+New dependencies sometimes have build bugs that need to be fixed in WrapDB
 or upstream.  Common problems include:
 
 1. Libraries dllexporting their public symbols when built as a Windows static
@@ -124,17 +124,17 @@ The `subproject()` call in `deps/meson.build` should initially be gated
 behind `if dev_deps`, causing the new subproject to be omitted from
 openslide-bin releases until the feature lands in an OpenSlide release.
 
-All openslide-bin subprojects must use wraps from wrapdb, so new Meson ports
-should be submitted there first.  (wrapdb does not expect ports to include
+All openslide-bin subprojects must use wraps from WrapDB, so new Meson ports
+should be submitted there first.  (WrapDB does not expect ports to include
 all functionality from the upstream build system.  For example, obscure
 options and CPU architectures can be omitted.)  As an exception, wraps for
 newly-developed libraries can point directly to an upstream Git commit while
 the library is being integrated into OpenSlide.  However, the wrap must be
-added to wrapdb before the first OpenSlide release that uses the library.
+added to WrapDB before the first OpenSlide release that uses the library.
 
 Similarly, all `diff_files` directives in wrap files must have a comment
-linking to a wrapdb PR or upstream PR for the patch.
+linking to a WrapDB PR or upstream PR for the patch.
 
 [Anitya]: https://release-monitoring.org/
 [Meson]: https://mesonbuild.com/
-[wrapdb]: https://github.com/mesonbuild/wrapdb
+[WrapDB]: https://github.com/mesonbuild/wrapdb
