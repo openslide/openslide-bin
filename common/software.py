@@ -421,7 +421,7 @@ _PROJECTS = (
         id='libjpeg-turbo',
         display='libjpeg-turbo',
         license_files=['LICENSE.md', 'README.ijg'],
-        remove_dirs=['doc', 'java', 'testimages'],
+        remove_dirs=['doc', 'jna', 'testimages'],
         keep_files=['simd/CMakeLists.txt'],
     ),
     Project(
