@@ -18,6 +18,8 @@ quote-style = "single"
 
 [tool.ruff.lint]
 extend-select = ["B", "C4", "FLY", "I", "RUF", "UP"]
+# EXE001 - shebang in non-executable files - used for Meson scripts
+ignore = ["EXE001"]
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true

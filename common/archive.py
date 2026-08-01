@@ -38,6 +38,8 @@ from types import TracebackType
 from typing import BinaryIO, Self, cast
 import zipfile
 
+from .error import BuildError
+
 
 @dataclass
 class Member(ABC):
@@ -72,6 +74,7 @@ class ArchiveWriter(ABC):
     def __init__(self, path: Path):
         self.base = _path_base(path)
         self._members: dict[PurePath, Member] = {}
+        self._stack = ExitStack()
 
     def __enter__(self) -> Self:
         return self
@@ -86,7 +89,7 @@ class ArchiveWriter(ABC):
 
     @abstractmethod
     def close(self) -> None:
-        pass
+        self._stack.close()
 
     def add(self, member: Member) -> None:
         assert member.path not in self._members
@@ -106,7 +109,7 @@ class ArchiveWriter(ABC):
                 self.add(
                     FileMember(
                         arcdir / dpath.relative_to(path.parent) / fname,
-                        open(dpath / fname, 'rb'),
+                        self._stack.enter_context(open(dpath / fname, 'rb')),  # noqa: SIM115
                     )
                 )
 
@@ -114,7 +117,7 @@ class ArchiveWriter(ABC):
 class TarArchiveWriter(ArchiveWriter):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
-        self._tar = tarfile.open(
+        self._tar = tarfile.open(  # noqa: SIM115
             fileobj=fh,
             mode='w:xz',
             format=tarfile.PAX_FORMAT,
@@ -152,6 +155,7 @@ class TarArchiveWriter(ArchiveWriter):
                 info.gname = 'root'
                 self._tar.addfile(info)
         self._tar.close()
+        super().close()
 
 
 class ZipArchiveWriter(ArchiveWriter):
@@ -177,8 +181,9 @@ class ZipArchiveWriter(ArchiveWriter):
             elif isinstance(member, DirMember):
                 self._zip.writestr(member.path.as_posix() + '/', b'')
             elif isinstance(member, SymlinkMember):
-                raise Exception('Symlinks not supported in Zip')
+                raise BuildError('Symlinks not supported in Zip')
         self._zip.close()
+        super().close()
 
 
 class WheelWriter(ZipArchiveWriter):
@@ -228,6 +233,7 @@ class ArchiveReader(ABC):
         self.base = _path_base(path)
         self._tempdir = tempfile.TemporaryDirectory(prefix='openslide-bin-')
         self._dir = Path(self._tempdir.name)
+        self._stack = ExitStack()
 
     @classmethod
     @contextmanager
@@ -253,6 +259,7 @@ class ArchiveReader(ABC):
 
     @abstractmethod
     def close(self) -> None:
+        self._stack.close()
         self._tempdir.cleanup()
 
     @abstractmethod
@@ -263,7 +270,7 @@ class ArchiveReader(ABC):
 class TarArchiveReader(ArchiveReader):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
-        self._tar = tarfile.open(fileobj=fh)
+        self._tar = tarfile.open(fileobj=fh)  # noqa: SIM115
         self._tar.extraction_filter = tarfile.data_filter
 
     def close(self) -> None:
@@ -280,11 +287,14 @@ class TarArchiveReader(ArchiveReader):
                 yield DirMember(path)
             elif info.type == tarfile.REGTYPE:
                 self._tar.extract(info, self._dir)
-                yield FileMember(path, open(self._dir / path, 'rb'))
+                yield FileMember(
+                    path,
+                    self._stack.enter_context(open(self._dir / path, 'rb')),  # noqa: SIM115
+                )
             elif info.type == tarfile.SYMTYPE:
                 yield SymlinkMember(path, PurePath(info.linkname))
             else:
-                raise Exception(
+                raise BuildError(
                     f'Unsupported member type: {info.type.decode()}'
                 )
 
@@ -305,14 +315,17 @@ class ZipArchiveReader(ArchiveReader):
                 yield DirMember(path)
             else:
                 yield FileMember(
-                    path, open(self._zip.extract(info, self._dir), 'rb')
+                    path,
+                    self._stack.enter_context(
+                        open(self._zip.extract(info, self._dir), 'rb')  # noqa: SIM115
+                    ),
                 )
 
 
 class MemberSet:
     def __init__(self, members: Sequence[Member | None]):
         if not all(members):
-            raise Exception('Missing member in one or more archives')
+            raise BuildError('Missing member in one or more archives')
         self.members = cast(Sequence[Member], members)
 
     def __getitem__(self, idx: int) -> Member:
@@ -330,7 +343,7 @@ class MemberSet:
         ret = []
         for member in self:
             if not isinstance(member, FileMember):
-                raise Exception('Member is not a file')
+                raise BuildError('Member is not a file')
             ret.append(member.fh.read())
             member.fh.seek(0)
         return ret

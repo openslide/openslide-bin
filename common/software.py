@@ -35,6 +35,7 @@ import subprocess
 import time
 from typing import Literal, TextIO, TypedDict
 
+from .error import BuildError
 from .meson import meson_introspect, meson_source_root, parse_ini_file
 
 
@@ -176,7 +177,7 @@ class Project(Software):
         ret = [p for p in _PROJECTS if p.id in enabled]
         unknown = enabled - _PROJECTS_IGNORE - {p.id for p in ret}
         if unknown:
-            raise Exception(f'Unknown projects: {unknown}')
+            raise BuildError(f'Unknown projects: {unknown}')
         return ret
 
     @staticmethod
@@ -226,7 +227,7 @@ class Project(Software):
                     version = sub['version']
                     assert isinstance(version, str)
                     return version
-            raise Exception(f'Missing project info for {self.id}') from None
+            raise BuildError(f'Missing project info for {self.id}') from None
 
     @property
     def source_dir(self) -> Path:
@@ -337,7 +338,7 @@ class Project(Software):
                     resp.raise_for_status()
                     break
             else:
-                raise Exception(
+                raise BuildError(
                     'Repeated gateway timeouts when querying Anitya'
                 )
             packages: AnityaPackageList = resp.json()
@@ -366,7 +367,7 @@ class Project(Software):
             try:
                 return versions[self.id]
             except KeyError:
-                raise Exception(
+                raise BuildError(
                     f'{self.id} not found in Anitya database'
                 ) from None
 
@@ -381,7 +382,7 @@ def _sqlite3_license(proj: Project) -> tuple[str, str]:
             if line.startswith('*****'):
                 return 'PUBLIC-DOMAIN.txt', ''.join(ret)
             ret.append(line)
-    raise Exception("Couldn't parse license header")
+    raise BuildError("Couldn't parse license header")
 
 
 _PROJECTS = (

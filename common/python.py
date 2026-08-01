@@ -25,6 +25,7 @@ from pathlib import PurePath
 import re
 import tomllib
 
+from .error import BuildError
 from .meson import meson_introspect, meson_source_root
 from .software import Project, get_spdx
 
@@ -86,7 +87,7 @@ def pyproject_to_message(pyproject: str) -> Message:
                 elif kk == 'repository':
                     out['Project-URL'] = f'Repository, {vv}'
                 else:
-                    raise Exception(f'Unknown URL type: {kk}')
+                    raise BuildError(f'Unknown URL type: {kk}')
         elif k == 'authors':
             for item in v:
                 out['Author-Email'] = f'{item["name"]} <{item["email"]}>'
@@ -108,5 +109,5 @@ def pyproject_to_message(pyproject: str) -> Message:
         elif k == 'requires-python':
             out['Requires-Python'] = v
         else:
-            raise Exception(f'Unknown field: {k}')
+            raise BuildError(f'Unknown field: {k}')
     return out

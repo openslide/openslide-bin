@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 from pathlib import Path, PurePath
 import re
 from typing import BinaryIO
@@ -63,7 +64,7 @@ if meson_host() == 'windows':
     arc: ArchiveWriter = ZipArchiveWriter(args.output)
 else:
     arc = TarArchiveWriter(args.output)
-with arc:
+with ExitStack() as stack, arc:
     for path in args.artifacts:
         name = path.name
         if re.search('\\.(lib|dylib(\\.dSYM)?|so[.0-9]*(\\.debug)?)$', name):
@@ -83,7 +84,9 @@ with arc:
         if path.is_dir():
             arc.add_tree(arcdir, path)
         else:
-            arc.add(FileMember(arcdir / name, path.open('rb')))
+            arc.add(
+                FileMember(arcdir / name, stack.enter_context(path.open('rb')))
+            )
             if re.search('\\.so(\\.[0-9]+){3}$', name):
                 for pat in '(\\.[0-9]+){2}$', '(\\.[0-9]+)+$':
                     lname = re.sub(pat, '', name)
@@ -96,6 +99,8 @@ with arc:
     arc.add(
         FileMember(
             arc.base / 'README.md',
-            open(Project.get('openslide').source_dir / 'README.md', 'rb'),
+            stack.enter_context(
+                open(Project.get('openslide').source_dir / 'README.md', 'rb')
+            ),
         )
     )

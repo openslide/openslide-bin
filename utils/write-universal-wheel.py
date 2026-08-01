@@ -31,6 +31,7 @@ from typing import BinaryIO, cast
 
 from common.archive import DirMember, FileMember, WheelWriter, ZipArchiveReader
 from common.argparse import TypedArgs
+from common.error import BuildError
 from common.macos import all_equal, merge_macho
 
 
@@ -72,7 +73,7 @@ with ExitStack() as stack:
         else:
             all_type = None
         if not all_equal(members.relpaths):
-            raise Exception(f'Path mismatch: {members.relpaths}')
+            raise BuildError(f'Path mismatch: {members.relpaths}')
         elif all_type is DirMember:
             whl.add(members[0])
         elif all_type is FileMember:
@@ -98,6 +99,6 @@ with ExitStack() as stack:
             elif all_equal(members.datas):
                 whl.add(members[0])
             else:
-                raise Exception(f'Contents mismatch: {members.relpaths}')
+                raise BuildError(f'Contents mismatch: {members.relpaths}')
         else:
-            raise Exception(f'Unknown/mismatched types: {members.relpaths}')
+            raise BuildError(f'Unknown/mismatched types: {members.relpaths}')

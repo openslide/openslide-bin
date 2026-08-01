@@ -30,6 +30,7 @@ import zipfile
 
 from common.argparse import TypedArgs
 from common.dist import BDistName
+from common.error import BuildError
 from common.software import Info, Infos, write_version_markdown
 
 
@@ -63,14 +64,13 @@ for fh in args.bdists:
     name = BDistName(Path(fh.name).name)
     verfile = (name.base / 'versions.json').as_posix()
     if name.format == 'zip':
-        with zipfile.ZipFile(fh) as zip:
-            with zip.open(verfile) as zmember:
-                contents: Infos = json.load(zmember)
+        with zipfile.ZipFile(fh) as zip, zip.open(verfile) as zmember:
+            contents: Infos = json.load(zmember)
     else:
         with tarfile.open(fileobj=fh) as tar:
             tmember = tar.extractfile(tar.getmember(verfile))
             if tmember is None:
-                raise Exception(f'{verfile} is not a file')
+                raise BuildError(f'{verfile} is not a file')
             with tmember:
                 contents = json.load(tmember)
 
@@ -80,7 +80,7 @@ for fh in args.bdists:
         if key in infos:
             prev_version = infos[key]['version']
             if prev_version != version:
-                raise Exception(
+                raise BuildError(
                     f'Version mismatch for {id}: {version} vs. {prev_version}'
                 )
         if typ == 'tool':

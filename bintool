@@ -42,6 +42,7 @@ import zipfile
 
 from common.argparse import TypedArgs
 from common.dist import BDistName
+from common.error import BuildError
 from common.meson import (
     default_suffix,
     meson_source_root,
@@ -162,7 +163,7 @@ class BuildParams:
                 # no container image to check for
                 plat = MacPlatform(self, ['arm64', 'x86_64'])
             else:
-                raise Exception(
+                raise BuildError(
                     'Not running in a compatible builder container. '
                     + "Either bintool isn't running in the container (see "
                     + 'instructions in README.md) or the container image is '
@@ -446,7 +447,7 @@ class SmokeTester(ABC):
         elif cur_system == 'win32':
             cur_system = 'windows'
         if self._system != cur_system:
-            raise Exception(
+            raise BuildError(
                 f"Can't test {self._system} archive from {cur_system}."
             )
 
@@ -517,7 +518,7 @@ class WheelSmokeTester(SmokeTester):
             self._venv_bindir = 'Scripts'
             return 'windows'
         else:
-            raise Exception(f'Unknown platform: {platform}')
+            raise BuildError(f'Unknown platform: {platform}')
 
     def _unpack(self, dir: Path) -> None:
         log('Creating virtualenv')
