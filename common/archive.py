@@ -109,7 +109,7 @@ class ArchiveWriter(ABC):
                 self.add(
                     FileMember(
                         arcdir / dpath.relative_to(path.parent) / fname,
-                        self._stack.enter_context(open(dpath / fname, 'rb')),
+                        self._stack.enter_context(open(dpath / fname, 'rb')),  # noqa: SIM115
                     )
                 )
 
@@ -117,7 +117,7 @@ class ArchiveWriter(ABC):
 class TarArchiveWriter(ArchiveWriter):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
-        self._tar = tarfile.open(
+        self._tar = tarfile.open(  # noqa: SIM115
             fileobj=fh,
             mode='w:xz',
             format=tarfile.PAX_FORMAT,
@@ -270,7 +270,7 @@ class ArchiveReader(ABC):
 class TarArchiveReader(ArchiveReader):
     def __init__(self, fh: BinaryIO):
         super().__init__(Path(fh.name))
-        self._tar = tarfile.open(fileobj=fh)
+        self._tar = tarfile.open(fileobj=fh)  # noqa: SIM115
         self._tar.extraction_filter = tarfile.data_filter
 
     def close(self) -> None:
@@ -289,7 +289,7 @@ class TarArchiveReader(ArchiveReader):
                 self._tar.extract(info, self._dir)
                 yield FileMember(
                     path,
-                    self._stack.enter_context(open(self._dir / path, 'rb')),
+                    self._stack.enter_context(open(self._dir / path, 'rb')),  # noqa: SIM115
                 )
             elif info.type == tarfile.SYMTYPE:
                 yield SymlinkMember(path, PurePath(info.linkname))
@@ -317,7 +317,7 @@ class ZipArchiveReader(ArchiveReader):
                 yield FileMember(
                     path,
                     self._stack.enter_context(
-                        open(self._zip.extract(info, self._dir), 'rb')
+                        open(self._zip.extract(info, self._dir), 'rb')  # noqa: SIM115
                     ),
                 )
 

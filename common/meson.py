@@ -79,4 +79,4 @@ def default_suffix() -> str:
             segments.append('local')
         return '.'.join(segments)
     except FileNotFoundError:
-        return date.today().strftime('%Y%m%d') + '.local'
+        return date.today().strftime('%Y%m%d') + '.local'  # noqa: DTZ011
