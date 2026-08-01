@@ -63,9 +63,8 @@ for fh in args.bdists:
     name = BDistName(Path(fh.name).name)
     verfile = (name.base / 'versions.json').as_posix()
     if name.format == 'zip':
-        with zipfile.ZipFile(fh) as zip:
-            with zip.open(verfile) as zmember:
-                contents: Infos = json.load(zmember)
+        with zipfile.ZipFile(fh) as zip, zip.open(verfile) as zmember:
+            contents: Infos = json.load(zmember)
     else:
         with tarfile.open(fileobj=fh) as tar:
             tmember = tar.extractfile(tar.getmember(verfile))

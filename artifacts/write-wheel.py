@@ -58,38 +58,33 @@ args.add_arg(
 )
 args.parse()
 
-with ExitStack() as inputs:
-    with WheelWriter(args.output) as whl:
-        for path in args.artifacts:
-            if path.is_file():
-                fh = inputs.enter_context(path.open('rb'))
-            if path.name == 'pyproject.toml':
-                meta = pyproject_to_message(fh.read().decode())
-                whl.add(
-                    FileMember(
-                        whl.metadir / 'METADATA', BytesIO(meta.as_bytes())
-                    )
-                )
-            elif path.name in ('COPYING.LESSER', 'licenses'):
-                # Assume the file or dir is in the root of the sdist.
-                # Write licenses directory to {metadir}/licenses/licenses,
-                # as required by PEP 639.
-                if path.is_dir():
-                    whl.add_tree(whl.metadir / 'licenses', path)
-                else:
-                    whl.add(
-                        FileMember(whl.metadir / 'licenses' / path.name, fh)
-                    )
+with ExitStack() as inputs, WheelWriter(args.output) as whl:
+    for path in args.artifacts:
+        if path.is_file():
+            fh = inputs.enter_context(path.open('rb'))
+        if path.name == 'pyproject.toml':
+            meta = pyproject_to_message(fh.read().decode())
+            whl.add(
+                FileMember(whl.metadir / 'METADATA', BytesIO(meta.as_bytes()))
+            )
+        elif path.name in ('COPYING.LESSER', 'licenses'):
+            # Assume the file or dir is in the root of the sdist.
+            # Write licenses directory to {metadir}/licenses/licenses,
+            # as required by PEP 639.
+            if path.is_dir():
+                whl.add_tree(whl.metadir / 'licenses', path)
             else:
-                name = re.sub('(\\.so\\.[0-9]+)\\.[0-9.]+', '\\1', path.name)
-                whl.add(FileMember(whl.datadir / name, fh))
+                whl.add(FileMember(whl.metadir / 'licenses' / path.name, fh))
+        else:
+            name = re.sub('(\\.so\\.[0-9]+)\\.[0-9.]+', '\\1', path.name)
+            whl.add(FileMember(whl.datadir / name, fh))
 
-        meta = Message()
-        meta['Wheel-Version'] = '1.0'
-        meta['Generator'] = 'openslide-bin'
-        meta['Root-Is-Purelib'] = 'false'
-        meta['Tag'] = whl.tag
-        whl.add(FileMember(whl.metadir / 'WHEEL', BytesIO(meta.as_bytes())))
+    meta = Message()
+    meta['Wheel-Version'] = '1.0'
+    meta['Generator'] = 'openslide-bin'
+    meta['Root-Is-Purelib'] = 'false'
+    meta['Tag'] = whl.tag
+    whl.add(FileMember(whl.metadir / 'WHEEL', BytesIO(meta.as_bytes())))
 
 if meson_host() == 'linux':
     report = subprocess.check_output(
