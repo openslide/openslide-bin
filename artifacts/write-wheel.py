@@ -32,6 +32,7 @@ from typing import BinaryIO
 
 from common.archive import FileMember, WheelWriter
 from common.argparse import TypedArgs
+from common.error import BuildError
 from common.meson import meson_host
 from common.python import pyproject_to_message
 
@@ -95,4 +96,4 @@ if meson_host() == 'linux':
         ],
     ).decode()
     if f'"{whl.platform}"' not in report:
-        raise Exception(f'Wheel audit failed: {report}')
+        raise BuildError(f'Wheel audit failed: {report}')

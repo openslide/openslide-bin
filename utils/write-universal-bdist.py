@@ -34,6 +34,7 @@ from common.archive import (
     TarArchiveWriter,
 )
 from common.argparse import TypedArgs
+from common.error import BuildError
 from common.macos import all_equal, merge_macho
 
 DSYM_ARCHES = frozenset(('aarch64', 'x86_64'))
@@ -82,12 +83,12 @@ with ExitStack() as stack:
             if not all(
                 DSYM_ARCHES.intersection(p.parts) for p in members.relpaths
             ):
-                raise Exception(f'Path mismatch: {members.relpaths}')
+                raise BuildError(f'Path mismatch: {members.relpaths}')
             if all_type in (DirMember, FileMember):
                 for member in members:
                     out.add(member.with_base(out.base))
             else:
-                raise Exception(
+                raise BuildError(
                     'Unknown/mismatched types for relocations: '
                     f'{members.relpaths}'
                 )
@@ -114,6 +115,6 @@ with ExitStack() as stack:
             elif all_equal(members.datas):
                 out.add(members[0].with_base(out.base))
             else:
-                raise Exception(f'Contents mismatch: {members.relpaths}')
+                raise BuildError(f'Contents mismatch: {members.relpaths}')
         else:
-            raise Exception(f'Unknown/mismatched types: {members.relpaths}')
+            raise BuildError(f'Unknown/mismatched types: {members.relpaths}')

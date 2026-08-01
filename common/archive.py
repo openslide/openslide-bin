@@ -38,6 +38,8 @@ from types import TracebackType
 from typing import BinaryIO, Self, cast
 import zipfile
 
+from .error import BuildError
+
 
 @dataclass
 class Member(ABC):
@@ -177,7 +179,7 @@ class ZipArchiveWriter(ArchiveWriter):
             elif isinstance(member, DirMember):
                 self._zip.writestr(member.path.as_posix() + '/', b'')
             elif isinstance(member, SymlinkMember):
-                raise Exception('Symlinks not supported in Zip')
+                raise BuildError('Symlinks not supported in Zip')
         self._zip.close()
 
 
@@ -284,7 +286,7 @@ class TarArchiveReader(ArchiveReader):
             elif info.type == tarfile.SYMTYPE:
                 yield SymlinkMember(path, PurePath(info.linkname))
             else:
-                raise Exception(
+                raise BuildError(
                     f'Unsupported member type: {info.type.decode()}'
                 )
 
@@ -312,7 +314,7 @@ class ZipArchiveReader(ArchiveReader):
 class MemberSet:
     def __init__(self, members: Sequence[Member | None]):
         if not all(members):
-            raise Exception('Missing member in one or more archives')
+            raise BuildError('Missing member in one or more archives')
         self.members = cast(Sequence[Member], members)
 
     def __getitem__(self, idx: int) -> Member:
@@ -330,7 +332,7 @@ class MemberSet:
         ret = []
         for member in self:
             if not isinstance(member, FileMember):
-                raise Exception('Member is not a file')
+                raise BuildError('Member is not a file')
             ret.append(member.fh.read())
             member.fh.seek(0)
         return ret

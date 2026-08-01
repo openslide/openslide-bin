@@ -27,6 +27,7 @@ import re
 import subprocess
 
 from common.argparse import TypedArgs
+from common.error import BuildError
 from common.meson import meson_host
 
 
@@ -60,9 +61,9 @@ def library_symbols(file: Path) -> list[str]:
                     syms.append(sym)
             elif 'Ordinal/Name Pointer' in line:
                 active = True
-        raise Exception("Couldn't parse objdump output")
+        raise BuildError("Couldn't parse objdump output")
     else:
-        raise Exception(f'Unknown host: {host}')
+        raise BuildError(f'Unknown host: {host}')
 
 
 class Args(TypedArgs):
@@ -113,7 +114,7 @@ else:
 if re.search('\\.(dll|dylib|so[.0-9]*)$', args.file.name):
     syms = library_symbols(args.file)
     if not syms:
-        raise Exception(f"Couldn't find exported symbols in {args.file}")
+        raise BuildError(f"Couldn't find exported symbols in {args.file}")
     syms = [
         # filter out acceptable symbols
         sym
@@ -121,7 +122,7 @@ if re.search('\\.(dll|dylib|so[.0-9]*)$', args.file.name):
         if not sym.startswith('openslide_')
     ]
     if syms:
-        raise Exception(f'Unexpected exports in {args.file}: {syms}')
+        raise BuildError(f'Unexpected exports in {args.file}: {syms}')
 
 # update rpath
 if host == 'linux' and not re.match('\\.so[.0-9]*$', args.file.name):
@@ -142,7 +143,7 @@ elif host == 'darwin' and not args.file.name.endswith('.dylib'):
                 old_rpath = words[1]
                 break
     else:
-        raise Exception("Couldn't read LC_RPATH")
+        raise BuildError("Couldn't read LC_RPATH")
     subprocess.check_call(
         [
             os.environ['INSTALL_NAME_TOOL'],
