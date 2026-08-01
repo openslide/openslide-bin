@@ -74,6 +74,7 @@ class ArchiveWriter(ABC):
     def __init__(self, path: Path):
         self.base = _path_base(path)
         self._members: dict[PurePath, Member] = {}
+        self._stack = ExitStack()
 
     def __enter__(self) -> Self:
         return self
@@ -88,7 +89,7 @@ class ArchiveWriter(ABC):
 
     @abstractmethod
     def close(self) -> None:
-        pass
+        self._stack.close()
 
     def add(self, member: Member) -> None:
         assert member.path not in self._members
@@ -108,7 +109,7 @@ class ArchiveWriter(ABC):
                 self.add(
                     FileMember(
                         arcdir / dpath.relative_to(path.parent) / fname,
-                        open(dpath / fname, 'rb'),
+                        self._stack.enter_context(open(dpath / fname, 'rb')),
                     )
                 )
 
@@ -154,6 +155,7 @@ class TarArchiveWriter(ArchiveWriter):
                 info.gname = 'root'
                 self._tar.addfile(info)
         self._tar.close()
+        super().close()
 
 
 class ZipArchiveWriter(ArchiveWriter):
@@ -181,6 +183,7 @@ class ZipArchiveWriter(ArchiveWriter):
             elif isinstance(member, SymlinkMember):
                 raise BuildError('Symlinks not supported in Zip')
         self._zip.close()
+        super().close()
 
 
 class WheelWriter(ZipArchiveWriter):
@@ -230,6 +233,7 @@ class ArchiveReader(ABC):
         self.base = _path_base(path)
         self._tempdir = tempfile.TemporaryDirectory(prefix='openslide-bin-')
         self._dir = Path(self._tempdir.name)
+        self._stack = ExitStack()
 
     @classmethod
     @contextmanager
@@ -255,6 +259,7 @@ class ArchiveReader(ABC):
 
     @abstractmethod
     def close(self) -> None:
+        self._stack.close()
         self._tempdir.cleanup()
 
     @abstractmethod
@@ -282,7 +287,10 @@ class TarArchiveReader(ArchiveReader):
                 yield DirMember(path)
             elif info.type == tarfile.REGTYPE:
                 self._tar.extract(info, self._dir)
-                yield FileMember(path, open(self._dir / path, 'rb'))
+                yield FileMember(
+                    path,
+                    self._stack.enter_context(open(self._dir / path, 'rb')),
+                )
             elif info.type == tarfile.SYMTYPE:
                 yield SymlinkMember(path, PurePath(info.linkname))
             else:
@@ -307,7 +315,10 @@ class ZipArchiveReader(ArchiveReader):
                 yield DirMember(path)
             else:
                 yield FileMember(
-                    path, open(self._zip.extract(info, self._dir), 'rb')
+                    path,
+                    self._stack.enter_context(
+                        open(self._zip.extract(info, self._dir), 'rb')
+                    ),
                 )
 
 

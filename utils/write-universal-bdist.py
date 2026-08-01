@@ -64,14 +64,13 @@ args.add_arg(
 )
 args.parse()
 
-with ExitStack() as stack:
+with ExitStack() as stack, TarArchiveWriter(args.output) as out:
     tempdir = Path(
         stack.enter_context(
             tempfile.TemporaryDirectory(prefix='openslide-bin-')
         )
     )
     readers = stack.enter_context(TarArchiveReader.group(args.bdists))
-    out = stack.enter_context(TarArchiveWriter(args.output))
     for members in readers:
         if all_equal(type(m) for m in members):
             all_type: type | None = type(members[0])
@@ -109,7 +108,7 @@ with ExitStack() as stack:
                 out.add(
                     FileMember(
                         out.base / members[0].relpath,
-                        open(macho_path, 'rb'),
+                        stack.enter_context(open(macho_path, 'rb')),
                     )
                 )
             elif all_equal(members.datas):
