@@ -1,10 +1,10 @@
 [wrap-file]
-directory = glib-2.88.3
-source_url = https://download.gnome.org/sources/glib/2.88/glib-2.88.3.tar.xz
-source_fallback_url = https://wrapdb.mesonbuild.com/v2/glib_2.88.3-1/get_source/glib-2.88.3.tar.xz
-source_filename = glib-2.88.3.tar.xz
-source_hash = ab24d24e698dfa1e408b7bcdb508f4aafc906185a8b8ce72fdf79bbbdc9b383b
-wrapdb_version = 2.88.3-1
+directory = glib-2.90.0
+source_url = https://download.gnome.org/sources/glib/2.90/glib-2.90.0.tar.xz
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/glib_2.90.0-1/get_source/glib-2.90.0.tar.xz
+source_filename = glib-2.90.0.tar.xz
+source_hash = 17d15cac2af80a33271127408e0abc2748eb297c595c2a26409e81e14e7d1b8f
+wrapdb_version = 2.90.0-1
 
 # avoid PCRE2 dependency to save some space
 # https://github.com/libvips/build-win64-mxe/blob/v8.18.3-rc1/build/patches/glib-2-without-gregex.patch
