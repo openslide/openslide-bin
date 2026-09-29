@@ -56,11 +56,6 @@ LINUX_API_VERS = (9,)
 # we have a higher minimum than the underlying meson.build
 MESON_MIN_VER = (1, 12, 1)
 
-CACHEDIR_TAG_CONTENTS = """Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by openslide-bin.
-# For information about cache directory tags, see https://bford.info/cachedir/
-"""
-
 
 def log(msg: str, stderr: bool = False, **kwargs: Any) -> None:
     if stderr:
@@ -96,10 +91,6 @@ class BuildParams:
         the build dir."""
         assert not self.locked
         self.work.mkdir(exist_ok=True)
-
-        cachedir_tag = self.work / 'CACHEDIR.TAG'
-        if not cachedir_tag.exists():
-            cachedir_tag.write_text(CACHEDIR_TAG_CONTENTS)
 
         with open(self.work / '.lock', 'wb') as lock:
             try:
