@@ -51,13 +51,10 @@ from common.meson import (
 )
 from common.software import Project
 
-WINDOWS_API_VERS = (9,)
-LINUX_API_VERS = (8,)
-
-CACHEDIR_TAG_CONTENTS = """Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by openslide-bin.
-# For information about cache directory tags, see https://bford.info/cachedir/
-"""
+WINDOWS_API_VERS = (10,)
+LINUX_API_VERS = (9,)
+# we have a higher minimum than the underlying meson.build
+MESON_MIN_VER = (1, 12, 1)
 
 
 def log(msg: str, stderr: bool = False, **kwargs: Any) -> None:
@@ -94,10 +91,6 @@ class BuildParams:
         the build dir."""
         assert not self.locked
         self.work.mkdir(exist_ok=True)
-
-        cachedir_tag = self.work / 'CACHEDIR.TAG'
-        if not cachedir_tag.exists():
-            cachedir_tag.write_text(CACHEDIR_TAG_CONTENTS)
 
         with open(self.work / '.lock', 'wb') as lock:
             try:
@@ -161,6 +154,16 @@ class BuildParams:
                 )
             elif sys.platform == 'darwin':
                 # no container image to check for
+                meson_ver = (
+                    subprocess.check_output(['meson', '--version'])
+                    .decode()
+                    .strip()
+                )
+                if tuple(int(c) for c in meson_ver.split('.')) < MESON_MIN_VER:
+                    raise BuildError(
+                        f'Meson version {meson_ver} < '
+                        f'{".".join(str(c) for c in MESON_MIN_VER)}'
+                    )
                 plat = MacPlatform(self, ['arm64', 'x86_64'])
             else:
                 raise BuildError(
@@ -325,25 +328,6 @@ class MesonPlatform(Platform):
         subprocess.check_call(
             args, env={**os.environ, **self.params.env}, cwd=self.params.root
         )
-
-        # Manually promote gvdb source to avoid 'meson dist' failure.  Do it
-        # here to ensure gvdb is synced from glib for both sdist and bdist.
-        # https://github.com/mesonbuild/meson/issues/12489
-        gvdb = self.params.root / 'subprojects' / 'gvdb'
-        if gvdb.exists():
-            shutil.rmtree(gvdb)
-        subprocess.check_call(
-            [
-                'meson',
-                'wrap',
-                'promote',
-                (
-                    Project.get('glib').source_dir / 'subprojects' / 'gvdb'
-                ).relative_to(self.params.root),
-            ],
-            cwd=self.params.root,
-        )
-
         return dir
 
     def sdist(self) -> Path:
